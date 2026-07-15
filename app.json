@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "mobile",
+    "slug": "mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "$(PRODUCT_NAME) utilise Face ID pour verrouiller l'accès à vos données financières."
+      }
+    },
+    "android": {
+      "package": "com.mizaniyati.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-localization",
+      "expo-sqlite",
+      "expo-notifications",
+      "expo-secure-store",
+      "expo-asset"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "440376c5-68dc-455c-b955-fbdcb4a58b8c"
+      }
+    },
+    "owner": "anissrelicum",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/440376c5-68dc-455c-b955-fbdcb4a58b8c"
+    }
+  }
+}

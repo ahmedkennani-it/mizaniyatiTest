@@ -1,0 +1,1 @@
+export { seedDefaultMember } from './seedDefaultMember';

@@ -1,0 +1,1719 @@
+{
+  "project": "Mizaniyati Frontend",
+  "description": "App mobile de budget familial (Expo / React Native / TypeScript), zero connexion bancaire, saisie manuelle clavier + voix, multi-marches MENA / Golfe / diaspora, i18n ar/fr/en avec RTL natif. PRD complet : toutes les user stories du projet, derivees des maquettes (design system + 41 ecrans). Le champ 'us' fait le lien avec le PRD produit (prd-produit.json), le champ 'plan' indique si la fonction est gratuite ou reservee au plan Pro.",
+  "phases": [
+    {
+      "number": 1,
+      "name": "Fondations techniques",
+      "tasks": 7
+    },
+    {
+      "number": 2,
+      "name": "Design system & accessibilite",
+      "tasks": 5
+    },
+    {
+      "number": 3,
+      "name": "Shell de navigation",
+      "tasks": 2
+    },
+    {
+      "number": 4,
+      "name": "Onboarding & configuration initiale",
+      "tasks": 6
+    },
+    {
+      "number": 5,
+      "name": "Dashboard - Solde du mois",
+      "tasks": 8
+    },
+    {
+      "number": 6,
+      "name": "Saisie des operations (clavier & voix)",
+      "tasks": 11
+    },
+    {
+      "number": 7,
+      "name": "Categories, plafonds & alertes",
+      "tasks": 7
+    },
+    {
+      "number": 8,
+      "name": "Objectifs & coffres d'epargne",
+      "tasks": 4
+    },
+    {
+      "number": 9,
+      "name": "Tontine (daret / ROSCA)",
+      "tasks": 5
+    },
+    {
+      "number": 10,
+      "name": "Zakat & mode Ramadan",
+      "tasks": 4
+    },
+    {
+      "number": 11,
+      "name": "Transferts diaspora",
+      "tasks": 3
+    },
+    {
+      "number": 12,
+      "name": "Dettes informelles",
+      "tasks": 3
+    },
+    {
+      "number": 13,
+      "name": "Foyer & membres",
+      "tasks": 5
+    },
+    {
+      "number": 14,
+      "name": "Profil, reglages & themes",
+      "tasks": 6
+    },
+    {
+      "number": 15,
+      "name": "Multi-marches & conversion",
+      "tasks": 2
+    },
+    {
+      "number": 16,
+      "name": "Monetisation freemium",
+      "tasks": 6
+    },
+    {
+      "number": 17,
+      "name": "Confidentialite & sauvegarde",
+      "tasks": 3
+    }
+  ],
+  "tasks": [
+    {
+      "id": "1.1",
+      "phase": 1,
+      "phaseName": "Fondations techniques",
+      "us": "BS-001",
+      "plan": "free",
+      "title": "Scaffolder le projet Expo + TypeScript",
+      "description": "En tant que developpeur, je veux un projet Expo/React Native TypeScript qui demarre, afin que les iterations suivantes aient une base compilable.",
+      "acceptanceCriteria": [
+        "Projet Expo (SDK courant) initialise avec TypeScript en mode strict",
+        "L'app demarre sur web (expo start --web) et affiche un ecran placeholder",
+        "Structure de dossiers creee : src/{app,components,features,i18n,theme,lib,types}",
+        "README court decrivant comment lancer l'app et les tests",
+        "npm run typecheck passe sans erreur"
+      ],
+      "done": false
+    },
+    {
+      "id": "1.2",
+      "phase": 1,
+      "phaseName": "Fondations techniques",
+      "us": "BS-002",
+      "plan": "free",
+      "title": "Mettre en place la porte qualite (lint, typecheck, tests, CI)",
+      "description": "En tant que developpeur, je veux des feedback loops automatiques, afin que Ralph ne puisse pas committer du code casse.",
+      "acceptanceCriteria": [
+        "Scripts npm : typecheck, lint, test, test:ci",
+        "ESLint + Prettier configures et passants sur le code existant",
+        "Jest + @testing-library/react-native configures avec un test temoin qui passe",
+        "Workflow GitHub Actions qui lance typecheck + lint + test sur chaque push",
+        "npm run typecheck passe sans erreur"
+      ],
+      "done": false
+    },
+    {
+      "id": "1.3",
+      "phase": 1,
+      "phaseName": "Fondations techniques",
+      "us": "BS-003",
+      "plan": "free",
+      "title": "Definir le modele de donnees et la couche de persistance locale",
+      "description": "En tant que developpeur, je veux un schema local typé, afin que toutes les features ecrivent au meme endroit.",
+      "acceptanceCriteria": [
+        "Entites definies en TypeScript : Household, Member, Transaction, Category, Goal, GoalDeposit, Tontine, TontineRound, Debt, Transfer, ZakatCalculation, Settings",
+        "Persistance locale via expo-sqlite avec migrations versionnees",
+        "Repository par entite avec CRUD et tests unitaires",
+        "Aucun appel reseau dans cette couche",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)"
+      ],
+      "done": false
+    },
+    {
+      "id": "1.4",
+      "phase": 1,
+      "phaseName": "Fondations techniques",
+      "us": "US-061a",
+      "plan": "free",
+      "title": "Infrastructure i18n et bascule de direction LTR/RTL",
+      "description": "En tant que utilisateur arabophone, je veux une interface pensee en RTL et non traduite a la va-vite, afin de que l'app me paraisse native.",
+      "acceptanceCriteria": [
+        "i18n initialise avec les catalogues ar, fr, en ; aucune chaine en dur",
+        "Le changement de langue bascule I18nManager et la direction de mise en page sans redemarrage",
+        "Les polices sont chargees par langue : Outfit pour le latin, IBM Plex Sans Arabic pour l'arabe",
+        "Un test verifie qu'aucune chaine litterale visible ne subsiste dans les composants du shell",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "1.5",
+      "phase": 1,
+      "phaseName": "Fondations techniques",
+      "us": "US-061b",
+      "plan": "free",
+      "title": "Miroir RTL des composants de base",
+      "description": "En tant que utilisateur arabophone, je veux une interface pensee en RTL et non traduite a la va-vite, afin de que l'app me paraisse native.",
+      "acceptanceCriteria": [
+        "Header, bottom nav, listes, chips, barres de progression et anneaux sont mirroites en RTL",
+        "Les icones directionnelles (fleches, chevrons) sont inversees ; les icones non directionnelles ne le sont pas",
+        "Un ecran mixte (chiffres latins dans texte arabe) ne presente aucune inversion bidi incorrecte",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "1.6",
+      "phase": 1,
+      "phaseName": "Fondations techniques",
+      "us": "US-062",
+      "plan": "free",
+      "title": "Formats locaux des nombres, dates et devises",
+      "description": "En tant que utilisateur d'un marche donne, je veux voir les montants et dates comme chez moi, afin de les lire sans effort.",
+      "acceptanceCriteria": [
+        "Etant donne la locale fr-MA, alors les milliers sont separes par une espace insecable et la decimale par une virgule",
+        "Etant donne la locale en-FR/en-US, alors le format anglo-saxon est applique (virgule milliers, point decimal, symbole en prefixe)",
+        "Etant donne la locale ar, alors le separateur de milliers arabe est utilise et le nom de devise localise",
+        "Etant donne les dates, alors les mois sont affiches dans la langue active (Juin / يونيو / June)",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "1.7",
+      "phase": 1,
+      "phaseName": "Fondations techniques",
+      "us": "US-070",
+      "plan": "free",
+      "title": "Stockage local des donnees",
+      "description": "En tant que utilisateur soucieux de sa vie privee, je veux que mes donnees soient stockees sur mon appareil, afin de garder le controle.",
+      "acceptanceCriteria": [
+        "Etant donne une operation saisie, alors elle est persistee localement et consultable hors ligne",
+        "Etant donne l'absence de reseau, alors toutes les fonctions de saisie et de consultation restent disponibles",
+        "Etant donne la base locale, alors elle est chiffree au repos",
+        "Etant donne une desinstallation sans sauvegarde, alors l'utilisateur est prevenu de la perte definitive",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)"
+      ],
+      "done": false
+    },
+    {
+      "id": "2.1",
+      "phase": 2,
+      "phaseName": "Design system & accessibilite",
+      "us": "US-073",
+      "plan": "free",
+      "title": "Design tokens et palette",
+      "description": "En tant que developpeur / designer, je veux des tokens de couleurs et de typographie centralises, afin de garantir la coherence sur tous les ecrans et themes.",
+      "acceptanceCriteria": [
+        "Etant donne la palette, alors les tokens sont definis : BG #F0FDF4, Teal #0D9488, Teal-dark #0F766E, Wash #CCFBF1, Gold #D97706, Coral #F43F5E, Purple #7C3AED, Blue #2563EB, textes #0F172A / #334155 / #64748B",
+        "Etant donne la typographie, alors Outfit est utilisee pour le latin et les chiffres, IBM Plex Sans Arabic pour l'arabe",
+        "Etant donne un theme (clair, sombre, senior, Ramadan), alors il est defini comme une surcharge de tokens et non par des valeurs codees en dur",
+        "Etant donne un composant, alors il ne contient aucune couleur hors tokens",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)"
+      ],
+      "done": false
+    },
+    {
+      "id": "2.2",
+      "phase": 2,
+      "phaseName": "Design system & accessibilite",
+      "us": "US-074a",
+      "plan": "free",
+      "title": "Composants de base : Header, Bouton, Tag, Card",
+      "description": "En tant que developpeur, je veux des composants standardises, afin de livrer les ecrans plus vite et sans derive visuelle.",
+      "acceptanceCriteria": [
+        "Header, Bouton (primaire/secondaire), Tag et Card sont implementes a partir des tokens",
+        "Card applique un rayon de 14 px et l'ombre douce definie",
+        "Chaque composant supporte LTR, RTL et les 4 themes",
+        "Tests de rendu pour chaque composant",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)"
+      ],
+      "done": false
+    },
+    {
+      "id": "2.3",
+      "phase": 2,
+      "phaseName": "Design system & accessibilite",
+      "us": "US-074b",
+      "plan": "free",
+      "title": "Composants financiers : Montant, Progression, Anneau, LigneTransaction, Avatar",
+      "description": "En tant que developpeur, je veux des composants standardises, afin de livrer les ecrans plus vite et sans derive visuelle.",
+      "acceptanceCriteria": [
+        "Le composant Montant gere signe, devise et formatage selon la locale",
+        "Barre de progression et anneau acceptent une valeur et un seuil d'alerte",
+        "LigneTransaction affiche libelle, date relative, membre et montant signe colore",
+        "Tests de rendu pour chaque composant",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)"
+      ],
+      "done": false
+    },
+    {
+      "id": "2.4",
+      "phase": 2,
+      "phaseName": "Design system & accessibilite",
+      "us": "US-075a",
+      "plan": "free",
+      "title": "Contraste et mise a l'echelle des textes",
+      "description": "En tant que utilisateur en situation de handicap, je veux une app lisible et utilisable au lecteur d'ecran, afin de gerer mon budget de facon autonome.",
+      "acceptanceCriteria": [
+        "Le contraste texte/fond respecte WCAG AA (4.5:1) sur les 4 themes (test automatise sur les tokens)",
+        "L'app suit le Dynamic Type / font scale systeme sans casser les mises en page (verifie a 200%)",
+        "Une information portee par la couleur est toujours doublee d'un texte ou d'une icone",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "2.5",
+      "phase": 2,
+      "phaseName": "Design system & accessibilite",
+      "us": "US-075b",
+      "plan": "free",
+      "title": "Libelles pour lecteurs d'ecran",
+      "description": "En tant que utilisateur en situation de handicap, je veux une app lisible et utilisable au lecteur d'ecran, afin de gerer mon budget de facon autonome.",
+      "acceptanceCriteria": [
+        "Montants, statuts et icones porteuses de sens exposent un libelle accessible explicite",
+        "Les libelles accessibles sont traduits en ar, fr et en",
+        "Les elements decoratifs sont masques aux lecteurs d'ecran",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "3.1",
+      "phase": 3,
+      "phaseName": "Shell de navigation",
+      "us": "BS-004",
+      "plan": "free",
+      "title": "Mettre en place la navigation et le shell applicatif",
+      "description": "En tant que developpeur, je veux la navigation par onglets et la pile d'ecrans, afin que chaque story d'ecran ait un point d'accroche.",
+      "acceptanceCriteria": [
+        "expo-router configure avec un layout a onglets et des ecrans placeholder",
+        "Onglets : Accueil, Categories, Tontine, Profil + bouton central d'ajout",
+        "Le layout suit la direction (LTR/RTL) fournie par la couche i18n",
+        "Aucune couleur ni texte en dur dans le shell",
+        "npm run typecheck passe sans erreur",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "3.2",
+      "phase": 3,
+      "phaseName": "Shell de navigation",
+      "us": "US-013",
+      "plan": "free",
+      "title": "Barre de navigation principale",
+      "description": "En tant que utilisateur, je veux acceder aux sections cles en un tap, afin de circuler vite dans l'app.",
+      "acceptanceCriteria": [
+        "Etant donne l'app, alors la barre affiche Accueil, Categories, Tontine, Profil et un bouton central d'ajout",
+        "Etant donne le RTL, alors l'ordre des onglets est mirroite",
+        "Etant donne un marche sans tontine (ex. France), alors l'onglet Tontine est remplace par Transferts",
+        "Etant donne le mode senior, alors la barre est simplifiee (Accueil, Profil) avec de grandes cibles tactiles",
+        "Regle metier : Cibles tactiles minimum 44x44 pt ; 56x56 pt en mode senior",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "4.1",
+      "phase": 4,
+      "phaseName": "Onboarding & configuration initiale",
+      "us": "US-001",
+      "plan": "free",
+      "title": "Ecran de bienvenue",
+      "description": "En tant que nouvel utilisateur, je veux voir un ecran d'accueil qui explique en une phrase ce que fait l'app, afin de comprendre la promesse avant de m'engager.",
+      "acceptanceCriteria": [
+        "Etant donne que j'ouvre l'app pour la premiere fois, alors je vois le logo, le nom Mizaniyati et le pitch 'Le budget de la famille, clair et prive'",
+        "Etant donne l'ecran de bienvenue, alors un badge 'Aucune connexion bancaire' est visible sans scroll",
+        "Etant donne l'ecran de bienvenue, quand je tape 'Commencer', alors je suis dirige vers le choix langue & pays",
+        "Etant donne l'ecran de bienvenue, quand je tape 'J'ai deja un compte', alors je suis dirige vers la connexion",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "4.2",
+      "phase": 4,
+      "phaseName": "Onboarding & configuration initiale",
+      "us": "US-002",
+      "plan": "free",
+      "title": "Choix de la langue a l'onboarding",
+      "description": "En tant que nouvel utilisateur, je veux choisir ma langue parmi Arabe (MSA), Francais et Anglais, afin de utiliser l'app dans la langue ou je pense mon argent.",
+      "acceptanceCriteria": [
+        "Etant donne l'ecran Langue & pays, alors les 3 langues v1 sont proposees avec leur nom natif et traduit",
+        "Quand je selectionne l'arabe, alors toute l'interface bascule immediatement en RTL",
+        "Etant donne la liste, alors une mention 'Packs additionnels : Darija, Tamazight, Turkce' indique les langues a venir sans etre selectionnable",
+        "Etant donne un choix effectue, alors la langue est persistee et rechargee au prochain lancement",
+        "Regle metier : La langue par defaut est pre-selectionnee depuis la locale systeme du telephone",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "4.3",
+      "phase": 4,
+      "phaseName": "Onboarding & configuration initiale",
+      "us": "US-003",
+      "plan": "free",
+      "title": "Choix du pays / marche et de la devise",
+      "description": "En tant que nouvel utilisateur, je veux choisir mon pays, afin de que la devise, les categories et les fonctions locales soient adaptees automatiquement.",
+      "acceptanceCriteria": [
+        "Etant donne l'ecran Langue & pays, quand je choisis Maroc, alors la devise MAD est affichee et confirmee sous le pays",
+        "Etant donne un pays choisi, alors le jeu de categories par defaut et les modules locaux (tontine vs remittances) sont configures selon ce marche",
+        "Etant donne l'ecran, alors les autres marches disponibles sont mentionnes (DZD, TND, EGP, EUR, AED, SAR)",
+        "Quand je tape 'Continuer' sans choix, alors le bouton est desactive",
+        "Regle metier : Le couple (pays, devise) determine le mapping de modules : Maroc/DZ/TN -> tontine ; France/US -> remittances ; Golfe -> les deux",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "4.4",
+      "phase": 4,
+      "phaseName": "Onboarding & configuration initiale",
+      "us": "US-004",
+      "plan": "free",
+      "title": "Ecran de confidentialite / promesse zero banque",
+      "description": "En tant que nouvel utilisateur mefiant vis-a-vis des apps financieres, je veux comprendre exactement quelles donnees sont collectees, afin de accepter d'utiliser l'app en confiance.",
+      "acceptanceCriteria": [
+        "Etant donne l'ecran confidentialite, alors 3 engagements sont listes : zero acces bancaire, stockage sur l'appareil, partage famille uniquement sur invitation",
+        "Etant donne l'ecran, alors il est explicite que la saisie est manuelle et qu'aucun prelevement n'est effectue",
+        "Quand je tape 'J'ai compris, continuer', alors l'acceptation est horodatee et je rejoins le dashboard",
+        "Etant donne l'ecran, alors un lien vers la politique de confidentialite complete est accessible",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "4.5",
+      "phase": 4,
+      "phaseName": "Onboarding & configuration initiale",
+      "us": "US-005",
+      "plan": "free",
+      "title": "Creation du foyer",
+      "description": "En tant que nouvel utilisateur, je veux nommer mon foyer et creer mon profil, afin de que le dashboard et les transactions me soient personnalises.",
+      "acceptanceCriteria": [
+        "Etant donne l'onboarding, alors je saisis mon prenom et le nom du foyer",
+        "Etant donne un foyer cree, alors je suis automatiquement administrateur avec droits de modification",
+        "Etant donne un foyer cree, alors l'en-tete du dashboard affiche 'Bonjour, {prenom}' et le nom du foyer",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "4.6",
+      "phase": 4,
+      "phaseName": "Onboarding & configuration initiale",
+      "us": "US-006",
+      "plan": "free",
+      "title": "Connexion a un compte existant",
+      "description": "En tant que utilisateur qui change de telephone, je veux me reconnecter a mon compte, afin de retrouver mon foyer et mon historique.",
+      "acceptanceCriteria": [
+        "Etant donne l'ecran de bienvenue, quand je tape 'J'ai deja un compte', alors l'ecran de connexion s'affiche",
+        "Etant donne des identifiants valides et une sauvegarde chiffree existante, alors mes donnees sont restaurees sur le nouvel appareil",
+        "Etant donne des identifiants invalides, alors un message d'erreur explicite s'affiche sans revelation d'information",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "5.1",
+      "phase": 5,
+      "phaseName": "Dashboard - Solde du mois",
+      "us": "US-007",
+      "plan": "free",
+      "title": "Hero solde du mois restant",
+      "description": "En tant que chef de foyer, je veux voir immediatement le solde restant du mois, afin de savoir si je peux depenser aujourd'hui.",
+      "acceptanceCriteria": [
+        "Etant donne des operations saisies, alors le solde restant = revenus du mois - depenses du mois, affiche en gros avec la devise du foyer",
+        "Etant donne le hero, alors les totaux Revenus et Depenses du mois sont affiches sous le solde",
+        "Etant donne un solde negatif, alors il est affiche en couleur d'alerte (coral)",
+        "Etant donne une nouvelle operation enregistree, alors le solde est recalcule sans rechargement de l'ecran",
+        "Regle metier : Le mois de reference est le mois calendaire selectionne dans le selecteur de mois",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "5.2",
+      "phase": 5,
+      "phaseName": "Dashboard - Solde du mois",
+      "us": "US-008",
+      "plan": "free",
+      "title": "Selecteur de mois",
+      "description": "En tant que utilisateur, je veux naviguer entre les mois, afin de consulter l'historique et comparer.",
+      "acceptanceCriteria": [
+        "Etant donne le dashboard, alors le mois courant est affiche par defaut (ex. Juin 2026) dans la langue active",
+        "Quand je navigue vers un mois precedent, alors solde, categories, transactions et objectifs refletent ce mois",
+        "Etant donne un mois futur sans donnees, alors la navigation est bloquee au-dela du mois courant",
+        "Etant donne le RTL, alors les fleches de navigation sont inversees",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "5.3",
+      "phase": 5,
+      "phaseName": "Dashboard - Solde du mois",
+      "us": "US-010",
+      "plan": "free",
+      "title": "Anneau de repartition des depenses par categorie",
+      "description": "En tant que chef de foyer, je veux voir la repartition de mes depenses du mois, afin de identifier ou part mon argent.",
+      "acceptanceCriteria": [
+        "Etant donne des depenses du mois, alors un anneau affiche la part de chaque categorie avec le total au centre",
+        "Etant donne plus de 4 categories, alors les 4 principales sont listees et le reste agrege dans 'Autres'",
+        "Quand je tape un segment ou une legende, alors j'ouvre le detail de la categorie",
+        "Etant donne aucune depense, alors l'anneau affiche l'etat vide",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "5.4",
+      "phase": 5,
+      "phaseName": "Dashboard - Solde du mois",
+      "us": "US-012",
+      "plan": "free",
+      "title": "Dernieres transactions",
+      "description": "En tant que membre du foyer, je veux voir les dernieres operations du foyer, afin de verifier que tout est saisi et par qui.",
+      "acceptanceCriteria": [
+        "Etant donne des operations, alors les 4 dernieres sont listees avec libelle, date relative (Aujourd'hui/Hier), membre auteur et montant signe",
+        "Etant donne une depense, alors le montant est prefixe d'un moins ; etant donne un revenu, d'un plus et en couleur positive",
+        "Quand je tape 'Voir tout', alors l'historique complet filtrable s'ouvre",
+        "Quand je tape une ligne, alors le detail de la transaction s'ouvre",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "5.5",
+      "phase": 5,
+      "phaseName": "Dashboard - Solde du mois",
+      "us": "US-015",
+      "plan": "free",
+      "title": "Etat vide du dashboard",
+      "description": "En tant que utilisateur venant de finir l'onboarding, je veux comprendre quoi faire en premier, afin de ne pas rester bloque devant un ecran vide.",
+      "acceptanceCriteria": [
+        "Etant donne aucune operation, alors le hero affiche '- MAD' et le message 'Ajoute ta premiere operation pour demarrer'",
+        "Etant donne l'etat vide, alors une carte explicative propose deux actions : Depense et Vocal",
+        "Etant donne la premiere operation enregistree, alors l'etat vide disparait definitivement",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "5.6",
+      "phase": 5,
+      "phaseName": "Dashboard - Solde du mois",
+      "us": "US-009",
+      "plan": "free",
+      "title": "Chip de confiance 'saisie manuelle'",
+      "description": "En tant que utilisateur, je veux un rappel permanent que l'app ne touche pas a ma banque, afin de rester serein sur mes donnees.",
+      "acceptanceCriteria": [
+        "Etant donne le dashboard, alors un chip 'On ne se connecte pas a ta banque - saisie manuelle' est affiche sous le hero",
+        "Etant donne le chip, alors le texte est traduit dans les 3 langues et lisible dans tous les themes (clair, sombre, senior, Ramadan)",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "5.7",
+      "phase": 5,
+      "phaseName": "Dashboard - Solde du mois",
+      "us": "US-011",
+      "plan": "free",
+      "title": "Apercu des objectifs sur le dashboard",
+      "description": "En tant que utilisateur qui epargne, je veux voir la progression de mes coffres depuis l'accueil, afin de rester motive.",
+      "acceptanceCriteria": [
+        "Etant donne des objectifs actifs, alors les 2 premiers sont affiches avec barre de progression et montant epargne / cible",
+        "Quand je tape 'Voir tout', alors la liste complete des objectifs s'ouvre",
+        "Etant donne aucun objectif, alors la section propose de creer un premier objectif",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "5.8",
+      "phase": 5,
+      "phaseName": "Dashboard - Solde du mois",
+      "us": "US-014",
+      "plan": "free",
+      "title": "Bandeau de decouverte de la saisie vocale",
+      "description": "En tant que nouvel utilisateur, je veux decouvrir la saisie vocale depuis l'accueil, afin de adopter la methode de saisie la plus rapide.",
+      "acceptanceCriteria": [
+        "Etant donne que la saisie vocale n'a jamais ete utilisee, alors un bandeau 'Ajoute par la voix' avec tag NOUVEAU est affiche avec un exemple dans la langue active",
+        "Quand je tape le bandeau, alors l'ecran de saisie vocale s'ouvre",
+        "Etant donne que j'ai deja utilise la voix 3 fois ou que j'ai ferme le bandeau, alors il ne s'affiche plus",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "6.1",
+      "phase": 6,
+      "phaseName": "Saisie des operations (clavier & voix)",
+      "us": "US-016",
+      "plan": "free",
+      "title": "Saisie rapide d'une depense au clavier numerique",
+      "description": "En tant que membre du foyer, je veux saisir un montant sur un pave numerique plein ecran, afin de enregistrer une depense en quelques secondes.",
+      "acceptanceCriteria": [
+        "Etant donne l'ecran Nouvelle depense, alors le champ montant est actif par defaut avec la devise du foyer affichee",
+        "Etant donne un pave numerique custom, alors je peux saisir des decimales et corriger avec la touche retour",
+        "Etant donne un montant a zero, alors le bouton Enregistrer est desactive",
+        "Quand j'enregistre, alors l'ecran de confirmation s'affiche et le solde est mis a jour",
+        "Regle metier : Le nombre de decimales suit la devise (MAD/EUR : 2 ; devises sans decimale : 0)",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "6.2",
+      "phase": 6,
+      "phaseName": "Saisie des operations (clavier & voix)",
+      "us": "US-017",
+      "plan": "free",
+      "title": "Selection de la categorie par chips",
+      "description": "En tant que membre du foyer, je veux choisir la categorie en un tap parmi mes categories frequentes, afin de ne pas parcourir une longue liste.",
+      "acceptanceCriteria": [
+        "Etant donne l'ecran de saisie, alors des chips de categories (Courses, Repas, Transport, Sante...) sont proposees horizontalement",
+        "Etant donne mes habitudes, alors les chips sont ordonnees par frequence d'usage sur 30 jours",
+        "Quand je selectionne une chip, alors elle est mise en evidence et remplace toute selection precedente",
+        "Etant donne le besoin d'une autre categorie, alors une action 'Plus' ouvre la liste complete",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "6.3",
+      "phase": 6,
+      "phaseName": "Saisie des operations (clavier & voix)",
+      "us": "US-020a",
+      "plan": "pro",
+      "title": "Capture audio et etat d'ecoute de la saisie vocale",
+      "description": "En tant que membre du foyer, je veux dicter ma depense dans ma langue, afin de saisir sans taper, les mains occupees.",
+      "acceptanceCriteria": [
+        "Le tap sur le micro demande la permission avec une explication contextuelle au premier usage",
+        "Etant l'ecoute active, l'ecran affiche la langue, l'etat 'Je t'ecoute...' et une forme d'onde reactive au niveau sonore",
+        "Etant un refus de permission, un fallback vers le clavier est propose",
+        "Etant 5 secondes de silence, l'ecoute s'arrete automatiquement",
+        "Regle metier : La langue de reconnaissance suit la langue de l'app, avec bascule manuelle possible",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "6.4",
+      "phase": 6,
+      "phaseName": "Saisie des operations (clavier & voix)",
+      "us": "US-020b",
+      "plan": "pro",
+      "title": "Transcription vocale multilingue (ar/fr/en)",
+      "description": "En tant que membre du foyer, je veux dicter ma depense dans ma langue, afin de saisir sans taper, les mains occupees.",
+      "acceptanceCriteria": [
+        "La langue de reconnaissance suit la langue de l'app et reste modifiable a la volee",
+        "La transcription s'affiche a l'ecran pendant l'analyse",
+        "Aucun fichier audio n'est conserve apres l'analyse (verifie par test)",
+        "Etant une erreur du moteur de reconnaissance, un message clair et un fallback clavier sont proposes",
+        "Regle metier : La langue de reconnaissance suit la langue de l'app, avec bascule manuelle possible",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "6.5",
+      "phase": 6,
+      "phaseName": "Saisie des operations (clavier & voix)",
+      "us": "US-021a",
+      "plan": "pro",
+      "title": "Extraction du montant depuis la dictee (ar/fr/en)",
+      "description": "En tant que membre du foyer, je veux que l'app extraie le montant et la categorie de ma phrase, afin de n'avoir qu'a confirmer.",
+      "acceptanceCriteria": [
+        "'Quarante-deux dirhams de cafe' produit un montant de 42",
+        "Les nombres en toutes lettres sont supportes en arabe, francais et anglais (tests unitaires par langue)",
+        "Etant aucun montant detecte, l'app bascule sur le clavier avec les champs partiellement pre-remplis",
+        "Regle metier : Les nombres en toutes lettres doivent etre supportes en ar/fr/en",
+        "Regle metier : Aucun audio n'est conserve apres l'analyse",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "6.6",
+      "phase": 6,
+      "phaseName": "Saisie des operations (clavier & voix)",
+      "us": "US-021b",
+      "plan": "pro",
+      "title": "Deduction de la categorie et du libelle, prevu et confirmation",
+      "description": "En tant que membre du foyer, je veux que l'app extraie le montant et la categorie de ma phrase, afin de n'avoir qu'a confirmer.",
+      "acceptanceCriteria": [
+        "'Quarante-deux dirhams de cafe ce matin' propose libelle Cafe, categorie Repas, avec la mention 'Detecte automatiquement'",
+        "La categorie proposee reste modifiable avant confirmation",
+        "Confirmer enregistre l'operation ; Annuler revient sans rien enregistrer",
+        "Regle metier : Les nombres en toutes lettres doivent etre supportes en ar/fr/en",
+        "Regle metier : Aucun audio n'est conserve apres l'analyse",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "6.7",
+      "phase": 6,
+      "phaseName": "Saisie des operations (clavier & voix)",
+      "us": "US-022",
+      "plan": "free",
+      "title": "Confirmation d'ajout avec solde mis a jour",
+      "description": "En tant que membre du foyer, je veux une confirmation claire apres saisie, afin de etre sur que c'est enregistre et voir l'impact.",
+      "acceptanceCriteria": [
+        "Etant donne une operation enregistree, alors l'ecran affiche une coche, le montant, la categorie, le membre et la date",
+        "Etant donne la confirmation, alors le nouveau solde restant du mois est affiche",
+        "Etant donne la confirmation, alors deux actions sont proposees : Termine (retour dashboard) et Ajouter une autre (retour saisie vide)",
+        "Etant donne un depassement de plafond declenche par cette operation, alors un avertissement est affiche dans la confirmation",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "6.8",
+      "phase": 6,
+      "phaseName": "Saisie des operations (clavier & voix)",
+      "us": "US-023",
+      "plan": "free",
+      "title": "Saisie d'un revenu",
+      "description": "En tant que chef de foyer, je veux enregistrer mon salaire et autres revenus, afin de que le solde du mois soit exact.",
+      "acceptanceCriteria": [
+        "Etant donne l'ecran de saisie, alors je peux basculer entre Depense et Revenu",
+        "Etant donne un revenu enregistre, alors il apparait en positif dans les transactions et augmente le total Revenus du mois",
+        "Etant donne un revenu recurrent, alors je peux le marquer comme mensuel pour qu'il soit propose le mois suivant",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "6.9",
+      "phase": 6,
+      "phaseName": "Saisie des operations (clavier & voix)",
+      "us": "US-024",
+      "plan": "free",
+      "title": "Modification et suppression d'une operation",
+      "description": "En tant que membre du foyer, je veux corriger ou supprimer une operation, afin de reparer une erreur de saisie.",
+      "acceptanceCriteria": [
+        "Quand j'ouvre une transaction, alors je peux modifier montant, categorie, membre, date et libelle",
+        "Etant donne une suppression, alors une confirmation est demandee et une action Annuler est proposee pendant 5 secondes",
+        "Etant donne une modification, alors solde, categories et anneau sont recalcules",
+        "Etant donne un membre en Lecture seule, alors les actions modifier/supprimer sont indisponibles",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "6.10",
+      "phase": 6,
+      "phaseName": "Saisie des operations (clavier & voix)",
+      "us": "US-018",
+      "plan": "free",
+      "title": "Attribution d'une operation a un membre",
+      "description": "En tant que administrateur du foyer, je veux indiquer quel membre a effectue la depense, afin de suivre qui depense quoi.",
+      "acceptanceCriteria": [
+        "Etant donne l'ecran de saisie, alors le membre connecte est pre-selectionne avec son avatar",
+        "Quand je tape le champ Membre, alors la liste des membres du foyer s'affiche",
+        "Etant donne un plan Gratuit (1 membre), alors le champ Membre est masque",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "6.11",
+      "phase": 6,
+      "phaseName": "Saisie des operations (clavier & voix)",
+      "us": "US-019",
+      "plan": "free",
+      "title": "Choix de la date de l'operation",
+      "description": "En tant que membre du foyer, je veux pouvoir dater une depense oubliee, afin de que mon budget du mois reste juste.",
+      "acceptanceCriteria": [
+        "Etant donne l'ecran de saisie, alors la date par defaut est Aujourd'hui",
+        "Quand je tape le champ Date, alors un selecteur permet de choisir une date passee",
+        "Etant donne une date d'un mois anterieur, alors l'operation est comptabilisee dans ce mois-la et un rappel visuel l'indique",
+        "Etant donne une date future, alors la selection est refusee",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "7.1",
+      "phase": 7,
+      "phaseName": "Categories, plafonds & alertes",
+      "us": "US-025",
+      "plan": "free",
+      "title": "Liste des categories avec plafonds mensuels",
+      "description": "En tant que chef de foyer, je veux voir toutes mes categories avec le consomme et le plafond, afin de piloter mes enveloppes.",
+      "acceptanceCriteria": [
+        "Etant donne l'onglet Categories, alors chaque ligne affiche icone, nom, depense / plafond, barre de progression et pourcentage",
+        "Etant donne une categorie au-dela de 100%, alors sa barre et son pourcentage passent en couleur d'alerte",
+        "Etant donne le mois selectionne, alors les valeurs correspondent a ce mois",
+        "Quand je tape une categorie, alors son detail s'ouvre",
+        "Regle metier : Categories par defaut Maroc : Logement, Alimentation, Ecole & enfants, Transport, Zakat & dons, Autres",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "7.2",
+      "phase": 7,
+      "phaseName": "Categories, plafonds & alertes",
+      "us": "US-026",
+      "plan": "free",
+      "title": "Alerte de depassement de plafond",
+      "description": "En tant que chef de foyer, je veux etre alerte quand une categorie depasse son plafond, afin de reagir avant la fin du mois.",
+      "acceptanceCriteria": [
+        "Etant donne une categorie depassee, alors un bandeau d'alerte en haut de l'ecran Categories indique la categorie et le montant de depassement",
+        "Etant donne l'atteinte du seuil configure, alors une notification push est envoyee (si autorisee)",
+        "Etant donne plusieurs categories depassees, alors le bandeau les agrege ('2 categories depassees')",
+        "Quand je tape le bandeau, alors le detail de la categorie concernee s'ouvre",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "7.3",
+      "phase": 7,
+      "phaseName": "Categories, plafonds & alertes",
+      "us": "US-027",
+      "plan": "free",
+      "title": "Detail d'une categorie",
+      "description": "En tant que chef de foyer, je veux voir le detail d'une categorie et ses transactions, afin de comprendre le depassement.",
+      "acceptanceCriteria": [
+        "Etant donne le detail, alors un grand anneau affiche le pourcentage consomme et le ratio depense / plafond",
+        "Etant donne le detail, alors 3 tuiles affichent Depense, Plafond et Reste (negatif si depasse)",
+        "Etant donne le detail, alors la liste des transactions du mois pour cette categorie est affichee avec date et membre",
+        "Quand je tape Modifier, alors l'ecran d'edition du plafond s'ouvre",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "7.4",
+      "phase": 7,
+      "phaseName": "Categories, plafonds & alertes",
+      "us": "US-028",
+      "plan": "free",
+      "title": "Edition du plafond mensuel avec presets",
+      "description": "En tant que chef de foyer, je veux ajuster le plafond d'une categorie rapidement, afin de coller a la realite de mon budget.",
+      "acceptanceCriteria": [
+        "Etant donne l'ecran Modifier le plafond, alors le montant actuel est editable au clavier numerique",
+        "Etant donne l'ecran, alors 4 presets rapides sont proposes (ex. 2 500 / 3 000 / 3 500 / 4 000) et selectionnent la valeur en un tap",
+        "Quand j'enregistre, alors le nouveau plafond s'applique au mois courant et aux mois suivants",
+        "Etant donne un plafond inferieur au deja depense, alors un avertissement de depassement immediat est affiche",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "7.5",
+      "phase": 7,
+      "phaseName": "Categories, plafonds & alertes",
+      "us": "US-031",
+      "plan": "free",
+      "title": "Limite de 3 categories en plan Gratuit",
+      "description": "En tant que editeur du produit, je veux limiter les categories a 3 en Gratuit, afin de creer une raison de passer Pro.",
+      "acceptanceCriteria": [
+        "Etant donne un plan Gratuit avec 3 categories, quand je tente d'en creer une 4e, alors le paywall Pro s'affiche",
+        "Etant donne un passage Gratuit -> Pro, alors la limite est levee immediatement",
+        "Etant donne un retour Pro -> Gratuit, alors les categories existantes restent lisibles mais aucune nouvelle ne peut etre creee",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "7.6",
+      "phase": 7,
+      "phaseName": "Categories, plafonds & alertes",
+      "us": "US-029",
+      "plan": "free",
+      "title": "Seuil d'alerte configurable par categorie",
+      "description": "En tant que chef de foyer, je veux choisir a quel pourcentage je suis prevenu, afin de anticiper plutot que subir.",
+      "acceptanceCriteria": [
+        "Etant donne l'edition du plafond, alors un selecteur permet de choisir le seuil (ex. 80%)",
+        "Etant donne un seuil de 80% et un plafond de 3 500, alors l'app indique 'Notification quand tu atteins 2 800 MAD'",
+        "Etant donne le franchissement du seuil, alors une notification est envoyee une seule fois par mois et par categorie",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "7.7",
+      "phase": 7,
+      "phaseName": "Categories, plafonds & alertes",
+      "us": "US-030",
+      "plan": "pro",
+      "title": "Report du reste au mois suivant (rollover)",
+      "description": "En tant que chef de foyer, je veux reporter le solde non depense d'une categorie, afin de lisser les depenses irregulieres.",
+      "acceptanceCriteria": [
+        "Etant donne l'edition du plafond, alors un interrupteur 'Reporter le reste au mois suivant' est disponible",
+        "Etant donne le report actif et un reste de 300 MAD en juin, alors le plafond de juillet est augmente de 300 MAD et l'origine du bonus est indiquee",
+        "Etant donne un depassement avec report actif, alors le deficit est deduit du plafond du mois suivant",
+        "Etant donne le report inactif, alors le plafond repart a sa valeur nominale chaque mois",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "8.1",
+      "phase": 8,
+      "phaseName": "Objectifs & coffres d'epargne",
+      "us": "US-032",
+      "plan": "free",
+      "title": "Liste des objectifs & coffres",
+      "description": "En tant que utilisateur qui epargne, je veux voir tous mes coffres et le total epargne, afin de mesurer mon effort d'epargne global.",
+      "acceptanceCriteria": [
+        "Etant donne des objectifs, alors un hero affiche le total epargne et le nombre de coffres",
+        "Etant donne chaque objectif, alors sont affiches nom, echeance (ou 'Sans echeance'), pourcentage et montant epargne / cible",
+        "Etant donne un objectif a 0%, alors il reste visible avec sa barre vide",
+        "Quand je tape un objectif, alors son detail s'ouvre",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "8.2",
+      "phase": 8,
+      "phaseName": "Objectifs & coffres d'epargne",
+      "us": "US-033",
+      "plan": "free",
+      "title": "Creation d'un objectif d'epargne",
+      "description": "En tant que utilisateur, je veux creer un coffre avec un nom, une cible et une echeance, afin de structurer un projet (Omra, voiture, urgence).",
+      "acceptanceCriteria": [
+        "Etant donne l'ecran Objectifs, quand je tape Ajouter, alors je saisis nom, montant cible et echeance optionnelle",
+        "Etant donne une echeance, alors l'app calcule et affiche le versement mensuel suggere",
+        "Etant donne un objectif cree, alors il apparait dans la liste et dans l'apercu du dashboard",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "8.3",
+      "phase": 8,
+      "phaseName": "Objectifs & coffres d'epargne",
+      "us": "US-034",
+      "plan": "free",
+      "title": "Detail d'un objectif avec versement suggere",
+      "description": "En tant que utilisateur qui epargne, je veux savoir combien mettre de cote chaque mois pour tenir l'echeance, afin de atteindre mon objectif a temps.",
+      "acceptanceCriteria": [
+        "Etant donne le detail d'un objectif, alors un hero affiche le pourcentage et le montant epargne / cible",
+        "Etant donne une echeance, alors les tuiles 'Reste a epargner' et 'Suggere / mois' sont calculees (reste / nombre de mois restants) avec le nombre de mois affiche",
+        "Etant donne un objectif sans echeance, alors la tuile Suggere / mois est masquee",
+        "Etant donne une echeance depassee, alors un etat 'En retard' est affiche",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "8.4",
+      "phase": 8,
+      "phaseName": "Objectifs & coffres d'epargne",
+      "us": "US-035",
+      "plan": "free",
+      "title": "Versements sur un objectif et historique",
+      "description": "En tant que utilisateur qui epargne, je veux ajouter de l'argent a un coffre et voir l'historique des versements, afin de suivre qui a contribue et quand.",
+      "acceptanceCriteria": [
+        "Etant donne le detail d'un objectif, quand je tape 'Ajouter de l'argent', alors je saisis un montant et un libelle",
+        "Etant donne un versement, alors il apparait en tete de l'historique avec date, membre et montant positif, et la progression est mise a jour",
+        "Etant donne un objectif atteint (100%), alors une celebration est affichee et l'objectif passe en statut Atteint",
+        "Etant donne un versement errone, alors je peux le supprimer et la progression est recalculee",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "9.1",
+      "phase": 9,
+      "phaseName": "Tontine (daret / ROSCA)",
+      "us": "US-036",
+      "plan": "pro",
+      "title": "Vue d'ensemble d'une tontine (daret)",
+      "description": "En tant que participant a une daret, je veux voir la cagnotte, le nombre de membres et le tour en cours, afin de suivre ma tontine sans carnet papier.",
+      "acceptanceCriteria": [
+        "Etant donne une tontine, alors l'ecran affiche son nom, le nombre de membres, la cagnotte par tour et 'Tour X sur N - {mois}'",
+        "Etant donne une cagnotte, alors elle est calculee comme cotisation individuelle x nombre de membres",
+        "Etant donne aucune tontine, alors un etat vide propose d'en creer une",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "9.2",
+      "phase": 9,
+      "phaseName": "Tontine (daret / ROSCA)",
+      "us": "US-037",
+      "plan": "pro",
+      "title": "Creation et parametrage d'une tontine",
+      "description": "En tant que organisateur, je veux creer une tontine avec ses membres, la cotisation et l'ordre des tours, afin de digitaliser un groupe existant.",
+      "acceptanceCriteria": [
+        "Etant donne la creation, alors je saisis nom, cotisation par membre, periodicite et liste des membres",
+        "Etant donne les membres, alors je definis l'ordre des tours par glisser-deposer",
+        "Etant donne la creation validee, alors le calendrier des tours est genere automatiquement",
+        "Etant donne un membre ajoute, alors la cagnotte et le nombre de tours sont recalcules",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "9.3",
+      "phase": 9,
+      "phaseName": "Tontine (daret / ROSCA)",
+      "us": "US-038",
+      "plan": "pro",
+      "title": "Mise en avant de mon tour",
+      "description": "En tant que participant, je veux savoir quand vient mon tour et combien je recevrai, afin de planifier mes projets.",
+      "acceptanceCriteria": [
+        "Etant donne l'ecran tontine, alors une carte mise en evidence indique 'Ton tour arrive en {mois} (tour N). Tu recevras {montant}'",
+        "Etant donne que c'est mon tour ce cycle, alors la carte passe en etat 'C'est ton tour' avec le montant a recevoir",
+        "Etant donne mon tour passe, alors la carte affiche l'historique de ce que j'ai recu",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "9.4",
+      "phase": 9,
+      "phaseName": "Tontine (daret / ROSCA)",
+      "us": "US-039",
+      "plan": "pro",
+      "title": "Suivi des paiements du tour en cours",
+      "description": "En tant que organisateur de la daret, je veux cocher qui a paye ce tour, afin de relancer les retardataires.",
+      "acceptanceCriteria": [
+        "Etant donne le tour en cours, alors un compteur affiche 'X / N paye'",
+        "Etant donne chaque membre, alors sont affiches avatar, nom, montant et statut (Paye / En attente)",
+        "Etant donne le beneficiaire du tour, alors il est identifie par un badge 'beneficiaire - recoit ce tour'",
+        "Quand je change le statut d'un membre, alors le compteur se met a jour immediatement",
+        "Etant donne tous les membres payes, alors le tour peut etre cloture et le tour suivant devient courant",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "9.5",
+      "phase": 9,
+      "phaseName": "Tontine (daret / ROSCA)",
+      "us": "US-040",
+      "plan": "pro",
+      "title": "Calendrier des tours",
+      "description": "En tant que participant, je veux voir la frise des tours du cycle, afin de situer le tour en cours et le mien.",
+      "acceptanceCriteria": [
+        "Etant donne le calendrier, alors chaque tour est represente par mois et numero, en frise horizontale scrollable",
+        "Etant donne les tours passes, alors ils sont grises ; le tour courant est mis en evidence ; mon tour porte le libelle 'Toi'",
+        "Etant donne le RTL, alors la frise se lit et defile de droite a gauche",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "10.1",
+      "phase": 10,
+      "phaseName": "Zakat & mode Ramadan",
+      "us": "US-041",
+      "plan": "pro",
+      "title": "Mode Ramadan (theme saisonnier)",
+      "description": "En tant que famille musulmane, je veux un dashboard adapte au Ramadan, afin de gerer un budget qui change de nature ce mois-la.",
+      "acceptanceCriteria": [
+        "Etant donne le mode Ramadan actif, alors l'identite visuelle du dashboard bascule (palette doree/nuit) et l'en-tete affiche 'Mode Ramadan'",
+        "Etant donne le mode actif, alors le hero affiche le budget Ramadan restant, l'enveloppe totale et le nombre de jours restants",
+        "Etant donne le mode actif, alors des tuiles specifiques sont proposees : Iftar & Suhoor, Zakat al-Fitr, Aid & cadeaux, Invites & famille",
+        "Etant donne le mode actif, alors une entree 'Calculer ma Zakat' est affichee avec le rappel du taux 2,5%",
+        "Etant donne la fin du Ramadan, alors l'app propose de revenir au theme standard",
+        "Regle metier : Le mode peut etre active manuellement dans Profil > Theme saisonnier, ou propose automatiquement selon le calendrier hegirien",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "10.2",
+      "phase": 10,
+      "phaseName": "Zakat & mode Ramadan",
+      "us": "US-042",
+      "plan": "pro",
+      "title": "Calculateur de Zakat",
+      "description": "En tant que utilisateur musulman, je veux calculer ma zakat a partir de mes avoirs, afin de m'acquitter du montant juste.",
+      "acceptanceCriteria": [
+        "Etant donne le calculateur, alors je saisis Liquidites & comptes, Or & argent, Investissements et Dettes a deduire",
+        "Etant donne mes saisies, alors la base zakatable = actifs - dettes est affichee en direct",
+        "Etant donne une base superieure au nisab, alors la zakat due = 2,5% de la base est affichee dans un hero avec le statut 'Au-dessus du nisab - Zakat obligatoire'",
+        "Etant donne une base inferieure au nisab, alors le statut indique que la zakat n'est pas due",
+        "Etant donne le calcul, alors le nisab de reference (85 g d'or) est affiche converti dans la devise du foyer",
+        "Regle metier : Taux : 2,5% ; Nisab : contre-valeur de 85 g d'or, parametrable et date",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "10.3",
+      "phase": 10,
+      "phaseName": "Zakat & mode Ramadan",
+      "us": "US-044",
+      "plan": "free",
+      "title": "Categorie Zakat & dons avec plafond",
+      "description": "En tant que utilisateur musulman, je veux une categorie dediee aux dons, afin de suivre ma generosite comme le reste du budget.",
+      "acceptanceCriteria": [
+        "Etant donne un marche MENA/Golfe, alors la categorie 'Zakat & dons' fait partie des categories par defaut",
+        "Etant donne cette categorie, alors elle se comporte comme les autres (plafond, alerte, detail)",
+        "Etant donne un marche non concerne, alors la categorie reste creable mais non proposee par defaut",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "10.4",
+      "phase": 10,
+      "phaseName": "Zakat & mode Ramadan",
+      "us": "US-043",
+      "plan": "pro",
+      "title": "Enregistrement et planification du don de Zakat",
+      "description": "En tant que utilisateur musulman, je veux enregistrer ma zakat calculee et planifier son versement, afin de ne pas oublier de m'en acquitter.",
+      "acceptanceCriteria": [
+        "Etant donne un calcul, quand je tape 'Enregistrer & planifier le don', alors le montant est sauvegarde avec sa date de calcul",
+        "Etant donne une zakat planifiee, alors elle est rattachee a la categorie Zakat & dons et impacte son plafond une fois versee",
+        "Etant donne une echeance planifiee, alors un rappel est envoye a la date choisie",
+        "Etant donne un historique, alors les zakats des annees precedentes sont consultables",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "11.1",
+      "phase": 11,
+      "phaseName": "Transferts diaspora",
+      "us": "US-045",
+      "plan": "pro",
+      "title": "Suivi annuel des transferts vers le pays d'origine",
+      "description": "En tant que membre de la diaspora, je veux voir le total envoye cette annee et son equivalent dans la devise du pays d'origine, afin de mesurer mon effort reel de soutien familial.",
+      "acceptanceCriteria": [
+        "Etant donne l'ecran Transferts, alors le total envoye sur l'annee est affiche avec sa contre-valeur approximative et le nombre de transferts",
+        "Etant donne l'ecran, alors un rappel indique que les envois sont enregistres manuellement et que l'app n'est pas un service de transfert",
+        "Etant donne un changement d'annee, alors le compteur repart a zero et l'annee precedente reste consultable",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "11.2",
+      "phase": 11,
+      "phaseName": "Transferts diaspora",
+      "us": "US-046",
+      "plan": "pro",
+      "title": "Beneficiaires recurrents",
+      "description": "En tant que membre de la diaspora, je veux enregistrer mes beneficiaires habituels, afin de saisir un envoi en deux taps.",
+      "acceptanceCriteria": [
+        "Etant donne l'ecran Transferts, alors mes beneficiaires sont listes avec avatar, nom, lien de parente et rythme (ex. '300 EUR / mois' ou 'occasionnel')",
+        "Quand je selectionne un beneficiaire, alors le formulaire d'envoi est pre-rempli avec son montant habituel",
+        "Etant donne un beneficiaire, alors je peux le modifier ou le supprimer sans perdre l'historique",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "11.3",
+      "phase": 11,
+      "phaseName": "Transferts diaspora",
+      "us": "US-047",
+      "plan": "pro",
+      "title": "Enregistrement d'un transfert avec methode et conversion",
+      "description": "En tant que membre de la diaspora, je veux journaliser un envoi avec le canal utilise et le taux applique, afin de garder une trace fidele.",
+      "acceptanceCriteria": [
+        "Etant donne le formulaire, alors je saisis beneficiaire, montant, date et methode (ex. Wise, especes, autre)",
+        "Etant donne un montant, alors la contre-valeur dans la devise du pays d'origine est calculee et affichee avant enregistrement",
+        "Etant donne un transfert enregistre, alors il apparait dans l'historique avec date, methode et contre-valeur, et alimente le total annuel",
+        "Etant donne un raccourci 'Envoyer au {pays}' sur le dashboard, alors il ouvre directement ce formulaire",
+        "Regle metier : Le taux de change est indicatif et sa date/source doivent etre indiquees ; un taux manuel peut etre saisi",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "12.1",
+      "phase": 12,
+      "phaseName": "Dettes informelles",
+      "us": "US-048",
+      "plan": "pro",
+      "title": "Vue nette des dettes informelles",
+      "description": "En tant que utilisateur, je veux voir d'un coup ce qu'on me doit et ce que je dois, afin de me souvenir sans gener personne.",
+      "acceptanceCriteria": [
+        "Etant donne l'ecran Dettes & prets, alors deux totaux sont affiches : 'On me doit' et 'Je dois'",
+        "Etant donne l'ecran, alors un sous-titre precise 'Entre proches - sans interet, juste pour se souvenir'",
+        "Etant donne les deux sections, alors chaque ligne affiche avatar, nom, date du pret et echeance (ou 'pas d'echeance') et le montant",
+        "Etant donne aucune dette, alors un etat vide invite a en ajouter une",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "12.2",
+      "phase": 12,
+      "phaseName": "Dettes informelles",
+      "us": "US-049",
+      "plan": "pro",
+      "title": "Ajout d'une dette ou d'un pret",
+      "description": "En tant que utilisateur, je veux enregistrer un pret ou un emprunt entre proches, afin de ne pas oublier de rembourser ou de reclamer.",
+      "acceptanceCriteria": [
+        "Etant donne le formulaire, alors je choisis le sens (on me doit / je dois), la personne, le montant, la date et une echeance optionnelle",
+        "Etant donne une echeance ce mois, alors la ligne affiche un rappel visuel ('echeance ce mois')",
+        "Etant donne une dette enregistree, alors les totaux nets sont recalcules",
+        "Etant donne une echeance atteinte, alors une notification de rappel est envoyee",
+        "Regle metier : Aucun interet n'est jamais calcule ni propose (conformite culturelle et religieuse)",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "12.3",
+      "phase": 12,
+      "phaseName": "Dettes informelles",
+      "us": "US-050",
+      "plan": "pro",
+      "title": "Remboursement total ou partiel d'une dette",
+      "description": "En tant que utilisateur, je veux marquer une dette comme remboursee, meme partiellement, afin de que le solde reste juste.",
+      "acceptanceCriteria": [
+        "Quand j'ouvre une dette, alors je peux enregistrer un remboursement total ou partiel avec sa date",
+        "Etant donne un remboursement partiel, alors le montant restant du est mis a jour et l'historique conserve chaque versement",
+        "Etant donne un remboursement total, alors la dette passe en statut Soldee et sort des totaux",
+        "Etant donne une dette soldee, alors elle reste consultable dans l'historique",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "13.1",
+      "phase": 13,
+      "phaseName": "Foyer & membres",
+      "us": "US-054",
+      "plan": "free",
+      "title": "Limite de 1 membre en plan Gratuit",
+      "description": "En tant que editeur du produit, je veux reserver le multi-membres au plan Pro, afin de monetiser l'usage familial.",
+      "acceptanceCriteria": [
+        "Etant donne un plan Gratuit, quand je tente d'inviter un membre, alors le paywall Pro s'affiche",
+        "Etant donne un plan Pro, alors le nombre de membres est illimite",
+        "Etant donne un retour Pro -> Gratuit avec 3 membres, alors le foyer passe en lecture seule pour les membres supplementaires sans perte de donnees",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "13.2",
+      "phase": 13,
+      "phaseName": "Foyer & membres",
+      "us": "US-051a",
+      "plan": "pro",
+      "title": "Generation et acceptation d'un lien d'invitation",
+      "description": "En tant que administrateur du foyer, je veux inviter un proche a rejoindre le budget, afin de que chacun saisisse ses depenses.",
+      "acceptanceCriteria": [
+        "Un lien d'invitation unique est genere pour le foyer",
+        "Le lien expire apres le delai defini et ne peut servir qu'une seule fois (tests unitaires)",
+        "Quand l'invite accepte, il apparait dans la liste des membres",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "13.3",
+      "phase": 13,
+      "phaseName": "Foyer & membres",
+      "us": "US-051b",
+      "plan": "pro",
+      "title": "Ecran Inviter un membre (formulaire et canaux d'envoi)",
+      "description": "En tant que administrateur du foyer, je veux inviter un proche a rejoindre le budget, afin de que chacun saisisse ses depenses.",
+      "acceptanceCriteria": [
+        "L'ecran explique que chaque membre saisit ses depenses et que l'admin choisit ses droits",
+        "Le formulaire comporte le nom et le choix du role",
+        "L'envoi via WhatsApp et l'action Copier le lien fonctionnent",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "13.4",
+      "phase": 13,
+      "phaseName": "Foyer & membres",
+      "us": "US-052",
+      "plan": "pro",
+      "title": "Roles et permissions des membres",
+      "description": "En tant que administrateur du foyer, je veux definir si un membre peut modifier ou seulement consulter, afin de garder le controle du budget.",
+      "acceptanceCriteria": [
+        "Etant donne l'invitation, alors deux roles sont proposes : Peut modifier et Lecture seule",
+        "Etant donne un membre en Lecture seule, alors les actions de creation, modification et suppression sont masquees ou desactivees",
+        "Etant donne un administrateur, alors il peut changer le role d'un membre ou le retirer du foyer a tout moment",
+        "Etant donne un membre retire, alors ses transactions passees restent dans l'historique du foyer",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "13.5",
+      "phase": 13,
+      "phaseName": "Foyer & membres",
+      "us": "US-053",
+      "plan": "free",
+      "title": "Liste des membres du foyer",
+      "description": "En tant que membre du foyer, je veux voir qui compose le foyer, afin de savoir avec qui je partage le budget.",
+      "acceptanceCriteria": [
+        "Etant donne le profil, alors la section Famille affiche les avatars empiles et le nombre de membres",
+        "Quand je tape la section, alors la liste detaillee avec roles s'ouvre",
+        "Etant donne un plan Gratuit, alors seul 1 membre est present et une invite au Pro est affichee",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "14.1",
+      "phase": 14,
+      "phaseName": "Profil, reglages & themes",
+      "us": "US-055",
+      "plan": "free",
+      "title": "Ecran Profil",
+      "description": "En tant que utilisateur, je veux un ecran qui regroupe mon identite et mes reglages, afin de tout retrouver au meme endroit.",
+      "acceptanceCriteria": [
+        "Etant donne le profil, alors sont affiches avatar, nom, foyer et pays",
+        "Etant donne un abonnement Pro actif, alors un badge Pro est affiche sur la carte de profil",
+        "Etant donne le profil, alors les sections Preferences, Affichage et Famille sont accessibles",
+        "Etant donne un plan Gratuit, alors une entree de mise a niveau vers Pro est visible",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "14.2",
+      "phase": 14,
+      "phaseName": "Profil, reglages & themes",
+      "us": "US-056",
+      "plan": "free",
+      "title": "Changement de langue depuis les reglages",
+      "description": "En tant que utilisateur, je veux changer la langue apres l'onboarding, afin de adapter l'app a moi ou a un proche.",
+      "acceptanceCriteria": [
+        "Etant donne Preferences > Langue, alors la langue actuelle est affichee et modifiable",
+        "Quand je passe du francais a l'arabe, alors toute l'interface bascule en RTL sans redemarrage",
+        "Etant donne un changement de langue, alors les libelles des categories par defaut sont traduits, mais les libelles saisis par l'utilisateur restent inchanges",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "14.3",
+      "phase": 14,
+      "phaseName": "Profil, reglages & themes",
+      "us": "US-057",
+      "plan": "free",
+      "title": "Selecteur de pays & devise avec recherche",
+      "description": "En tant que utilisateur qui demenage ou voyage, je veux changer de pays et de devise, afin de que mon budget reste coherent avec ma vie.",
+      "acceptanceCriteria": [
+        "Etant donne le selecteur, alors un champ de recherche filtre les pays en temps reel",
+        "Etant donne la liste, alors les pays sont groupes par region (MENA & Golfe, Diaspora) avec drapeau, nom et devise",
+        "Etant donne le pays selectionne, alors il est mis en evidence en tete avec un exemple de montant formate",
+        "Quand je change de devise, alors une confirmation explique le traitement des montants existants (conservation de l'historique dans la devise d'origine)",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "14.4",
+      "phase": 14,
+      "phaseName": "Profil, reglages & themes",
+      "us": "US-059",
+      "plan": "free",
+      "title": "Mode sombre",
+      "description": "En tant que utilisateur, je veux un mode sombre, afin de consulter mon budget le soir sans etre eblou.",
+      "acceptanceCriteria": [
+        "Etant donne Affichage > Mode sombre, alors un interrupteur active le theme sombre immediatement",
+        "Etant donne le mode sombre, alors tous les ecrans respectent les tokens sombres avec un contraste minimal AA (4.5:1)",
+        "Etant donne le mode sombre, alors les couleurs semantiques (alerte, succes) restent distinguables",
+        "Etant donne le reglage systeme, alors l'app peut le suivre automatiquement",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "14.5",
+      "phase": 14,
+      "phaseName": "Profil, reglages & themes",
+      "us": "US-060",
+      "plan": "free",
+      "title": "Mode senior",
+      "description": "En tant que utilisateur senior, je veux un affichage simplifie avec de grandes polices et un fort contraste, afin de gerer mon budget sans lunettes ni aide.",
+      "acceptanceCriteria": [
+        "Etant donne le mode senior actif, alors les tailles de texte sont augmentees et les contrastes renforces",
+        "Etant donne le mode senior, alors le dashboard est simplifie : salutation, reste ce mois, revenus/depenses, dernieres depenses",
+        "Etant donne le mode senior, alors les elements secondaires (anneau, promo vocale, chips) sont masques et la navigation est reduite",
+        "Etant donne le mode senior, alors les cibles tactiles font au moins 56x56 pt",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "14.6",
+      "phase": 14,
+      "phaseName": "Profil, reglages & themes",
+      "us": "US-058",
+      "plan": "pro",
+      "title": "Theme saisonnier",
+      "description": "En tant que utilisateur, je veux activer ou desactiver le theme saisonnier, afin de que l'app colle a mon calendrier.",
+      "acceptanceCriteria": [
+        "Etant donne Preferences > Theme saisonnier, alors je peux choisir Aucun ou Ramadan",
+        "Etant donne le theme Ramadan choisi, alors le dashboard bascule en mode Ramadan",
+        "Etant donne l'approche du Ramadan, alors l'app propose l'activation via une notification, refusable definitivement",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "15.1",
+      "phase": 15,
+      "phaseName": "Multi-marches & conversion",
+      "us": "US-063",
+      "plan": "free",
+      "title": "Categories et modules localises par marche",
+      "description": "En tant que utilisateur d'un marche donne, je veux des categories et fonctions qui correspondent a ma realite, afin de ne pas avoir a tout reconfigurer.",
+      "acceptanceCriteria": [
+        "Etant donne le marche France (diaspora), alors la categorie 'Transfert famille' remplace la tontine et le module Transferts est mis en avant",
+        "Etant donne le marche Golfe, alors les categories par defaut incluent Logement, Transfert aux proches et Ecoles des enfants",
+        "Etant donne le marche Maroc, alors les modules Tontine et Zakat sont proposes par defaut",
+        "Etant donne un changement de pays, alors les modules sont reproposes sans supprimer les donnees deja saisies",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "15.2",
+      "phase": 15,
+      "phaseName": "Multi-marches & conversion",
+      "us": "US-064",
+      "plan": "pro",
+      "title": "Conversion vers la devise du pays d'origine",
+      "description": "En tant que membre de la diaspora, je veux voir l'equivalent de mes montants dans la devise de mon pays d'origine, afin de raisonner dans les deux mondes.",
+      "acceptanceCriteria": [
+        "Etant donne un foyer diaspora, alors une devise secondaire (pays d'origine) est configurable",
+        "Etant donne une devise secondaire, alors les transferts et le raccourci d'envoi affichent la contre-valeur approximative avec le signe ≈",
+        "Etant donne un taux, alors sa date de mise a jour est consultable et un mode hors ligne utilise le dernier taux connu",
+        "Etant donne une conversion, alors elle est toujours presentee comme indicative",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "16.1",
+      "phase": 16,
+      "phaseName": "Monetisation freemium",
+      "us": "US-065",
+      "plan": "free",
+      "title": "Paywall Pro avec tableau comparatif",
+      "description": "En tant que utilisateur Gratuit, je veux comprendre exactement ce que Pro m'apporte, afin de decider en connaissance de cause.",
+      "acceptanceCriteria": [
+        "Etant donne le paywall, alors un tableau compare Gratuit et Pro sur : suivi depenses & revenus, categories & plafonds (3 max), membres (1 / illimite), saisie vocale, tontine & dettes, zakat & mode Ramadan",
+        "Etant donne le paywall, alors la promesse 'Toujours zero connexion bancaire' est rappelee",
+        "Etant donne le paywall, alors il est fermable sans souscription et l'utilisateur revient a son ecran precedent",
+        "Etant donne un declencheur (limite atteinte), alors la ligne correspondante du tableau est mise en evidence",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "16.2",
+      "phase": 16,
+      "phaseName": "Monetisation freemium",
+      "us": "US-066a",
+      "plan": "free",
+      "title": "Integration des achats in-app (RevenueCat ou expo-in-app-purchases)",
+      "description": "En tant que utilisateur interesse par Pro, je veux choisir entre mensuel et annuel, afin de payer comme cela m'arrange.",
+      "acceptanceCriteria": [
+        "Les produits mensuel et annuel sont declares et recuperes depuis le store",
+        "L'achat debloque le plan Pro et l'etat est persiste localement",
+        "L'action Restaurer les achats fonctionne sur un nouvel appareil",
+        "Les erreurs d'achat (annulation, reseau) sont gerees sans crash",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "16.3",
+      "phase": 16,
+      "phaseName": "Monetisation freemium",
+      "us": "US-066b",
+      "plan": "free",
+      "title": "Affichage des formules tarifaires sur le paywall",
+      "description": "En tant que utilisateur interesse par Pro, je veux choisir entre mensuel et annuel, afin de payer comme cela m'arrange.",
+      "acceptanceCriteria": [
+        "Deux options affichees : Mensuel 39 MAD/mois et Annuel 279 MAD/an avec badge -40%",
+        "L'option annuelle est pre-selectionnee par defaut",
+        "Sur un marche autre que le Maroc, les prix s'affichent dans la devise locale selon la grille du marche",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "16.4",
+      "phase": 16,
+      "phaseName": "Monetisation freemium",
+      "us": "US-067",
+      "plan": "free",
+      "title": "Essai gratuit de 14 jours",
+      "description": "En tant que utilisateur hesitant, je veux essayer Pro sans engagement, afin de verifier que ca vaut le prix.",
+      "acceptanceCriteria": [
+        "Etant donne le paywall, alors le CTA principal propose l'essai de 14 jours avec la mention 'sans engagement, annulable a tout moment'",
+        "Etant donne un essai demarre, alors toutes les fonctions Pro sont debloquees immediatement",
+        "Etant donne un essai en cours, alors le nombre de jours restants est visible dans le profil",
+        "Etant donne la fin de l'essai sans conversion, alors le compte repasse en Gratuit sans perte de donnees",
+        "Etant donne un utilisateur ayant deja utilise son essai, alors il ne peut pas en redemarrer un",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "16.5",
+      "phase": 16,
+      "phaseName": "Monetisation freemium",
+      "us": "US-068",
+      "plan": "free",
+      "title": "Verrouillage des fonctions Pro (gating)",
+      "description": "En tant que editeur du produit, je veux que les fonctions Pro soient verrouillees mais visibles, afin de faire desirer l'abonnement sans frustrer.",
+      "acceptanceCriteria": [
+        "Etant donne un plan Gratuit, alors les entrees Pro (saisie vocale, tontine, dettes, zakat, mode Ramadan) sont visibles avec un cadenas",
+        "Quand je tape une fonction verrouillee, alors le paywall s'ouvre avec la fonction concernee mise en avant",
+        "Etant donne une souscription active, alors tous les verrous disparaissent au plus tard a la reprise de l'app",
+        "Etant donne une expiration d'abonnement, alors les donnees Pro restent consultables en lecture seule",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "16.6",
+      "phase": 16,
+      "phaseName": "Monetisation freemium",
+      "us": "US-069",
+      "plan": "pro",
+      "title": "Gestion de l'abonnement",
+      "description": "En tant que abonne Pro, je veux voir et gerer mon abonnement, afin de le resilier ou le changer facilement.",
+      "acceptanceCriteria": [
+        "Etant donne le profil d'un abonne, alors le plan, la date de renouvellement et un acces a la gestion de l'abonnement sont affiches",
+        "Etant donne une resiliation, alors Pro reste actif jusqu'a la fin de la periode payee",
+        "Etant donne un changement d'appareil, alors une action 'Restaurer les achats' est disponible",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
+        "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
+      ],
+      "done": false
+    },
+    {
+      "id": "17.1",
+      "phase": 17,
+      "phaseName": "Confidentialite & sauvegarde",
+      "us": "US-072",
+      "plan": "free",
+      "title": "Garantie 'aucune connexion bancaire'",
+      "description": "En tant que utilisateur, je veux la certitude qu'aucun acces bancaire n'est demande, afin de utiliser l'app sans risque.",
+      "acceptanceCriteria": [
+        "Etant donne l'app, alors aucun ecran ne demande d'identifiants bancaires, de RIB ou de carte hors tunnel d'abonnement de la plateforme",
+        "Etant donne le parcours (bienvenue, confidentialite, dashboard, paywall), alors la promesse zero banque est rappelee a chaque etape cle",
+        "Etant donne une future integration tierce, alors elle ne peut pas contredire cette promesse sans opt-in explicite et documente",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)"
+      ],
+      "done": false
+    },
+    {
+      "id": "17.2",
+      "phase": 17,
+      "phaseName": "Confidentialite & sauvegarde",
+      "us": "US-071a",
+      "plan": "free",
+      "title": "Chiffrement et export de la sauvegarde",
+      "description": "En tant que utilisateur, je veux activer une sauvegarde chiffree, afin de ne pas tout perdre en cas de perte du telephone.",
+      "acceptanceCriteria": [
+        "La sauvegarde est desactivee par defaut et necessite une activation explicite",
+        "Les donnees sont chiffrees de bout en bout avant tout envoi (cle derivee cote client, test unitaire)",
+        "La desactivation supprime les sauvegardes distantes",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)"
+      ],
+      "done": false
+    },
+    {
+      "id": "17.3",
+      "phase": 17,
+      "phaseName": "Confidentialite & sauvegarde",
+      "us": "US-071b",
+      "plan": "free",
+      "title": "Restauration d'une sauvegarde",
+      "description": "En tant que utilisateur, je veux activer une sauvegarde chiffree, afin de ne pas tout perdre en cas de perte du telephone.",
+      "acceptanceCriteria": [
+        "La restauration exige une authentification du compte",
+        "La date de la derniere sauvegarde reussie est affichee dans les reglages",
+        "Une restauration sur appareil vierge reconstitue foyer, transactions, categories et objectifs (test d'integration)",
+        "npm run typecheck passe sans erreur",
+        "npm test passe (tests unitaires couvrant les criteres ci-dessus)"
+      ],
+      "done": false
+    }
+  ]
+}
