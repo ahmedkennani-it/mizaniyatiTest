@@ -104,7 +104,7 @@
         "README court decrivant comment lancer l'app et les tests",
         "npm run typecheck passe sans erreur"
       ],
-      "done": false
+      "done": true
     },
     {
       "id": "1.2",
