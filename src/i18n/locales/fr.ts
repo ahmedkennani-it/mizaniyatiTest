@@ -16,6 +16,7 @@ export const fr = {
     label: 'Langue',
     french: 'Français',
     arabic: 'العربية',
+    english: 'English',
   },
   expense: {
     label: 'Libellé de la dépense',
@@ -41,7 +42,8 @@ export const fr = {
     breakdownTitle: 'Répartition par catégorie',
     breakdownEmpty: 'Aucune dépense catégorisée ce mois-ci.',
     recentTitle: 'Dernières opérations',
-    emptyState: 'Aucune opération pour le moment. Appuyez sur « Ajouter une opération » pour commencer.',
+    emptyState:
+      'Aucune opération pour le moment. Appuyez sur « Ajouter une opération » pour commencer.',
     greeting: 'Bonjour',
     household: 'Ma famille',
     balanceIncome: 'Revenus',
@@ -338,7 +340,8 @@ export const fr = {
     upsellMessage: 'Le mode Ramadan fait partie du forfait Pro.',
     upsellCta: 'Passez à un forfait supérieur pour activer le mode Ramadan.',
     setupTitle: 'Configurer le mode Ramadan',
-    setupDescription: 'Définissez une enveloppe dédiée et les dates du mois (ajustables manuellement).',
+    setupDescription:
+      'Définissez une enveloppe dédiée et les dates du mois (ajustables manuellement).',
     envelopeLabel: 'Enveloppe Ramadan',
     envelopePlaceholder: '0.00',
     startDateLabel: 'Date de début',
@@ -381,7 +384,8 @@ export const fr = {
     delete: 'Supprimer',
     errorName: 'Saisissez un nom de membre.',
     deleteBlockedLastMember: 'Vous devez conserver au moins un membre.',
-    deleteReassignMessage: 'Ce membre a {{count}} opération(s). Choisissez un membre de remplacement :',
+    deleteReassignMessage:
+      'Ce membre a {{count}} opération(s). Choisissez un membre de remplacement :',
     deleteReassignConfirm: 'Réaffecter et supprimer',
     deleteConfirmMessage: 'Supprimer définitivement ce membre ?',
     deleteConfirmYes: 'Oui, supprimer',
@@ -483,7 +487,7 @@ export const fr = {
   onboarding: {
     welcomeTitle: 'Bienvenue sur Mizaniyati',
     welcomeSubtitle:
-      'Choisissez votre langue et votre pays pour adapter la devise, les catégories et l\'affichage.',
+      "Choisissez votre langue et votre pays pour adapter la devise, les catégories et l'affichage.",
     languageLabel: 'Langue',
     countryLabel: 'Pays',
     countryMorocco: 'Maroc',

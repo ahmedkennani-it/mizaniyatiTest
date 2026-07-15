@@ -38,7 +38,10 @@ export function computeSeasonalThemeStatus(
     (transaction) => transaction.type === 'expense' && themeCategoryIds.has(transaction.categoryId),
   );
 
-  const spentMinor = themeTransactions.reduce((sum, transaction) => sum + transaction.amountMinor, 0);
+  const spentMinor = themeTransactions.reduce(
+    (sum, transaction) => sum + transaction.amountMinor,
+    0,
+  );
   const remainingMinor = theme.envelopeMinor - spentMinor;
 
   const endOfDay = new Date(`${theme.endDate}T23:59:59.999Z`).getTime();

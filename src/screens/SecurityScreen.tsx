@@ -2,7 +2,14 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AppScreen, Button, Card, IconTile, ScreenHeader, TextField, Txt } from '../components';
-import { biometricClient, disableAppLock, disableBiometric, enableBiometric, setPinLock, useAppLock } from '../security';
+import {
+  biometricClient,
+  disableAppLock,
+  disableBiometric,
+  enableBiometric,
+  setPinLock,
+  useAppLock,
+} from '../security';
 import { useTheme } from '../theme';
 
 export interface SecurityScreenProps {
@@ -121,21 +128,36 @@ export function SecurityScreen({ onBack }: SecurityScreenProps) {
               errorMessage={error}
             />
             <Button label={t('securityScreen.savePinButton')} onPress={handleSavePin} />
-            <Button label={t('securityScreen.cancel')} variant="secondary" onPress={() => setShowPinSetup(false)} />
+            <Button
+              label={t('securityScreen.cancel')}
+              variant="secondary"
+              onPress={() => setShowPinSetup(false)}
+            />
           </>
         ) : (
           <>
             {settings.mode === 'none' ? (
               <Button label={t('securityScreen.modePin')} onPress={() => openPinSetup(false)} />
             ) : (
-              <Button label={t('securityScreen.setPinTitle')} variant="secondary" onPress={() => openPinSetup(settings.mode === 'biometric')} />
+              <Button
+                label={t('securityScreen.setPinTitle')}
+                variant="secondary"
+                onPress={() => openPinSetup(settings.mode === 'biometric')}
+              />
             )}
 
             {settings.mode === 'pin' && biometricAvailable ? (
-              <Button label={t('securityScreen.enableBiometricButton')} onPress={handleEnableBiometric} />
+              <Button
+                label={t('securityScreen.enableBiometricButton')}
+                onPress={handleEnableBiometric}
+              />
             ) : null}
             {settings.mode === 'biometric' ? (
-              <Button label={t('securityScreen.disableBiometricButton')} variant="secondary" onPress={handleDisableBiometric} />
+              <Button
+                label={t('securityScreen.disableBiometricButton')}
+                variant="secondary"
+                onPress={handleDisableBiometric}
+              />
             ) : null}
 
             {hasHardware === false ? (
@@ -149,7 +171,11 @@ export function SecurityScreen({ onBack }: SecurityScreenProps) {
             ) : null}
 
             {settings.mode !== 'none' ? (
-              <Button label={t('securityScreen.disableLockButton')} variant="danger" onPress={handleDisableLock} />
+              <Button
+                label={t('securityScreen.disableLockButton')}
+                variant="danger"
+                onPress={handleDisableLock}
+              />
             ) : null}
           </>
         )}

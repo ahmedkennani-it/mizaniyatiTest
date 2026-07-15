@@ -10,7 +10,13 @@ export interface CardProps extends ViewProps {
   borderless?: boolean;
 }
 
-export function Card({ style, children, elevated = false, borderless = false, ...rest }: CardProps) {
+export function Card({
+  style,
+  children,
+  elevated = false,
+  borderless = false,
+  ...rest
+}: CardProps) {
   const { theme } = useTheme();
 
   return (

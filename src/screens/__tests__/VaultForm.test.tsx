@@ -14,7 +14,11 @@ jest.mock('../../db/client', () => ({
   getDatabase: () => mockFakeDb,
 }));
 
-function renderForm(vault?: Vault, onSaved: () => void = jest.fn(), onDeleted: () => void = jest.fn()) {
+function renderForm(
+  vault?: Vault,
+  onSaved: () => void = jest.fn(),
+  onDeleted: () => void = jest.fn(),
+) {
   return render(
     <ThemeProvider initialColorScheme="light">
       <VaultForm vault={vault} onSaved={onSaved} onCancel={jest.fn()} onDeleted={onDeleted} />
@@ -39,7 +43,11 @@ describe('VaultForm — création (US-023)', () => {
     expect(onSaved).toHaveBeenCalledTimes(1);
     const all = await listVaults(mockFakeDb);
     expect(all).toHaveLength(1);
-    expect(all[0]).toMatchObject({ name: 'Omra 2027', targetMinor: 3000000, deadline: '2027-06-01' });
+    expect(all[0]).toMatchObject({
+      name: 'Omra 2027',
+      targetMinor: 3000000,
+      deadline: '2027-06-01',
+    });
   });
 
   it('creates a vault without a deadline', async () => {

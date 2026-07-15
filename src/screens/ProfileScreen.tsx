@@ -29,7 +29,15 @@ import { DEFAULT_CURRENCY_CODE } from '../money';
 import { useTheme } from '../theme';
 
 /** Wraps `PlaceholderScreen` with a back link — for entry points to specs not built yet. */
-function ProfilePlaceholder({ title, message, onBack }: { title: string; message: string; onBack: () => void }) {
+function ProfilePlaceholder({
+  title,
+  message,
+  onBack,
+}: {
+  title: string;
+  message: string;
+  onBack: () => void;
+}) {
   const { theme } = useTheme();
   return (
     <AppScreen scroll contentStyle={{ gap: theme.spacing.md }}>
@@ -53,7 +61,15 @@ export function ProfileScreen() {
   const [budgetAlertsEnabled, setBudgetAlertsEnabledState] = useState(false);
   const [members, setMembers] = useState<Member[]>([]);
   const [view, setView] = useState<
-    'settings' | 'recurring' | 'vaults' | 'zakat' | 'ramadan' | 'members' | 'security' | 'subscription' | 'account'
+    | 'settings'
+    | 'recurring'
+    | 'vaults'
+    | 'zakat'
+    | 'ramadan'
+    | 'members'
+    | 'security'
+    | 'subscription'
+    | 'account'
   >('settings');
 
   const refresh = useCallback(() => {
@@ -77,7 +93,12 @@ export function ProfileScreen() {
   if (view === 'vaults') return <VaultsScreen onBack={() => setView('settings')} />;
   if (view === 'zakat') return <ZakatScreen onBack={() => setView('settings')} />;
   if (view === 'ramadan')
-    return <RamadanScreen onBack={() => setView('settings')} onNavigateToZakat={() => setView('zakat')} />;
+    return (
+      <RamadanScreen
+        onBack={() => setView('settings')}
+        onNavigateToZakat={() => setView('zakat')}
+      />
+    );
   if (view === 'members') return <MembersScreen onBack={() => setView('settings')} />;
   if (view === 'security') return <SecurityScreen onBack={() => setView('settings')} />;
   if (view === 'subscription') return <PaywallScreen onBack={() => setView('settings')} />;
@@ -109,7 +130,11 @@ export function ProfileScreen() {
             {`${t('home.disclaimer')}`}
           </Txt>
         </View>
-        <Pill label={DEFAULT_CURRENCY_CODE} background={theme.accents.teal.wash} color={theme.accents.teal.ink} />
+        <Pill
+          label={DEFAULT_CURRENCY_CODE}
+          background={theme.accents.teal.wash}
+          color={theme.accents.teal.ink}
+        />
       </Card>
 
       {/* Preferences */}
@@ -170,18 +195,60 @@ export function ProfileScreen() {
       {/* Family & features */}
       <View style={{ gap: theme.spacing.sm }}>
         <SectionHeader title={t('membersScreen.openLink')} />
-        <ListRow icon="users" accent="teal" title={t('membersScreen.openLink')} onPress={() => setView('members')} chevron />
-        <ListRow icon="calendar-clock" accent="blue" title={t('recurringRulesScreen.openLink')} onPress={() => setView('recurring')} chevron />
-        <ListRow icon="piggy-bank" accent="purple" title={t('vaultsScreen.openLink')} onPress={() => setView('vaults')} chevron />
-        <ListRow icon="hand-heart" accent="gold" title={t('zakatScreen.openLink')} onPress={() => setView('zakat')} chevron />
+        <ListRow
+          icon="users"
+          accent="teal"
+          title={t('membersScreen.openLink')}
+          onPress={() => setView('members')}
+          chevron
+        />
+        <ListRow
+          icon="calendar-clock"
+          accent="blue"
+          title={t('recurringRulesScreen.openLink')}
+          onPress={() => setView('recurring')}
+          chevron
+        />
+        <ListRow
+          icon="piggy-bank"
+          accent="purple"
+          title={t('vaultsScreen.openLink')}
+          onPress={() => setView('vaults')}
+          chevron
+        />
+        <ListRow
+          icon="hand-heart"
+          accent="gold"
+          title={t('zakatScreen.openLink')}
+          onPress={() => setView('zakat')}
+          chevron
+        />
       </View>
 
       {/* Account */}
       <View style={{ gap: theme.spacing.sm }}>
         <SectionHeader title={t('accountScreen.openLink')} />
-        <ListRow icon="lock" accent="teal" title={t('securityScreen.openLink')} onPress={() => setView('security')} chevron />
-        <ListRow icon="tag" accent="purple" title={t('subscriptionScreen.openLink')} onPress={() => setView('subscription')} chevron />
-        <ListRow icon="user" accent="blue" title={t('accountScreen.openLink')} onPress={() => setView('account')} chevron />
+        <ListRow
+          icon="lock"
+          accent="teal"
+          title={t('securityScreen.openLink')}
+          onPress={() => setView('security')}
+          chevron
+        />
+        <ListRow
+          icon="tag"
+          accent="purple"
+          title={t('subscriptionScreen.openLink')}
+          onPress={() => setView('subscription')}
+          chevron
+        />
+        <ListRow
+          icon="user"
+          accent="blue"
+          title={t('accountScreen.openLink')}
+          onPress={() => setView('account')}
+          chevron
+        />
       </View>
     </AppScreen>
   );

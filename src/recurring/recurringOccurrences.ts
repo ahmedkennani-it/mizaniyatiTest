@@ -68,7 +68,11 @@ export function computeDueOccurrenceDates(rule: RecurringRule, asOfDate: Date): 
       if (occurrence > asOf) {
         break;
       }
-      if (occurrence >= rule.startDate && (!notAfter || occurrence <= notAfter) && (!notBefore || occurrence > notBefore)) {
+      if (
+        occurrence >= rule.startDate &&
+        (!notAfter || occurrence <= notAfter) &&
+        (!notBefore || occurrence > notBefore)
+      ) {
         due.push(occurrence);
       }
       monthIndex0 += 1;
@@ -86,7 +90,11 @@ export function computeDueOccurrenceDates(rule: RecurringRule, asOfDate: Date): 
       if (occurrence > asOf) {
         break;
       }
-      if (occurrence >= rule.startDate && (!notAfter || occurrence <= notAfter) && (!notBefore || occurrence > notBefore)) {
+      if (
+        occurrence >= rule.startDate &&
+        (!notAfter || occurrence <= notAfter) &&
+        (!notBefore || occurrence > notBefore)
+      ) {
         due.push(occurrence);
       }
       cursor = new Date(cursor.getTime() + 7 * 24 * 60 * 60 * 1000);

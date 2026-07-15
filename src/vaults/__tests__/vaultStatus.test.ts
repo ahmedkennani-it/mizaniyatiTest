@@ -56,7 +56,7 @@ describe('computeVaultStatus', () => {
     expect(status.savedMinor).toBe(80000);
   });
 
-  it('imposes no dated monthly suggestion on a vault without a deadline (fonds d\'urgence)', () => {
+  it("imposes no dated monthly suggestion on a vault without a deadline (fonds d'urgence)", () => {
     const vault = makeVault({ targetMinor: 500000, deadline: null });
 
     const status = computeVaultStatus(vault, []);

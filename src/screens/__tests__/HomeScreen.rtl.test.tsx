@@ -83,7 +83,11 @@ describe('HomeScreen under RTL and LTR', () => {
   });
 
   it('scopes the balance card to the current month while keeping history from other months (US-013)', async () => {
-    const category = await createCategory(mockFakeDb, { name: 'Courses', icon: 'cart', color: '#111111' });
+    const category = await createCategory(mockFakeDb, {
+      name: 'Courses',
+      icon: 'cart',
+      color: '#111111',
+    });
     const member = await createMember(mockFakeDb, { name: 'Moi' });
     const now = new Date();
     const thisMonthKey = now.toISOString().slice(0, 7);
@@ -120,7 +124,11 @@ describe('HomeScreen under RTL and LTR', () => {
   });
 
   it('shows the category breakdown sorted by descending total, scoped to this month (US-014)', async () => {
-    const courses = await createCategory(mockFakeDb, { name: 'Courses', icon: 'cart', color: '#111111' });
+    const courses = await createCategory(mockFakeDb, {
+      name: 'Courses',
+      icon: 'cart',
+      color: '#111111',
+    });
     const transport = await createCategory(mockFakeDb, {
       name: 'Transport',
       icon: 'car',
@@ -195,7 +203,11 @@ describe('HomeScreen under RTL and LTR', () => {
   });
 
   it('limits Dernières opérations to the 5 most recent transactions (US-015)', async () => {
-    const category = await createCategory(mockFakeDb, { name: 'Courses', icon: 'cart', color: '#111111' });
+    const category = await createCategory(mockFakeDb, {
+      name: 'Courses',
+      icon: 'cart',
+      color: '#111111',
+    });
     const member = await createMember(mockFakeDb, { name: 'Moi' });
 
     for (let day = 1; day <= 7; day += 1) {
@@ -223,7 +235,11 @@ describe('HomeScreen under RTL and LTR', () => {
   });
 
   it('distinguishes income (no sign) from expense (minus sign) in the recent list (US-015)', async () => {
-    const category = await createCategory(mockFakeDb, { name: 'Courses', icon: 'cart', color: '#111111' });
+    const category = await createCategory(mockFakeDb, {
+      name: 'Courses',
+      icon: 'cart',
+      color: '#111111',
+    });
     const member = await createMember(mockFakeDb, { name: 'Moi' });
 
     await createTransaction(mockFakeDb, {
@@ -253,7 +269,11 @@ describe('HomeScreen under RTL and LTR', () => {
   });
 
   it('editing a transaction from the recent list updates the aggregates in place (US-016)', async () => {
-    const category = await createCategory(mockFakeDb, { name: 'Courses', icon: 'cart', color: '#111111' });
+    const category = await createCategory(mockFakeDb, {
+      name: 'Courses',
+      icon: 'cart',
+      color: '#111111',
+    });
     const member = await createMember(mockFakeDb, { name: 'Moi' });
     const thisMonthKey = new Date().toISOString().slice(0, 7);
     await createTransaction(mockFakeDb, {
@@ -290,7 +310,11 @@ describe('HomeScreen under RTL and LTR', () => {
   });
 
   it('deleting a transaction from the edit form recalculates the dashboard (US-016)', async () => {
-    const category = await createCategory(mockFakeDb, { name: 'Courses', icon: 'cart', color: '#111111' });
+    const category = await createCategory(mockFakeDb, {
+      name: 'Courses',
+      icon: 'cart',
+      color: '#111111',
+    });
     const member = await createMember(mockFakeDb, { name: 'Moi' });
     const thisMonthKey = new Date().toISOString().slice(0, 7);
     await createTransaction(mockFakeDb, {

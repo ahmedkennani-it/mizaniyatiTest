@@ -22,7 +22,11 @@ jest.mock('../../db/client', () => ({
 let category: Category;
 let member: Member;
 
-function renderForm(rule?: RecurringRule, onSaved: () => void = jest.fn(), onDeleted: () => void = jest.fn()) {
+function renderForm(
+  rule?: RecurringRule,
+  onSaved: () => void = jest.fn(),
+  onDeleted: () => void = jest.fn(),
+) {
   return render(
     <ThemeProvider initialColorScheme="light">
       <RecurringRuleForm rule={rule} onSaved={onSaved} onCancel={jest.fn()} onDeleted={onDeleted} />
@@ -33,7 +37,11 @@ function renderForm(rule?: RecurringRule, onSaved: () => void = jest.fn(), onDel
 describe('RecurringRuleForm — création (US-021)', () => {
   beforeEach(async () => {
     mockFakeDb = createFakeDatabase().db;
-    category = await createCategory(mockFakeDb, { name: 'Logement', icon: 'home', color: '#0D9488' });
+    category = await createCategory(mockFakeDb, {
+      name: 'Logement',
+      icon: 'home',
+      color: '#0D9488',
+    });
     member = await createMember(mockFakeDb, { name: 'Youssef' });
   });
 
@@ -97,7 +105,9 @@ describe('RecurringRuleForm — création (US-021)', () => {
     await fireEvent.press(screen.getByText('Enregistrer'));
 
     expect(
-      await screen.findByText('La date de fin doit être une date valide postérieure à la date de début.'),
+      await screen.findByText(
+        'La date de fin doit être une date valide postérieure à la date de début.',
+      ),
     ).toBeTruthy();
     expect(await listRecurringRules(mockFakeDb)).toHaveLength(0);
   });
@@ -108,7 +118,11 @@ describe('RecurringRuleForm — édition et suppression (US-021)', () => {
 
   beforeEach(async () => {
     mockFakeDb = createFakeDatabase().db;
-    category = await createCategory(mockFakeDb, { name: 'Logement', icon: 'home', color: '#0D9488' });
+    category = await createCategory(mockFakeDb, {
+      name: 'Logement',
+      icon: 'home',
+      color: '#0D9488',
+    });
     member = await createMember(mockFakeDb, { name: 'Youssef' });
     rule = await createRecurringRule(mockFakeDb, {
       type: 'expense',

@@ -47,7 +47,10 @@ export function computeNisabMinor(
  * disponible" without losing the base/due figures. When `nisabMinor` is `null`, `aboveNisab` is
  * `false` (no due amount is asserted) rather than guessed.
  */
-export function computeZakatAssessment(assets: ZakatAssets, nisabMinor: number | null): ZakatResult {
+export function computeZakatAssessment(
+  assets: ZakatAssets,
+  nisabMinor: number | null,
+): ZakatResult {
   const totalAssetsMinor = assets.cashMinor + assets.goldSilverMinor + assets.investmentsMinor;
   const baseMinor = Math.max(0, totalAssetsMinor - assets.debtsMinor);
   const aboveNisab = nisabMinor !== null && baseMinor >= nisabMinor;

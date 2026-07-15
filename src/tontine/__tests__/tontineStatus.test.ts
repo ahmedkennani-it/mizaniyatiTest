@@ -59,7 +59,11 @@ describe('computeRoundStatus', () => {
     expect(status.paidCount).toBe(2);
     expect(status.totalCount).toBe(3);
     expect(status.beneficiary?.name).toBe('Salma');
-    expect(status.memberStatuses.map((s) => s.payment?.status)).toEqual(['paid', 'paid', 'pending']);
+    expect(status.memberStatuses.map((s) => s.payment?.status)).toEqual([
+      'paid',
+      'paid',
+      'pending',
+    ]);
   });
 
   it('ignores payments belonging to a different round', () => {
@@ -101,7 +105,10 @@ describe('findCurrentRound', () => {
 describe('findMyRound', () => {
   it('finds the round whose beneficiary is the self participant', () => {
     const members = [makeMember({ id: 'm1' }), makeMember({ id: 'm2', isSelf: true })];
-    const rounds = [makeRound({ id: 'r1', beneficiaryMemberId: 'm1' }), makeRound({ id: 'r2', beneficiaryMemberId: 'm2' })];
+    const rounds = [
+      makeRound({ id: 'r1', beneficiaryMemberId: 'm1' }),
+      makeRound({ id: 'r2', beneficiaryMemberId: 'm2' }),
+    ];
 
     expect(findMyRound(rounds, members)?.id).toBe('r2');
   });

@@ -4,7 +4,16 @@ import { useTranslation } from 'react-i18next';
 
 import { VaultDetail } from './VaultDetail';
 import { VaultForm } from './VaultForm';
-import { AppScreen, Button, Card, IconTile, Pill, ProgressBar, ScreenHeader, Txt } from '../components';
+import {
+  AppScreen,
+  Button,
+  Card,
+  IconTile,
+  Pill,
+  ProgressBar,
+  ScreenHeader,
+  Txt,
+} from '../components';
 import type { AccentName } from '../theme';
 import { getDatabase } from '../db/client';
 import { listVaultContributions, listVaults } from '../db/repositories';
@@ -87,7 +96,10 @@ export function VaultsScreen({ onBack }: VaultsScreenProps) {
       </Txt>
 
       {vaults.length > 0 ? (
-        <Card elevated style={{ gap: theme.spacing.xs, alignItems: 'center', paddingVertical: theme.spacing.lg }}>
+        <Card
+          elevated
+          style={{ gap: theme.spacing.xs, alignItems: 'center', paddingVertical: theme.spacing.lg }}
+        >
           <Txt size="sm" color={theme.colors.textSecondary}>
             {t('vaultsScreen.totalSavedLabel')}
           </Txt>
@@ -126,7 +138,9 @@ export function VaultsScreen({ onBack }: VaultsScreenProps) {
                 }}
               >
                 <Card elevated style={{ gap: theme.spacing.sm }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
+                  <View
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}
+                  >
                     <IconTile icon="piggy-bank" accent={accent} />
                     <Txt weight="semibold" size="sm" style={{ flex: 1 }}>
                       {vault.name}

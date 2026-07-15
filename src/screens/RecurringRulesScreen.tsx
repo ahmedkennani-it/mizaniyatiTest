@@ -3,7 +3,16 @@ import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { RecurringRuleForm } from './RecurringRuleForm';
-import { AppScreen, Button, Card, ListRow, ScreenHeader, SectionHeader, TextField, Txt } from '../components';
+import {
+  AppScreen,
+  Button,
+  Card,
+  ListRow,
+  ScreenHeader,
+  SectionHeader,
+  TextField,
+  Txt,
+} from '../components';
 import { getDatabase } from '../db/client';
 import { createTransaction, listRecurringRules, updateRecurringRule } from '../db/repositories';
 import type { RecurringRule } from '../db/repositories';
@@ -61,17 +70,23 @@ export function RecurringRulesScreen({ onBack }: RecurringRulesScreenProps) {
   // the DB — safe to recompute on every render.
   const pendingProposals: PendingProposal[] = rules
     .filter((rule) => rule.mode === 'prompt' && !rule.paused)
-    .flatMap((rule) => computeDueOccurrenceDates(rule, new Date()).map((dueDate) => ({ rule, dueDate })));
+    .flatMap((rule) =>
+      computeDueOccurrenceDates(rule, new Date()).map((dueDate) => ({ rule, dueDate })),
+    );
 
   function proposalAmountInput(proposal: PendingProposal): string {
     const key = proposalKey(proposal);
-    return proposalAmounts[key] ?? String(toMajorUnits(proposal.rule.amountMinor, proposal.rule.currencyCode));
+    return (
+      proposalAmounts[key] ??
+      String(toMajorUnits(proposal.rule.amountMinor, proposal.rule.currencyCode))
+    );
   }
 
   async function handleConfirmProposal(proposal: PendingProposal) {
     const db = getDatabase();
     const amountMinor =
-      parseAmountInput(proposalAmountInput(proposal), proposal.rule.currencyCode) ?? proposal.rule.amountMinor;
+      parseAmountInput(proposalAmountInput(proposal), proposal.rule.currencyCode) ??
+      proposal.rule.amountMinor;
     await createTransaction(db, {
       type: proposal.rule.type,
       amountMinor,
@@ -117,7 +132,9 @@ export function RecurringRulesScreen({ onBack }: RecurringRulesScreenProps) {
       return t('recurringRulesScreen.frequencyMonthlyLabel', { day: rule.dayOfMonth ?? 1 });
     }
     const weekdayKey = WEEKDAY_KEYS[rule.weekday ?? 0];
-    return t('recurringRulesScreen.frequencyWeeklyLabel', { weekday: t(`recurringForm.${weekdayKey}`) });
+    return t('recurringRulesScreen.frequencyWeeklyLabel', {
+      weekday: t(`recurringForm.${weekdayKey}`),
+    });
   }
 
   return (
@@ -153,7 +170,9 @@ export function RecurringRulesScreen({ onBack }: RecurringRulesScreenProps) {
                 <TextField
                   label={t('recurringRulesScreen.pendingAmountLabel')}
                   value={proposalAmountInput(proposal)}
-                  onChangeText={(text) => setProposalAmounts((current) => ({ ...current, [key]: text }))}
+                  onChangeText={(text) =>
+                    setProposalAmounts((current) => ({ ...current, [key]: text }))
+                  }
                   keyboardType="decimal-pad"
                 />
                 <View style={{ flexDirection: 'row', gap: theme.spacing.xs }}>
@@ -195,7 +214,11 @@ export function RecurringRulesScreen({ onBack }: RecurringRulesScreenProps) {
                   ? t('recurringRulesScreen.modeAutoLabel')
                   : t('recurringRulesScreen.modePromptLabel')
               }${rule.paused ? ` · ${t('recurringRulesScreen.pausedLabel')}` : ''}`}
-              value={formatMoney(rule.amountMinor, rule.currencyCode ?? DEFAULT_CURRENCY_CODE, language)}
+              value={formatMoney(
+                rule.amountMinor,
+                rule.currencyCode ?? DEFAULT_CURRENCY_CODE,
+                language,
+              )}
               onPress={() => {
                 setEditingRule(rule);
                 setView('form');

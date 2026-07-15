@@ -1,4 +1,9 @@
-import { createTransaction, listCategories, listRecurringRules, updateRecurringRule } from '../db/repositories';
+import {
+  createTransaction,
+  listCategories,
+  listRecurringRules,
+  updateRecurringRule,
+} from '../db/repositories';
 import type { SqlDatabase } from '../db/types';
 import i18n from '../i18n/i18n';
 import { notificationClient } from '../notifications';
@@ -15,7 +20,10 @@ import { computeDueOccurrenceDates } from './recurringOccurrences';
  * their due dates on demand so the user can confirm/modify/ignore each one, and `lastRunDate`
  * only advances once a proposal is actually resolved (see that screen).
  */
-export async function processRecurringRules(db: SqlDatabase, now: Date = new Date()): Promise<void> {
+export async function processRecurringRules(
+  db: SqlDatabase,
+  now: Date = new Date(),
+): Promise<void> {
   const [rules, categories] = await Promise.all([listRecurringRules(db), listCategories(db)]);
 
   for (const rule of rules) {

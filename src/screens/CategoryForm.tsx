@@ -162,7 +162,12 @@ export function CategoryForm({
         </Txt>
         <View style={[styles.chipRow, { gap: theme.spacing.xs }]}>
           {CATEGORY_ICON_OPTIONS.map((option) => (
-            <Chip key={option} label={option} selected={option === icon} onPress={() => setIcon(option)} />
+            <Chip
+              key={option}
+              label={option}
+              selected={option === icon}
+              onPress={() => setIcon(option)}
+            />
           ))}
         </View>
       </View>
@@ -217,7 +222,9 @@ export function CategoryForm({
             {t('categoryForm.rolloverHint')}
           </Txt>
           <Button
-            label={rolloverEnabled ? t('categoryForm.rolloverDisable') : t('categoryForm.rolloverEnable')}
+            label={
+              rolloverEnabled ? t('categoryForm.rolloverDisable') : t('categoryForm.rolloverEnable')
+            }
             variant={rolloverEnabled ? 'primary' : 'secondary'}
             onPress={() => setRolloverEnabled((current) => !current)}
           />
@@ -240,7 +247,9 @@ export function CategoryForm({
               {transactionsToReassign.length > 0 ? (
                 <>
                   <Txt size="sm">
-                    {t('categoryForm.deleteReassignMessage', { count: transactionsToReassign.length })}
+                    {t('categoryForm.deleteReassignMessage', {
+                      count: transactionsToReassign.length,
+                    })}
                   </Txt>
                   <View style={[styles.chipRow, { gap: theme.spacing.xs }]}>
                     {otherCategories.map((candidate) => (
@@ -261,9 +270,7 @@ export function CategoryForm({
                 </>
               ) : (
                 <>
-                  <Txt size="sm">
-                    {t('categoryForm.deleteConfirmMessage')}
-                  </Txt>
+                  <Txt size="sm">{t('categoryForm.deleteConfirmMessage')}</Txt>
                   <Button
                     label={t('categoryForm.deleteConfirmYes')}
                     variant="danger"

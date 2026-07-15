@@ -94,8 +94,19 @@ export function BalanceHeroCard({
         {label}
       </Txt>
 
-      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: theme.spacing.sm, marginTop: 6 }}>
-        <Txt color={ON_GRADIENT} size={42} style={{ fontFamily: font.extrabold, letterSpacing: -0.5 }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'baseline',
+          gap: theme.spacing.sm,
+          marginTop: 6,
+        }}
+      >
+        <Txt
+          color={ON_GRADIENT}
+          size={42}
+          style={{ fontFamily: font.extrabold, letterSpacing: -0.5 }}
+        >
           {amountText}
         </Txt>
         <Txt color="rgba(255,255,255,0.9)" weight="semibold" size="md">

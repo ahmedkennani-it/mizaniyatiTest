@@ -21,7 +21,8 @@ export interface VaultStatus {
 function monthsBetween(now: Date, deadlineIso: string): number {
   const deadline = new Date(`${deadlineIso}T00:00:00.000Z`);
   return (
-    (deadline.getUTCFullYear() - now.getUTCFullYear()) * 12 + (deadline.getUTCMonth() - now.getUTCMonth())
+    (deadline.getUTCFullYear() - now.getUTCFullYear()) * 12 +
+    (deadline.getUTCMonth() - now.getUTCMonth())
   );
 }
 

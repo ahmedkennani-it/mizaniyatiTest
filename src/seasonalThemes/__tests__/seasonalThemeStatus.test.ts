@@ -57,7 +57,12 @@ describe('computeSeasonalThemeStatus', () => {
       makeTransaction({ categoryId: 'other-category', amountMinor: 999999 }), // ignored: not a theme category
     ];
 
-    const status = computeSeasonalThemeStatus(theme, categories, transactions, new Date('2027-03-15T00:00:00.000Z'));
+    const status = computeSeasonalThemeStatus(
+      theme,
+      categories,
+      transactions,
+      new Date('2027-03-15T00:00:00.000Z'),
+    );
 
     expect(status.spentMinor).toBe(20000);
     expect(status.remainingMinor).toBe(750000 - 20000);
@@ -68,7 +73,12 @@ describe('computeSeasonalThemeStatus', () => {
     const categories = [makeCategory({ id: 'cat-1' })];
     const transactions = [makeTransaction({ categoryId: 'cat-1', amountMinor: 15000 })];
 
-    const status = computeSeasonalThemeStatus(theme, categories, transactions, new Date('2027-03-15T00:00:00.000Z'));
+    const status = computeSeasonalThemeStatus(
+      theme,
+      categories,
+      transactions,
+      new Date('2027-03-15T00:00:00.000Z'),
+    );
 
     expect(status.remainingMinor).toBe(-5000);
   });
@@ -103,7 +113,12 @@ describe('computeSeasonalThemeStatus', () => {
       makeTransaction({ categoryId: 'cat-2', amountMinor: 25000 }),
     ];
 
-    const status = computeSeasonalThemeStatus(theme, categories, transactions, new Date('2027-03-15T00:00:00.000Z'));
+    const status = computeSeasonalThemeStatus(
+      theme,
+      categories,
+      transactions,
+      new Date('2027-03-15T00:00:00.000Z'),
+    );
 
     expect(status.categorySpend).toEqual([
       { category: categories[0], spentMinor: 10000 },
@@ -115,11 +130,20 @@ describe('computeSeasonalThemeStatus', () => {
     const theme = makeTheme();
     const categories = [makeCategory({ id: 'cat-1' })];
     const transactions = [
-      makeTransaction({ id: 'recent', categoryId: 'cat-1', occurredAt: '2027-03-14T00:00:00.000Z' }),
+      makeTransaction({
+        id: 'recent',
+        categoryId: 'cat-1',
+        occurredAt: '2027-03-14T00:00:00.000Z',
+      }),
       makeTransaction({ id: 'old', categoryId: 'cat-1', occurredAt: '2027-03-01T00:00:00.000Z' }),
     ];
 
-    const status = computeSeasonalThemeStatus(theme, categories, transactions, new Date('2027-03-15T00:00:00.000Z'));
+    const status = computeSeasonalThemeStatus(
+      theme,
+      categories,
+      transactions,
+      new Date('2027-03-15T00:00:00.000Z'),
+    );
 
     expect(status.weeklyTransactions.map((t) => t.id)).toEqual(['recent']);
   });

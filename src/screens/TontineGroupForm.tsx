@@ -69,14 +69,21 @@ export function TontineGroupForm({ onSaved, onCancel }: TontineGroupFormProps) {
     if (!MONTH_PATTERN.test(startMonth)) {
       nextErrors.startMonth = t('tontineForm.errorStartMonth');
     }
-    if (trimmedMemberNames.length < MIN_MEMBERS || trimmedMemberNames.some((memberName) => !memberName)) {
+    if (
+      trimmedMemberNames.length < MIN_MEMBERS ||
+      trimmedMemberNames.some((memberName) => !memberName)
+    ) {
       nextErrors.members = t('tontineForm.errorMembers');
     }
     if (selfIndex === null || !trimmedMemberNames[selfIndex]) {
       nextErrors.self = t('tontineForm.errorSelf');
     }
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0 || contributionPerRoundMinor === null || selfIndex === null) {
+    if (
+      Object.keys(nextErrors).length > 0 ||
+      contributionPerRoundMinor === null ||
+      selfIndex === null
+    ) {
       return;
     }
 

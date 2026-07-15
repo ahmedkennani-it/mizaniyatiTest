@@ -49,7 +49,9 @@ describe('ZakatScreen (US-025)', () => {
   it('shows the Pro upsell when the plan does not include zakat', async () => {
     await renderScreen(jest.fn());
 
-    expect(await screen.findByText('Le calcul de la Zakat fait partie du forfait Pro.')).toBeTruthy();
+    expect(
+      await screen.findByText('Le calcul de la Zakat fait partie du forfait Pro.'),
+    ).toBeTruthy();
   });
 
   it('shows the disclaimer and defaults to the gold nisab basis', async () => {

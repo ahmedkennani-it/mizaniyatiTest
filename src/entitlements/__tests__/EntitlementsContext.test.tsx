@@ -30,7 +30,11 @@ describe('EntitlementsProvider / useEntitlements', () => {
     expect(screen.getByText('plan:free')).toBeTruthy();
     expect(screen.getByText('voice:true')).toBeTruthy();
     expect(screen.getByText('tontine:false')).toBeTruthy();
-    expect(screen.getByText(`categories.max:${FREE_PLAN.entitlements.find((e) => e.key === 'categories.max')?.numericValue}`)).toBeTruthy();
+    expect(
+      screen.getByText(
+        `categories.max:${FREE_PLAN.entitlements.find((e) => e.key === 'categories.max')?.numericValue}`,
+      ),
+    ).toBeTruthy();
   });
 
   it('reads entitlements from a custom plan (e.g. Pro) instead of a hardcoded value', async () => {

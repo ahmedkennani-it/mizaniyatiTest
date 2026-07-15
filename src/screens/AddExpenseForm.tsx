@@ -55,11 +55,16 @@ export function AddExpenseForm({ transaction, onSaved, onCancel, onDeleted }: Ad
   );
   const [categoryId, setCategoryId] = useState<string | null>(transaction?.categoryId ?? null);
   const [memberId, setMemberId] = useState<string | null>(transaction?.memberId ?? null);
-  const [dateInput, setDateInput] = useState(transaction?.occurredAt.slice(0, 10) ?? todayIsoDate());
-  const [note, setNote] = useState(transaction?.note ?? '');
-  const [errors, setErrors] = useState<{ amount?: string; category?: string; member?: string; date?: string }>(
-    {},
+  const [dateInput, setDateInput] = useState(
+    transaction?.occurredAt.slice(0, 10) ?? todayIsoDate(),
   );
+  const [note, setNote] = useState(transaction?.note ?? '');
+  const [errors, setErrors] = useState<{
+    amount?: string;
+    category?: string;
+    member?: string;
+    date?: string;
+  }>({});
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   useEffect(() => {
@@ -82,7 +87,9 @@ export function AddExpenseForm({ transaction, onSaved, onCancel, onDeleted }: Ad
    */
   async function maybeSendBudgetAlert(savedCategoryId: string) {
     const db = getDatabase();
-    const budget = (await listCategoryBudgets(db)).find((candidate) => candidate.categoryId === savedCategoryId);
+    const budget = (await listCategoryBudgets(db)).find(
+      (candidate) => candidate.categoryId === savedCategoryId,
+    );
     if (!budget) {
       return;
     }
@@ -186,8 +193,16 @@ export function AddExpenseForm({ transaction, onSaved, onCancel, onDeleted }: Ad
           {t('expenseForm.typeLabel')}
         </Txt>
         <View style={[styles.chipRow, { gap: theme.spacing.xs }]}>
-          <Chip label={t('expenseForm.typeExpense')} selected={type === 'expense'} onPress={() => setType('expense')} />
-          <Chip label={t('expenseForm.typeIncome')} selected={type === 'income'} onPress={() => setType('income')} />
+          <Chip
+            label={t('expenseForm.typeExpense')}
+            selected={type === 'expense'}
+            onPress={() => setType('expense')}
+          />
+          <Chip
+            label={t('expenseForm.typeIncome')}
+            selected={type === 'income'}
+            onPress={() => setType('income')}
+          />
         </View>
       </View>
 
@@ -266,7 +281,11 @@ export function AddExpenseForm({ transaction, onSaved, onCancel, onDeleted }: Ad
           {confirmingDelete ? (
             <>
               <Txt size="sm">{t('expenseForm.deleteConfirmMessage')}</Txt>
-              <Button label={t('expenseForm.deleteConfirmYes')} variant="danger" onPress={handleConfirmDelete} />
+              <Button
+                label={t('expenseForm.deleteConfirmYes')}
+                variant="danger"
+                onPress={handleConfirmDelete}
+              />
               <Button
                 label={t('expenseForm.deleteConfirmCancel')}
                 variant="secondary"
@@ -274,7 +293,11 @@ export function AddExpenseForm({ transaction, onSaved, onCancel, onDeleted }: Ad
               />
             </>
           ) : (
-            <Button label={t('expenseForm.delete')} variant="danger" onPress={() => setConfirmingDelete(true)} />
+            <Button
+              label={t('expenseForm.delete')}
+              variant="danger"
+              onPress={() => setConfirmingDelete(true)}
+            />
           )}
         </Card>
       ) : null}

@@ -3,7 +3,17 @@ import { Pressable, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { VaultForm } from './VaultForm';
-import { AppScreen, Button, Card, Chip, IconTile, ProgressBar, ScreenHeader, TextField, Txt } from '../components';
+import {
+  AppScreen,
+  Button,
+  Card,
+  Chip,
+  IconTile,
+  ProgressBar,
+  ScreenHeader,
+  TextField,
+  Txt,
+} from '../components';
 import { getDatabase } from '../db/client';
 import {
   createVaultContribution,
@@ -127,7 +137,10 @@ export function VaultDetail({ vault, onBack, onVaultChanged, onVaultDeleted }: V
   if (view === 'addContribution') {
     return (
       <AppScreen scroll contentStyle={{ gap: theme.spacing.md }}>
-        <ScreenHeader title={t('vaultDetail.addContributionButton')} onBack={() => setView('detail')} />
+        <ScreenHeader
+          title={t('vaultDetail.addContributionButton')}
+          onBack={() => setView('detail')}
+        />
 
         <TextField
           label={t('vaultDetail.contributionAmountLabel')}
@@ -166,11 +179,19 @@ export function VaultDetail({ vault, onBack, onVaultChanged, onVaultDeleted }: V
           errorMessage={errors.date}
         />
 
-        <TextField label={t('vaultDetail.contributionNoteLabel')} value={note} onChangeText={setNote} />
+        <TextField
+          label={t('vaultDetail.contributionNoteLabel')}
+          value={note}
+          onChangeText={setNote}
+        />
 
         <View style={{ gap: theme.spacing.sm }}>
           <Button label={t('vaultDetail.contributionSubmit')} onPress={handleAddContribution} />
-          <Button label={t('vaultDetail.contributionCancel')} variant="secondary" onPress={() => setView('detail')} />
+          <Button
+            label={t('vaultDetail.contributionCancel')}
+            variant="secondary"
+            onPress={() => setView('detail')}
+          />
         </View>
       </AppScreen>
     );
@@ -180,7 +201,10 @@ export function VaultDetail({ vault, onBack, onVaultChanged, onVaultDeleted }: V
     <AppScreen scroll contentStyle={{ gap: theme.spacing.md }}>
       <ScreenHeader title={currentVault.name} onBack={onBack} />
 
-      <Card elevated style={{ gap: theme.spacing.sm, alignItems: 'center', paddingVertical: theme.spacing.lg }}>
+      <Card
+        elevated
+        style={{ gap: theme.spacing.sm, alignItems: 'center', paddingVertical: theme.spacing.lg }}
+      >
         <IconTile icon="piggy-bank" accent="teal" size="lg" />
         <Txt size="sm" color={theme.colors.textSecondary}>
           {t('vaultDetail.savedLabel')}
@@ -200,9 +224,12 @@ export function VaultDetail({ vault, onBack, onVaultChanged, onVaultDeleted }: V
           style={{ alignSelf: 'stretch' }}
         />
         <Txt size="sm" color={theme.colors.textSecondary} style={{ textAlign: 'center' }}>
-          {t('vaultsScreen.percentageLabel', { percentage: Math.round(Math.min(100, status.percentage)) })}
+          {t('vaultsScreen.percentageLabel', {
+            percentage: Math.round(Math.min(100, status.percentage)),
+          })}
           {' · '}
-          {t('vaultDetail.targetLabel')}: {formatMoney(status.targetMinor, currentVault.currencyCode, language)}
+          {t('vaultDetail.targetLabel')}:{' '}
+          {formatMoney(status.targetMinor, currentVault.currencyCode, language)}
         </Txt>
 
         {status.isReached ? (
@@ -215,7 +242,8 @@ export function VaultDetail({ vault, onBack, onVaultChanged, onVaultDeleted }: V
         ) : currentVault.deadline ? (
           <View style={{ alignItems: 'center', gap: 2 }}>
             <Txt size="sm">
-              {t('vaultDetail.remainingLabel')}: {formatMoney(status.remainingMinor, currentVault.currencyCode, language)}
+              {t('vaultDetail.remainingLabel')}:{' '}
+              {formatMoney(status.remainingMinor, currentVault.currencyCode, language)}
             </Txt>
             {status.isOverdue ? (
               <Txt size="sm" color={theme.colors.danger}>
@@ -237,8 +265,17 @@ export function VaultDetail({ vault, onBack, onVaultChanged, onVaultDeleted }: V
       </Card>
 
       <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
-        <Button label={t('vaultDetail.addContributionButton')} style={{ flex: 1 }} onPress={() => setView('addContribution')} />
-        <Button label={t('vaultDetail.editButton')} variant="secondary" style={{ flex: 1 }} onPress={() => setView('edit')} />
+        <Button
+          label={t('vaultDetail.addContributionButton')}
+          style={{ flex: 1 }}
+          onPress={() => setView('addContribution')}
+        />
+        <Button
+          label={t('vaultDetail.editButton')}
+          variant="secondary"
+          style={{ flex: 1 }}
+          onPress={() => setView('edit')}
+        />
       </View>
 
       <Txt weight="semibold" size="md">
@@ -283,7 +320,10 @@ export function VaultDetail({ vault, onBack, onVaultChanged, onVaultDeleted }: V
                   </View>
                 </View>
               ) : (
-                <Pressable accessibilityRole="button" onPress={() => setConfirmingDeleteId(contribution.id)}>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => setConfirmingDeleteId(contribution.id)}
+                >
                   <Txt size="xs" color={theme.colors.danger}>
                     {t('vaultDetail.contributionDelete')}
                   </Txt>

@@ -6,6 +6,7 @@ import type { SupportedLanguage } from '../i18n/i18n';
 const DEFAULT_NAME_BY_LANGUAGE: Record<SupportedLanguage, string> = {
   fr: 'Moi',
   ar: 'أنا',
+  en: 'Me',
 };
 
 /**

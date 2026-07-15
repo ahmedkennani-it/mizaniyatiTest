@@ -18,6 +18,7 @@ export const ar: TranslationSchema = {
     label: 'اللغة',
     french: 'Français',
     arabic: 'العربية',
+    english: 'English',
   },
   expense: {
     label: 'بيان المصروف',
@@ -111,7 +112,8 @@ export const ar: TranslationSchema = {
     capPlaceholder: '0.00',
     alertThresholdLabel: 'حد التنبيه',
     alertThresholdPlaceholder: '0.00',
-    rolloverHint: 'يضيف الترحيل الرصيد الموجب من الشهر الماضي إلى سقف هذا الشهر (ترحيل بسيط وغير تراكمي).',
+    rolloverHint:
+      'يضيف الترحيل الرصيد الموجب من الشهر الماضي إلى سقف هذا الشهر (ترحيل بسيط وغير تراكمي).',
     rolloverEnable: 'تفعيل ترحيل الرصيد',
     rolloverDisable: 'تعطيل ترحيل الرصيد',
     submit: 'حفظ',
@@ -418,7 +420,8 @@ export const ar: TranslationSchema = {
     biometricUnavailable: 'لا تتوفر تقنية البصمة على هذا الجهاز.',
     biometricNotEnrolled: 'لا توجد بصمة/وجه مسجّل على هذا الجهاز.',
     disableLockButton: 'تعطيل القفل',
-    localOnlyNote: 'يحمي هذا القفل الوصول إلى التطبيق على هذا الجهاز؛ ولا يشفّر قاعدة البيانات المحلية.',
+    localOnlyNote:
+      'يحمي هذا القفل الوصول إلى التطبيق على هذا الجهاز؛ ولا يشفّر قاعدة البيانات المحلية.',
     forgotPinNote:
       'نسيت رمز PIN: لا يمكن الاسترجاع حاليًا. حذف التطبيق سيمسح بياناتك المحلية (لا توجد نسخة احتياطية سحابية بعد).',
     cancel: 'إلغاء',

@@ -51,16 +51,19 @@ export function CategoriesScreen() {
   }, [refresh]);
 
   const num = useCallback(
-    (minor: number) => forceLTR(toLocalizedDigits(toMajorUnits(minor, DEFAULT_CURRENCY_CODE), language)),
+    (minor: number) =>
+      forceLTR(toLocalizedDigits(toMajorUnits(minor, DEFAULT_CURRENCY_CODE), language)),
     [language],
   );
 
   const monthLabel = useMemo(() => {
     const { locale, numberingSystem } = resolveIntlLocale(language);
     try {
-      return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', numberingSystem }).format(
-        new Date(),
-      );
+      return new Intl.DateTimeFormat(locale, {
+        month: 'long',
+        year: 'numeric',
+        numberingSystem,
+      }).format(new Date());
     } catch {
       return currentMonthKey();
     }
@@ -123,7 +126,9 @@ export function CategoriesScreen() {
     <AppScreen scroll bottomInset={110} contentStyle={{ gap: theme.spacing.md }}>
       <ScreenHeader
         title={t('categoriesScreen.title')}
-        actions={[{ icon: 'plus', onPress: openCreate, accessibilityLabel: t('categoriesScreen.a11yAdd') }]}
+        actions={[
+          { icon: 'plus', onPress: openCreate, accessibilityLabel: t('categoriesScreen.a11yAdd') },
+        ]}
       />
       <Txt size="sm" color={theme.colors.textSecondary}>
         {`${monthLabel} · ${t('categoriesScreen.capsSubtitle')}`}
@@ -159,7 +164,14 @@ export function CategoriesScreen() {
 
           if (!budget) {
             return (
-              <ListRow key={category.id} icon={icon} accent={accent} title={category.name} chevron onPress={openEdit} />
+              <ListRow
+                key={category.id}
+                icon={icon}
+                accent={accent}
+                title={category.name}
+                chevron
+                onPress={openEdit}
+              />
             );
           }
 

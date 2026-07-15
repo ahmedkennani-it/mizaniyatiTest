@@ -38,7 +38,10 @@ function makeCategory(id: string, name: string): Category {
   };
 }
 
-const categories = [makeCategory('cat-courses', 'Courses'), makeCategory('cat-transport', 'Transport')];
+const categories = [
+  makeCategory('cat-courses', 'Courses'),
+  makeCategory('cat-transport', 'Transport'),
+];
 
 describe('computeCategoryBreakdown', () => {
   it('returns an empty list when there are no expenses', () => {
@@ -60,7 +63,7 @@ describe('computeCategoryBreakdown', () => {
     ]);
   });
 
-  it('excludes income transactions (répartition = où part l\'argent)', () => {
+  it("excludes income transactions (répartition = où part l'argent)", () => {
     const transactions = [
       makeTransaction('income', 500000, '2026-07-01T09:00:00.000Z', 'cat-courses'),
       makeTransaction('expense', 2000, '2026-07-05T10:00:00.000Z', 'cat-courses'),
@@ -68,7 +71,9 @@ describe('computeCategoryBreakdown', () => {
 
     const breakdown = computeCategoryBreakdown(transactions, categories, '2026-07');
 
-    expect(breakdown).toEqual([{ categoryId: 'cat-courses', categoryName: 'Courses', totalMinor: 2000 }]);
+    expect(breakdown).toEqual([
+      { categoryId: 'cat-courses', categoryName: 'Courses', totalMinor: 2000 },
+    ]);
   });
 
   it('ignores transactions from a different month', () => {
@@ -79,6 +84,8 @@ describe('computeCategoryBreakdown', () => {
 
     const breakdown = computeCategoryBreakdown(transactions, categories, '2026-07');
 
-    expect(breakdown).toEqual([{ categoryId: 'cat-courses', categoryName: 'Courses', totalMinor: 1000 }]);
+    expect(breakdown).toEqual([
+      { categoryId: 'cat-courses', categoryName: 'Courses', totalMinor: 1000 },
+    ]);
   });
 });

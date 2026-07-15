@@ -38,8 +38,16 @@ export function CategoryChipV({ icon, label, selected, onPress }: CategoryChipVP
         borderColor: selected ? theme.colors.primary : theme.colors.border,
       }}
     >
-      <Icon name={icon} size={20} color={selected ? theme.colors.primaryText : theme.colors.textSecondary} />
-      <Txt size="xs" weight={selected ? 'semibold' : 'regular'} color={selected ? theme.colors.primaryText : theme.colors.textSecondary}>
+      <Icon
+        name={icon}
+        size={20}
+        color={selected ? theme.colors.primaryText : theme.colors.textSecondary}
+      />
+      <Txt
+        size="xs"
+        weight={selected ? 'semibold' : 'regular'}
+        color={selected ? theme.colors.primaryText : theme.colors.textSecondary}
+      >
         {label}
       </Txt>
     </Pressable>

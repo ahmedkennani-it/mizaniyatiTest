@@ -27,8 +27,29 @@ const ICONS_AND_COLORS: { icon: string; color: string }[] = [
 ];
 
 const NAMES_BY_LANGUAGE: Record<SupportedLanguage, string[]> = {
-  fr: ['Courses', 'École', 'Santé', 'Transport', 'Factures', 'Logement', 'Restaurants', 'Loisirs', 'Autres'],
+  fr: [
+    'Courses',
+    'École',
+    'Santé',
+    'Transport',
+    'Factures',
+    'Logement',
+    'Restaurants',
+    'Loisirs',
+    'Autres',
+  ],
   ar: ['التسوق', 'المدرسة', 'الصحة', 'النقل', 'الفواتير', 'السكن', 'المطاعم', 'الترفيه', 'أخرى'],
+  en: [
+    'Groceries',
+    'School',
+    'Health',
+    'Transport',
+    'Bills',
+    'Housing',
+    'Restaurants',
+    'Leisure',
+    'Other',
+  ],
 };
 
 /**

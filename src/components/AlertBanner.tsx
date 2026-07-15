@@ -18,7 +18,11 @@ export interface AlertBannerProps {
  * `warning` renders the mockup's rose card; `info` the teal wash. Text wraps and stays readable in
  * both light and dark. The row mirrors under RTL automatically.
  */
-export function AlertBanner({ message, icon = 'alert-triangle', tone = 'warning' }: AlertBannerProps) {
+export function AlertBanner({
+  message,
+  icon = 'alert-triangle',
+  tone = 'warning',
+}: AlertBannerProps) {
   const { theme } = useTheme();
   const isWarning = tone === 'warning';
   const palette = isWarning
@@ -50,7 +54,11 @@ export function AlertBanner({ message, icon = 'alert-triangle', tone = 'warning'
       }}
     >
       <Icon name={icon} size={20} color={palette.icon} />
-      <Txt size="xs" color={palette.text} style={{ flex: 1, lineHeight: theme.typography.sizes.xs * 1.45 }}>
+      <Txt
+        size="xs"
+        color={palette.text}
+        style={{ flex: 1, lineHeight: theme.typography.sizes.xs * 1.45 }}
+      >
         {message}
       </Txt>
     </View>

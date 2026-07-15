@@ -12,7 +12,8 @@ export function computeMonthlyBalance(transactions: Transaction[], monthKey: str
     .filter((transaction) => transaction.occurredAt.slice(0, 7) === monthKey)
     .reduce(
       (balance, transaction) =>
-        balance + (transaction.type === 'income' ? transaction.amountMinor : -transaction.amountMinor),
+        balance +
+        (transaction.type === 'income' ? transaction.amountMinor : -transaction.amountMinor),
       0,
     );
 }

@@ -20,10 +20,13 @@ const ICONS_AND_COLORS: { icon: string; color: string }[] = [
 const NAMES_BY_LANGUAGE: Record<SupportedLanguage, string[]> = {
   fr: ['Iftar & Suhoor', 'Zakat al-Fitr', 'Aïd & cadeaux', 'Invités & famille'],
   ar: ['الإفطار والسحور', 'زكاة الفطر', 'العيد والهدايا', 'الضيوف والعائلة'],
+  en: ['Iftar & Suhoor', 'Zakat al-Fitr', 'Eid & gifts', 'Guests & family'],
 };
 
 /** The four Ramadan sub-categories (US-026, `docs/specs/mode-ramadan.md`), in a fixed language. */
-export function getRamadanSubcategories(language: SupportedLanguage): RamadanSubcategoryDefinition[] {
+export function getRamadanSubcategories(
+  language: SupportedLanguage,
+): RamadanSubcategoryDefinition[] {
   return NAMES_BY_LANGUAGE[language].map((name, index) => ({
     name,
     icon: ICONS_AND_COLORS[index].icon,

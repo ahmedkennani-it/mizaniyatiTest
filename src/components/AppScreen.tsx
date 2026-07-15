@@ -36,7 +36,11 @@ export function AppScreen({
   const bg = background ?? theme.colors.background;
 
   const padding: ViewStyle = padded
-    ? { paddingHorizontal: 22, paddingTop: theme.spacing.sm, paddingBottom: theme.spacing.lg + bottomInset }
+    ? {
+        paddingHorizontal: 22,
+        paddingTop: theme.spacing.sm,
+        paddingBottom: theme.spacing.lg + bottomInset,
+      }
     : { paddingBottom: bottomInset };
 
   if (scroll) {

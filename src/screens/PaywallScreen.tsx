@@ -82,10 +82,18 @@ export function PaywallScreen({ onBack }: PaywallScreenProps) {
           <Txt size="xs" color={theme.colors.textSecondary} style={{ flex: 2 }}>
             {t('paywallScreen.featureColumnLabel')}
           </Txt>
-          <Txt size="xs" color={theme.colors.textSecondary} style={{ flex: 1, textAlign: 'center' }}>
+          <Txt
+            size="xs"
+            color={theme.colors.textSecondary}
+            style={{ flex: 1, textAlign: 'center' }}
+          >
             {t('paywallScreen.freeColumnLabel')}
           </Txt>
-          <Txt size="xs" color={theme.colors.textSecondary} style={{ flex: 1, textAlign: 'center' }}>
+          <Txt
+            size="xs"
+            color={theme.colors.textSecondary}
+            style={{ flex: 1, textAlign: 'center' }}
+          >
             {t('paywallScreen.proColumnLabel')}
           </Txt>
         </View>
@@ -97,7 +105,12 @@ export function PaywallScreen({ onBack }: PaywallScreenProps) {
           <Txt size="sm" style={{ flex: 1, textAlign: 'center' }}>
             {planLimit('free', 'categories.max')}
           </Txt>
-          <Txt size="sm" weight="semibold" color={theme.colors.primary} style={{ flex: 1, textAlign: 'center' }}>
+          <Txt
+            size="sm"
+            weight="semibold"
+            color={theme.colors.primary}
+            style={{ flex: 1, textAlign: 'center' }}
+          >
             {t('paywallScreen.unlimitedLabel')}
           </Txt>
         </View>
@@ -109,7 +122,12 @@ export function PaywallScreen({ onBack }: PaywallScreenProps) {
           <Txt size="sm" style={{ flex: 1, textAlign: 'center' }}>
             {planLimit('free', 'members.max')}
           </Txt>
-          <Txt size="sm" weight="semibold" color={theme.colors.primary} style={{ flex: 1, textAlign: 'center' }}>
+          <Txt
+            size="sm"
+            weight="semibold"
+            color={theme.colors.primary}
+            style={{ flex: 1, textAlign: 'center' }}
+          >
             {t('paywallScreen.unlimitedLabel')}
           </Txt>
         </View>
@@ -119,14 +137,20 @@ export function PaywallScreen({ onBack }: PaywallScreenProps) {
             <Txt size="sm" style={{ flex: 2 }}>
               {row.label}
             </Txt>
-            <Txt size="sm" style={{ flex: 1, textAlign: 'center' }} color={theme.colors.textSecondary}>
+            <Txt
+              size="sm"
+              style={{ flex: 1, textAlign: 'center' }}
+              color={theme.colors.textSecondary}
+            >
               {planFeature('free', row.key) ? '✓' : '—'}
             </Txt>
             <Txt
               size="sm"
               weight="semibold"
               style={{ flex: 1, textAlign: 'center' }}
-              color={planFeature('pro', row.key) ? theme.colors.primary : theme.colors.textSecondary}
+              color={
+                planFeature('pro', row.key) ? theme.colors.primary : theme.colors.textSecondary
+              }
             >
               {planFeature('pro', row.key) ? '✓' : '—'}
             </Txt>

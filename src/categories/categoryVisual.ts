@@ -64,7 +64,13 @@ const COLOR_TO_ACCENT: Record<string, AccentName> = {
 };
 
 // One representative hex per accent, offered in the create/edit color picker.
-export const CATEGORY_ACCENT_COLORS: string[] = ['#0D9488', '#D97706', '#F43F5E', '#7C3AED', '#2563EB'];
+export const CATEGORY_ACCENT_COLORS: string[] = [
+  '#0D9488',
+  '#D97706',
+  '#F43F5E',
+  '#7C3AED',
+  '#2563EB',
+];
 
 export function categoryAccent(color: string): AccentName {
   return COLOR_TO_ACCENT[color.toUpperCase()] ?? COLOR_TO_ACCENT[color] ?? 'teal';

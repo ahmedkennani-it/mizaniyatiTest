@@ -4,7 +4,12 @@ jest.mock('../../notifications', () => {
 });
 
 // eslint-disable-next-line import/first -- must come after jest.mock('../../notifications', ...) above
-import { listTontineGroups, updateTontineGroup, updateTontinePayment, listTontinePayments } from '../../db/repositories';
+import {
+  listTontineGroups,
+  updateTontineGroup,
+  updateTontinePayment,
+  listTontinePayments,
+} from '../../db/repositories';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../notifications', ...) above
 import { createFakeDatabase } from '../../db/testUtils/createFakeDatabase';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../notifications', ...) above
@@ -16,7 +21,10 @@ import { processTontineReminders } from '../processTontineReminders';
 
 const NOON = new Date('2026-07-15T12:00:00.000Z');
 
-async function seedGroup(db: ReturnType<typeof createFakeDatabase>['db'], reminderEnabled: boolean) {
+async function seedGroup(
+  db: ReturnType<typeof createFakeDatabase>['db'],
+  reminderEnabled: boolean,
+) {
   const { group } = await createTontineGroupWithMembers(db, {
     name: 'Tontine famille',
     contributionPerRoundMinor: 100000,

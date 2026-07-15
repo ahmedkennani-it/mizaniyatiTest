@@ -35,7 +35,11 @@ describe('VaultsScreen (US-023)', () => {
   });
 
   it('lists a vault with its progress and total saved', async () => {
-    const vault = await createVault(mockFakeDb, { name: 'Omra 2027', targetMinor: 300000, currencyCode: 'MAD' });
+    const vault = await createVault(mockFakeDb, {
+      name: 'Omra 2027',
+      targetMinor: 300000,
+      currencyCode: 'MAD',
+    });
     const member = await createMember(mockFakeDb, { name: 'Youssef' });
     await createVaultContribution(mockFakeDb, {
       vaultId: vault.id,

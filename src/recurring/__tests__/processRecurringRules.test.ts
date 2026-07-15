@@ -49,7 +49,11 @@ describe('processRecurringRules', () => {
 
     const transactions = await listTransactions(db);
     expect(transactions).toHaveLength(1);
-    expect(transactions[0]).toMatchObject({ amountMinor: 1400000, type: 'income', note: 'Salaire' });
+    expect(transactions[0]).toMatchObject({
+      amountMinor: 1400000,
+      type: 'income',
+      note: 'Salaire',
+    });
 
     const updated = await getRecurringRuleById(db, rule.id);
     expect(updated?.lastRunDate).toBe('2026-07-01');

@@ -38,7 +38,9 @@ export function MemberForm({
   const [errorName, setErrorName] = useState<string | undefined>(undefined);
 
   const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const [reassignToMemberId, setReassignToMemberId] = useState<string | null>(otherMembers[0]?.id ?? null);
+  const [reassignToMemberId, setReassignToMemberId] = useState<string | null>(
+    otherMembers[0]?.id ?? null,
+  );
 
   async function handleSubmit() {
     const trimmedName = name.trim();
@@ -74,7 +76,10 @@ export function MemberForm({
 
   return (
     <AppScreen scroll contentStyle={{ gap: theme.spacing.md }}>
-      <ScreenHeader title={isEditing ? t('memberForm.titleEdit') : t('memberForm.titleNew')} onBack={onCancel} />
+      <ScreenHeader
+        title={isEditing ? t('memberForm.titleEdit') : t('memberForm.titleNew')}
+        onBack={onCancel}
+      />
 
       <TextField
         label={t('memberForm.nameLabel')}
@@ -89,8 +94,16 @@ export function MemberForm({
           {t('memberForm.roleLabel')}
         </Txt>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.xs }}>
-          <Chip label={t('membersScreen.roleEditor')} selected={role === 'editor'} onPress={() => setRole('editor')} />
-          <Chip label={t('membersScreen.roleViewer')} selected={role === 'viewer'} onPress={() => setRole('viewer')} />
+          <Chip
+            label={t('membersScreen.roleEditor')}
+            selected={role === 'editor'}
+            onPress={() => setRole('editor')}
+          />
+          <Chip
+            label={t('membersScreen.roleViewer')}
+            selected={role === 'viewer'}
+            onPress={() => setRole('viewer')}
+          />
         </View>
       </View>
 
@@ -109,7 +122,11 @@ export function MemberForm({
             <>
               {transactionsToReassign.length > 0 ? (
                 <>
-                  <Txt size="sm">{t('memberForm.deleteReassignMessage', { count: transactionsToReassign.length })}</Txt>
+                  <Txt size="sm">
+                    {t('memberForm.deleteReassignMessage', {
+                      count: transactionsToReassign.length,
+                    })}
+                  </Txt>
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.xs }}>
                     {otherMembers.map((candidate) => (
                       <Chip
@@ -130,7 +147,11 @@ export function MemberForm({
               ) : (
                 <>
                   <Txt size="sm">{t('memberForm.deleteConfirmMessage')}</Txt>
-                  <Button label={t('memberForm.deleteConfirmYes')} variant="danger" onPress={handleConfirmDelete} />
+                  <Button
+                    label={t('memberForm.deleteConfirmYes')}
+                    variant="danger"
+                    onPress={handleConfirmDelete}
+                  />
                 </>
               )}
               <Button
@@ -140,7 +161,11 @@ export function MemberForm({
               />
             </>
           ) : (
-            <Button label={t('memberForm.delete')} variant="danger" onPress={() => setConfirmingDelete(true)} />
+            <Button
+              label={t('memberForm.delete')}
+              variant="danger"
+              onPress={() => setConfirmingDelete(true)}
+            />
           )}
         </Card>
       ) : null}

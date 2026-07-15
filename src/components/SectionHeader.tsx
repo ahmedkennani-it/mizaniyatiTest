@@ -16,9 +16,7 @@ export function SectionHeader({ title, actionLabel, onActionPress }: SectionHead
   const { theme } = useTheme();
 
   return (
-    <View
-      style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
-    >
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
       <Txt weight="semibold" size="md">
         {title}
       </Txt>

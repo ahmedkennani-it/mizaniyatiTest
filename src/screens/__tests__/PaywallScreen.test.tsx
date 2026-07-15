@@ -70,7 +70,11 @@ describe('PaywallScreen (US-029)', () => {
 
     await renderScreen();
 
-    expect(await screen.findByText('Votre essai gratuit est terminé. Vous êtes revenu au forfait Gratuit.')).toBeTruthy();
+    expect(
+      await screen.findByText(
+        'Votre essai gratuit est terminé. Vous êtes revenu au forfait Gratuit.',
+      ),
+    ).toBeTruthy();
     expect(screen.queryByText("Commencer l'essai gratuit de 14 jours")).toBeNull();
   });
 

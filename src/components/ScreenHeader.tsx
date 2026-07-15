@@ -115,7 +115,9 @@ export function ScreenHeader({ title, greeting, name, onBack, actions }: ScreenH
         ) : null}
 
         {greeting !== undefined ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, flex: 1 }}>
+          <View
+            style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, flex: 1 }}
+          >
             <Avatar name={name ?? ''} />
             <View style={{ flex: 1 }}>
               <Txt size="xs" color={theme.colors.textSecondary}>

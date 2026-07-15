@@ -14,7 +14,12 @@ import {
   Txt,
 } from '../components';
 import { getDatabase } from '../db/client';
-import { listCategories, listSeasonalThemes, listTransactions, updateSeasonalTheme } from '../db/repositories';
+import {
+  listCategories,
+  listSeasonalThemes,
+  listTransactions,
+  updateSeasonalTheme,
+} from '../db/repositories';
 import type { Category, SeasonalTheme, Transaction } from '../db/repositories';
 import { useEntitlements } from '../entitlements';
 import { useLanguage } from '../i18n';
@@ -46,7 +51,9 @@ export function RamadanScreen({ onBack, onNavigateToZakat }: RamadanScreenProps)
   const [envelopeInput, setEnvelopeInput] = useState('');
   const [startDateInput, setStartDateInput] = useState(todayIsoDate());
   const [endDateInput, setEndDateInput] = useState('');
-  const [errors, setErrors] = useState<{ envelope?: string; startDate?: string; endDate?: string }>({});
+  const [errors, setErrors] = useState<{ envelope?: string; startDate?: string; endDate?: string }>(
+    {},
+  );
 
   const refresh = useCallback(() => {
     const db = getDatabase();
@@ -76,7 +83,8 @@ export function RamadanScreen({ onBack, onNavigateToZakat }: RamadanScreenProps)
     );
   }
 
-  const activeTheme = themes.find((candidate) => candidate.type === 'ramadan' && candidate.active) ?? null;
+  const activeTheme =
+    themes.find((candidate) => candidate.type === 'ramadan' && candidate.active) ?? null;
 
   async function handleActivate() {
     const envelopeMinor = parseAmountInput(envelopeInput, DEFAULT_CURRENCY_CODE);
@@ -167,20 +175,33 @@ export function RamadanScreen({ onBack, onNavigateToZakat }: RamadanScreenProps)
             {t('ramadanScreen.recapMessage')}
           </Txt>
           <Txt size="sm">
-            {t('ramadanScreen.spentLabel')}: {formatMoney(status.spentMinor, activeTheme.currencyCode, language)}
+            {t('ramadanScreen.spentLabel')}:{' '}
+            {formatMoney(status.spentMinor, activeTheme.currencyCode, language)}
           </Txt>
           <Txt size="sm">
-            {t('ramadanScreen.envelopeLabel')}: {formatMoney(activeTheme.envelopeMinor, activeTheme.currencyCode, language)}
+            {t('ramadanScreen.envelopeLabel')}:{' '}
+            {formatMoney(activeTheme.envelopeMinor, activeTheme.currencyCode, language)}
           </Txt>
-          <Button label={t('ramadanScreen.deactivateButton')} variant="danger" onPress={handleDeactivate} />
+          <Button
+            label={t('ramadanScreen.deactivateButton')}
+            variant="danger"
+            onPress={handleDeactivate}
+          />
         </Card>
       ) : (
-        <Card elevated style={{ gap: theme.spacing.xs, alignItems: 'center', paddingVertical: theme.spacing.lg }}>
+        <Card
+          elevated
+          style={{ gap: theme.spacing.xs, alignItems: 'center', paddingVertical: theme.spacing.lg }}
+        >
           <IconTile icon="moon-star" accent="gold" />
           <Txt size="sm" color={theme.colors.textSecondary}>
             {t('ramadanScreen.envelopeTitle')}
           </Txt>
-          <Txt weight="extrabold" size="xxl" color={isNegative ? theme.colors.danger : theme.colors.textPrimary}>
+          <Txt
+            weight="extrabold"
+            size="xxl"
+            color={isNegative ? theme.colors.danger : theme.colors.textPrimary}
+          >
             {formatMoney(status.remainingMinor, activeTheme.currencyCode, language)}
           </Txt>
           {isNegative ? (
@@ -196,7 +217,11 @@ export function RamadanScreen({ onBack, onNavigateToZakat }: RamadanScreenProps)
         </Card>
       )}
 
-      <Button label={t('ramadanScreen.zakatShortcut')} variant="secondary" onPress={onNavigateToZakat} />
+      <Button
+        label={t('ramadanScreen.zakatShortcut')}
+        variant="secondary"
+        onPress={onNavigateToZakat}
+      />
 
       <View style={{ gap: theme.spacing.sm }}>
         <SectionHeader title={t('ramadanScreen.subcategoriesTitle')} />

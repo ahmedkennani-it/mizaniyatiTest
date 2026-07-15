@@ -22,7 +22,8 @@ export function resolveActivePlan(subscription: Subscription | null, now: Date =
     return FREE_PLAN;
   }
   if (subscription.status === 'trial') {
-    const stillTrialing = subscription.trialEndsAt !== null && new Date(subscription.trialEndsAt) > now;
+    const stillTrialing =
+      subscription.trialEndsAt !== null && new Date(subscription.trialEndsAt) > now;
     return stillTrialing ? PRO_PLAN : FREE_PLAN;
   }
   if (subscription.status === 'active') {

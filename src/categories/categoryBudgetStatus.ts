@@ -14,7 +14,11 @@ export interface CategoryBudgetStatus {
   rolloverMinor: number;
 }
 
-function spentMinorInMonth(transactions: Transaction[], categoryId: string, monthKey: string): number {
+function spentMinorInMonth(
+  transactions: Transaction[],
+  categoryId: string,
+  monthKey: string,
+): number {
   return transactions
     .filter(
       (transaction) =>
@@ -57,7 +61,8 @@ export function computeCategoryBudgetStatus(
   const rolloverMinor = budget.rolloverEnabled
     ? Math.max(
         0,
-        budget.capMinor - spentMinorInMonth(transactions, budget.categoryId, previousMonthKey(monthKey)),
+        budget.capMinor -
+          spentMinorInMonth(transactions, budget.categoryId, previousMonthKey(monthKey)),
       )
     : 0;
   const capMinor = budget.capMinor + rolloverMinor;

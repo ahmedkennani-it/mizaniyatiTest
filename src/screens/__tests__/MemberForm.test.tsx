@@ -2,7 +2,13 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
 
 import '../../i18n';
-import { createCategory, createMember, createTransaction, listMembers, listTransactions } from '../../db/repositories';
+import {
+  createCategory,
+  createMember,
+  createTransaction,
+  listMembers,
+  listTransactions,
+} from '../../db/repositories';
 import type { Member } from '../../db/repositories';
 import { createFakeDatabase } from '../../db/testUtils/createFakeDatabase';
 import { ThemeProvider } from '../../theme';
@@ -102,7 +108,11 @@ describe('MemberForm — édition et suppression (US-027)', () => {
   });
 
   it('reassigns transactions to another member before deleting', async () => {
-    const category = await createCategory(mockFakeDb, { name: 'Courses', icon: 'cart', color: '#000000' });
+    const category = await createCategory(mockFakeDb, {
+      name: 'Courses',
+      icon: 'cart',
+      color: '#000000',
+    });
     const transaction = await createTransaction(mockFakeDb, {
       type: 'expense',
       amountMinor: 1000,

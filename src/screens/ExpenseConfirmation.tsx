@@ -33,19 +33,33 @@ export function ExpenseConfirmation({
   const amountText = forceLTR(`${isNegative ? '-' : ''}${toLocalizedDigits(major, language)}`);
 
   return (
-    <AppScreen contentStyle={{ justifyContent: 'center', alignItems: 'center', gap: theme.spacing.lg }}>
+    <AppScreen
+      contentStyle={{ justifyContent: 'center', alignItems: 'center', gap: theme.spacing.lg }}
+    >
       <IconTile icon="check-circle" accent="teal" size="lg" />
 
       <Txt weight="bold" size="xl" style={{ textAlign: 'center' }}>
         {t('confirmation.title')}
       </Txt>
 
-      <Card elevated style={{ gap: theme.spacing.xs, alignItems: 'center', alignSelf: 'stretch', paddingVertical: theme.spacing.lg }}>
+      <Card
+        elevated
+        style={{
+          gap: theme.spacing.xs,
+          alignItems: 'center',
+          alignSelf: 'stretch',
+          paddingVertical: theme.spacing.lg,
+        }}
+      >
         <Txt size="sm" color={theme.colors.textSecondary}>
           {t('confirmation.remainingLabel')}
         </Txt>
         <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: theme.spacing.xs }}>
-          <Txt weight="extrabold" size={40} color={isNegative ? theme.colors.danger : theme.colors.textPrimary}>
+          <Txt
+            weight="extrabold"
+            size={40}
+            color={isNegative ? theme.colors.danger : theme.colors.textPrimary}
+          >
             {amountText}
           </Txt>
           <Txt weight="semibold" size="md" color={theme.colors.textSecondary}>

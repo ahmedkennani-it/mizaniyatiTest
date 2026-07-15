@@ -58,7 +58,9 @@ describe('TontineScreen (US-024)', () => {
   it('shows the disclaimer and creation CTA when entitled with no group yet', async () => {
     await renderScreen(TONTINE_PLAN);
 
-    expect(await screen.findByText(/ne collecte, ne détient et ne transfère aucun argent/)).toBeTruthy();
+    expect(
+      await screen.findByText(/ne collecte, ne détient et ne transfère aucun argent/),
+    ).toBeTruthy();
     expect(await screen.findByText('Créer une tontine')).toBeTruthy();
   });
 

@@ -31,7 +31,12 @@ describe('component kit smoke', () => {
 
   it('renders a gradient BalanceHeroCard with a formatted amount', async () => {
     await wrap(
-      <BalanceHeroCard label="Solde du mois" amountMinor={726000} currencyCode="MAD" progress={0.6} />,
+      <BalanceHeroCard
+        label="Solde du mois"
+        amountMinor={726000}
+        currencyCode="MAD"
+        progress={0.6}
+      />,
     );
     expect(screen.getByText('Solde du mois')).toBeTruthy();
     expect(screen.getByText('MAD')).toBeTruthy();
@@ -57,8 +62,21 @@ describe('component kit smoke', () => {
   it('renders ListRow, CategoryBudgetRow, AlertBanner, TrustChip, VoicePromoCard', async () => {
     await wrap(
       <>
-        <ListRow icon="banknote" accent="teal" title="Salaire" subtitle="Revenu" value="+14 000 MAD" />
-        <CategoryBudgetRow icon="utensils" accent="coral" name="Alimentation" amountLabel="3 200 / 2 950" progress={1} over />
+        <ListRow
+          icon="banknote"
+          accent="teal"
+          title="Salaire"
+          subtitle="Revenu"
+          value="+14 000 MAD"
+        />
+        <CategoryBudgetRow
+          icon="utensils"
+          accent="coral"
+          name="Alimentation"
+          amountLabel="3 200 / 2 950"
+          progress={1}
+          over
+        />
         <AlertBanner message="Alimentation a dépassé son plafond." />
         <TrustChip label="Aucune connexion bancaire" />
         <VoicePromoCard title="Ajoute par la voix" subtitle="Dans ta langue" badge="NOUVEAU" />

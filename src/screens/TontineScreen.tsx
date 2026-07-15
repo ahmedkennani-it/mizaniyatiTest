@@ -3,7 +3,18 @@ import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { TontineGroupForm } from './TontineGroupForm';
-import { AppScreen, AlertBanner, Avatar, Button, Card, ListRow, Pill, ScreenHeader, SectionHeader, Txt } from '../components';
+import {
+  AppScreen,
+  AlertBanner,
+  Avatar,
+  Button,
+  Card,
+  ListRow,
+  Pill,
+  ScreenHeader,
+  SectionHeader,
+  Txt,
+} from '../components';
 import { getDatabase } from '../db/client';
 import {
   listTontineGroups,
@@ -97,7 +108,10 @@ export function TontineScreen() {
       <AppScreen scroll bottomInset={110} contentStyle={{ gap: theme.spacing.md }}>
         <ScreenHeader title={t('tontineScreen.title')} />
         <AlertBanner tone="info" icon="shield-check" message={t('tontineScreen.disclaimer')} />
-        <Card elevated style={{ alignItems: 'center', gap: theme.spacing.md, paddingVertical: theme.spacing.xl }}>
+        <Card
+          elevated
+          style={{ alignItems: 'center', gap: theme.spacing.md, paddingVertical: theme.spacing.xl }}
+        >
           <Txt size="sm" color={theme.colors.textSecondary} style={{ textAlign: 'center' }}>
             {t('tontineScreen.emptyState')}
           </Txt>
@@ -109,10 +123,16 @@ export function TontineScreen() {
 
   const now = new Date();
   const currentRound = findCurrentRound(groupRounds, now);
-  const roundStatus = currentRound ? computeRoundStatus(currentRound, groupPayments, groupMembers) : null;
+  const roundStatus = currentRound
+    ? computeRoundStatus(currentRound, groupPayments, groupMembers)
+    : null;
   const myRound = findMyRound(groupRounds, groupMembers);
   const myMonthsUntil = myRound ? monthsUntil(now, myRound.month) : null;
-  const potLabel = formatMoney(group.contributionPerRoundMinor * groupMembers.length, group.currencyCode, language);
+  const potLabel = formatMoney(
+    group.contributionPerRoundMinor * groupMembers.length,
+    group.currencyCode,
+    language,
+  );
 
   return (
     <AppScreen scroll bottomInset={110} contentStyle={{ gap: theme.spacing.md }}>
@@ -122,7 +142,9 @@ export function TontineScreen() {
 
       {roundStatus ? (
         <Card elevated style={{ gap: theme.spacing.sm }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View
+            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+          >
             <Txt weight="semibold" size="md">
               {t('tontineScreen.currentRoundTitle')}
             </Txt>
@@ -136,7 +158,10 @@ export function TontineScreen() {
             />
           </View>
           <Txt weight="bold" size="sm">
-            {t('tontineScreen.roundLabel', { current: roundStatus.round.roundNumber, total: groupRounds.length })}
+            {t('tontineScreen.roundLabel', {
+              current: roundStatus.round.roundNumber,
+              total: groupRounds.length,
+            })}
           </Txt>
           <Txt size="sm">
             {t('tontineScreen.potLabel')}: {potLabel}
@@ -151,7 +176,13 @@ export function TontineScreen() {
               return (
                 <ListRow
                   key={member.id}
-                  leading={<Avatar name={member.name} size={38} accent={member.isSelf ? 'teal' : 'purple'} />}
+                  leading={
+                    <Avatar
+                      name={member.name}
+                      size={38}
+                      accent={member.isSelf ? 'teal' : 'purple'}
+                    />
+                  }
                   title={`${member.name}${member.isSelf ? t('tontineScreen.calendarMineTag') : ''}`}
                   trailing={
                     <Txt
@@ -183,8 +214,14 @@ export function TontineScreen() {
                   amount: potLabel,
                 })
               : myMonthsUntil === 0
-                ? t('tontineScreen.myRoundCurrent', { round: myRound.roundNumber, amount: potLabel })
-                : t('tontineScreen.myRoundPast', { round: myRound.roundNumber, month: myRound.month })}
+                ? t('tontineScreen.myRoundCurrent', {
+                    round: myRound.roundNumber,
+                    amount: potLabel,
+                  })
+                : t('tontineScreen.myRoundPast', {
+                    round: myRound.roundNumber,
+                    month: myRound.month,
+                  })}
           </Txt>
         ) : (
           <Txt size="sm" color={theme.colors.textSecondary}>
@@ -196,7 +233,9 @@ export function TontineScreen() {
       <View style={{ gap: theme.spacing.sm }}>
         <SectionHeader title={t('tontineScreen.calendarTitle')} />
         {groupRounds.map((round) => {
-          const beneficiary = groupMembers.find((member) => member.id === round.beneficiaryMemberId);
+          const beneficiary = groupMembers.find(
+            (member) => member.id === round.beneficiaryMemberId,
+          );
           const isCurrent = round.id === currentRound?.id;
           return (
             <ListRow
@@ -218,7 +257,11 @@ export function TontineScreen() {
           {t('tontineScreen.reminderDescription')}
         </Txt>
         <Button
-          label={group.reminderEnabled ? t('tontineScreen.reminderDisable') : t('tontineScreen.reminderEnable')}
+          label={
+            group.reminderEnabled
+              ? t('tontineScreen.reminderDisable')
+              : t('tontineScreen.reminderEnable')
+          }
           variant={group.reminderEnabled ? 'danger' : 'primary'}
           onPress={toggleReminder}
         />

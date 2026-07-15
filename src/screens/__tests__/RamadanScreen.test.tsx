@@ -31,7 +31,11 @@ const RAMADAN_PLAN: Plan = {
   entitlements: [{ key: 'ramadan', type: 'feature', booleanValue: true }],
 };
 
-function renderScreen(onBack: () => void = jest.fn(), onNavigateToZakat: () => void = jest.fn(), plan?: Plan) {
+function renderScreen(
+  onBack: () => void = jest.fn(),
+  onNavigateToZakat: () => void = jest.fn(),
+  plan?: Plan,
+) {
   return render(
     <LanguageProvider>
       <ThemeProvider initialColorScheme="light">

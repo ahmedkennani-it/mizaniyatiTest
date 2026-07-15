@@ -52,7 +52,9 @@ export function LockScreen() {
   }
 
   return (
-    <AppScreen contentStyle={{ justifyContent: 'center', alignItems: 'center', gap: theme.spacing.lg }}>
+    <AppScreen
+      contentStyle={{ justifyContent: 'center', alignItems: 'center', gap: theme.spacing.lg }}
+    >
       <IconTile icon="lock" accent="teal" size="lg" />
 
       <Txt weight="bold" size="xl" style={{ textAlign: 'center' }}>
@@ -61,7 +63,11 @@ export function LockScreen() {
 
       {settings.mode === 'biometric' && !showPinField ? (
         <View style={{ width: '100%', alignItems: 'center', gap: theme.spacing.md }}>
-          <Button label={t('lockScreen.useBiometricButton')} onPress={handleRetryBiometric} style={{ alignSelf: 'stretch' }} />
+          <Button
+            label={t('lockScreen.useBiometricButton')}
+            onPress={handleRetryBiometric}
+            style={{ alignSelf: 'stretch' }}
+          />
           <Pressable accessibilityRole="button" onPress={() => setPinRequestedManually(true)}>
             <Txt weight="bold" size="sm" color={theme.colors.primary}>
               {t('lockScreen.usePinInsteadButton')}

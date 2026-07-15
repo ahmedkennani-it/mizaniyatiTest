@@ -21,7 +21,10 @@ import { shouldSendTontineReminder } from './tontineReminderDecision';
  * payer" (`docs/specs/tontine.md`). `lastRemindedMonth` then advances so it never repeats within
  * the same month, mirroring `CategoryBudget.lastAlertedMonth`'s no-spam bookkeeping.
  */
-export async function processTontineReminders(db: SqlDatabase, now: Date = new Date()): Promise<void> {
+export async function processTontineReminders(
+  db: SqlDatabase,
+  now: Date = new Date(),
+): Promise<void> {
   const [groups, members, rounds, payments] = await Promise.all([
     listTontineGroups(db),
     listTontineMembers(db),
@@ -59,7 +62,11 @@ export async function processTontineReminders(db: SqlDatabase, now: Date = new D
       title: i18n.t('notifications.tontineReminderTitle'),
       body: i18n.t('notifications.tontineReminderBody', {
         group: group.name,
-        amount: formatMoney(group.contributionPerRoundMinor, group.currencyCode, i18n.language as SupportedLanguage),
+        amount: formatMoney(
+          group.contributionPerRoundMinor,
+          group.currencyCode,
+          i18n.language as SupportedLanguage,
+        ),
       }),
     });
     await updateTontineGroup(db, group.id, { lastRemindedMonth: monthKey });

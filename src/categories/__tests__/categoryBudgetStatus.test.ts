@@ -54,7 +54,9 @@ describe('computeCategoryBudgetStatus', () => {
   });
 
   it('computes the percentage of the cap consumed while under budget', () => {
-    const transactions = [makeTransaction('expense', 45000, '2026-07-05T10:00:00.000Z', 'cat-courses')];
+    const transactions = [
+      makeTransaction('expense', 45000, '2026-07-05T10:00:00.000Z', 'cat-courses'),
+    ];
 
     const status = computeCategoryBudgetStatus(transactions, makeBudget(), '2026-07');
 
@@ -65,7 +67,9 @@ describe('computeCategoryBudgetStatus', () => {
   });
 
   it('marks "dépassé de X" once spending exceeds the cap (% > 100)', () => {
-    const transactions = [makeTransaction('expense', 130000, '2026-07-05T10:00:00.000Z', 'cat-courses')];
+    const transactions = [
+      makeTransaction('expense', 130000, '2026-07-05T10:00:00.000Z', 'cat-courses'),
+    ];
 
     const status = computeCategoryBudgetStatus(transactions, makeBudget(), '2026-07');
 
@@ -88,28 +92,46 @@ describe('computeCategoryBudgetStatus', () => {
   });
 
   it('recomputes immediately against a newly edited cap (no stale state)', () => {
-    const transactions = [makeTransaction('expense', 90000, '2026-07-05T10:00:00.000Z', 'cat-courses')];
+    const transactions = [
+      makeTransaction('expense', 90000, '2026-07-05T10:00:00.000Z', 'cat-courses'),
+    ];
 
-    const before = computeCategoryBudgetStatus(transactions, makeBudget({ capMinor: 100000 }), '2026-07');
+    const before = computeCategoryBudgetStatus(
+      transactions,
+      makeBudget({ capMinor: 100000 }),
+      '2026-07',
+    );
     expect(before.isOverBudget).toBe(false);
 
-    const after = computeCategoryBudgetStatus(transactions, makeBudget({ capMinor: 80000 }), '2026-07');
+    const after = computeCategoryBudgetStatus(
+      transactions,
+      makeBudget({ capMinor: 80000 }),
+      '2026-07',
+    );
     expect(after.isOverBudget).toBe(true);
     expect(after.overageMinor).toBe(10000);
   });
 
   describe('report du reste au mois suivant (US-020)', () => {
     it('does not add any rollover when disabled, even with a positive leftover last month', () => {
-      const transactions = [makeTransaction('expense', 40000, '2026-06-10T10:00:00.000Z', 'cat-courses')];
+      const transactions = [
+        makeTransaction('expense', 40000, '2026-06-10T10:00:00.000Z', 'cat-courses'),
+      ];
 
-      const status = computeCategoryBudgetStatus(transactions, makeBudget({ rolloverEnabled: false }), '2026-07');
+      const status = computeCategoryBudgetStatus(
+        transactions,
+        makeBudget({ rolloverEnabled: false }),
+        '2026-07',
+      );
 
       expect(status.rolloverMinor).toBe(0);
       expect(status.capMinor).toBe(100000);
     });
 
-    it('adds last month\'s positive leftover to this month\'s effective cap when enabled', () => {
-      const transactions = [makeTransaction('expense', 40000, '2026-06-10T10:00:00.000Z', 'cat-courses')];
+    it("adds last month's positive leftover to this month's effective cap when enabled", () => {
+      const transactions = [
+        makeTransaction('expense', 40000, '2026-06-10T10:00:00.000Z', 'cat-courses'),
+      ];
       const budget = makeBudget({ rolloverEnabled: true, capMinor: 100000 });
 
       const status = computeCategoryBudgetStatus(transactions, budget, '2026-07');
@@ -120,7 +142,9 @@ describe('computeCategoryBudgetStatus', () => {
     });
 
     it('does not roll over a negative leftover (last month already over budget)', () => {
-      const transactions = [makeTransaction('expense', 130000, '2026-06-10T10:00:00.000Z', 'cat-courses')];
+      const transactions = [
+        makeTransaction('expense', 130000, '2026-06-10T10:00:00.000Z', 'cat-courses'),
+      ];
       const budget = makeBudget({ rolloverEnabled: true, capMinor: 100000 });
 
       const status = computeCategoryBudgetStatus(transactions, budget, '2026-07');

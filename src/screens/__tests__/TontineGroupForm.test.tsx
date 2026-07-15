@@ -32,8 +32,12 @@ describe('TontineGroupForm (US-024)', () => {
     await fireEvent.press(screen.getByText('Créer la tontine'));
 
     expect(await screen.findByText('Saisissez un nom de groupe.')).toBeTruthy();
-    expect(await screen.findByText('Saisissez une cagnotte valide, supérieure à zéro.')).toBeTruthy();
-    expect(await screen.findByText('Ajoutez au moins deux membres, chacun avec un nom.')).toBeTruthy();
+    expect(
+      await screen.findByText('Saisissez une cagnotte valide, supérieure à zéro.'),
+    ).toBeTruthy();
+    expect(
+      await screen.findByText('Ajoutez au moins deux membres, chacun avec un nom.'),
+    ).toBeTruthy();
     expect(await screen.findByText('Indiquez lequel des membres est vous.')).toBeTruthy();
     expect(await listTontineGroups(mockFakeDb)).toHaveLength(0);
   });
@@ -53,7 +57,11 @@ describe('TontineGroupForm (US-024)', () => {
     expect(onSaved).toHaveBeenCalledTimes(1);
     const groups = await listTontineGroups(mockFakeDb);
     expect(groups).toHaveLength(1);
-    expect(groups[0]).toMatchObject({ name: 'Tontine famille', contributionPerRoundMinor: 100000, memberCount: 2 });
+    expect(groups[0]).toMatchObject({
+      name: 'Tontine famille',
+      contributionPerRoundMinor: 100000,
+      memberCount: 2,
+    });
 
     const members = await listTontineMembers(mockFakeDb);
     expect(members.map((m) => m.name)).toEqual(['Youssef', 'Salma']);

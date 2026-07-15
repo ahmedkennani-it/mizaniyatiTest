@@ -23,7 +23,9 @@ export interface OnboardingLanguageCountryScreenProps {
  * screen's own copy — previews the choice live, rather than only applying it once "Continuer" is
  * pressed.
  */
-export function OnboardingLanguageCountryScreen({ onComplete }: OnboardingLanguageCountryScreenProps) {
+export function OnboardingLanguageCountryScreen({
+  onComplete,
+}: OnboardingLanguageCountryScreenProps) {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const { language, setLanguage } = useLanguage();
@@ -32,7 +34,8 @@ export function OnboardingLanguageCountryScreen({ onComplete }: OnboardingLangua
   const [saving, setSaving] = useState(false);
 
   const selectedCountry =
-    SUPPORTED_COUNTRIES.find((country) => country.code === selectedCountryCode) ?? SUPPORTED_COUNTRIES[0];
+    SUPPORTED_COUNTRIES.find((country) => country.code === selectedCountryCode) ??
+    SUPPORTED_COUNTRIES[0];
 
   async function handleContinue() {
     setSaving(true);
@@ -53,9 +56,7 @@ export function OnboardingLanguageCountryScreen({ onComplete }: OnboardingLangua
   ];
 
   function selectedBorder(active: boolean) {
-    return active
-      ? { borderWidth: 2, borderColor: theme.colors.primary }
-      : undefined;
+    return active ? { borderWidth: 2, borderColor: theme.colors.primary } : undefined;
   }
 
   return (
@@ -96,7 +97,11 @@ export function OnboardingLanguageCountryScreen({ onComplete }: OnboardingLangua
             key={lang.code}
             leading={<Avatar name={lang.label} size={38} accent={active ? 'teal' : 'purple'} />}
             title={lang.label}
-            trailing={active ? <Icon name="check-circle" size={22} color={theme.colors.primary} /> : undefined}
+            trailing={
+              active ? (
+                <Icon name="check-circle" size={22} color={theme.colors.primary} />
+              ) : undefined
+            }
             onPress={() => setLanguage(lang.code)}
             style={selectedBorder(active)}
           />
@@ -116,7 +121,11 @@ export function OnboardingLanguageCountryScreen({ onComplete }: OnboardingLangua
             accent="gold"
             title={t(country.nameKey)}
             subtitle={t('onboarding.currencyNote', { currency: country.currencyCode })}
-            trailing={active ? <Icon name="check-circle" size={22} color={theme.colors.primary} /> : undefined}
+            trailing={
+              active ? (
+                <Icon name="check-circle" size={22} color={theme.colors.primary} />
+              ) : undefined
+            }
             onPress={() => setSelectedCountryCode(country.code)}
             style={selectedBorder(active)}
           />

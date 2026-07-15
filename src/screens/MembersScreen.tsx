@@ -3,7 +3,17 @@ import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { MemberForm } from './MemberForm';
-import { AppScreen, Avatar, Button, Card, Chip, ListRow, Pill, ScreenHeader, Txt } from '../components';
+import {
+  AppScreen,
+  Avatar,
+  Button,
+  Card,
+  Chip,
+  ListRow,
+  Pill,
+  ScreenHeader,
+  Txt,
+} from '../components';
 import { getDatabase } from '../db/client';
 import { listMembers, listTransactions } from '../db/repositories';
 import type { Member, MemberRole, Transaction } from '../db/repositories';
@@ -34,7 +44,9 @@ export function MembersScreen({ onBack }: MembersScreenProps) {
   }, [refresh]);
 
   if (view === 'form') {
-    const otherMembers = editingMember ? members.filter((candidate) => candidate.id !== editingMember.id) : members;
+    const otherMembers = editingMember
+      ? members.filter((candidate) => candidate.id !== editingMember.id)
+      : members;
     const transactionsToReassign = editingMember
       ? transactions.filter((transaction) => transaction.memberId === editingMember.id)
       : [];
@@ -83,7 +95,9 @@ export function MembersScreen({ onBack }: MembersScreenProps) {
             />
           </View>
           <Txt size="xs" color={theme.colors.textSecondary}>
-            {inviteRole === 'editor' ? t('memberInvite.roleEditorHint') : t('memberInvite.roleViewerHint')}
+            {inviteRole === 'editor'
+              ? t('memberInvite.roleEditorHint')
+              : t('memberInvite.roleViewerHint')}
           </Txt>
         </View>
 
@@ -92,7 +106,11 @@ export function MembersScreen({ onBack }: MembersScreenProps) {
           <Button label={t('memberInvite.enableCloudButton')} disabled />
         </Card>
 
-        <Button label={t('memberInvite.cancel')} variant="secondary" onPress={() => setView('list')} />
+        <Button
+          label={t('memberInvite.cancel')}
+          variant="secondary"
+          onPress={() => setView('list')}
+        />
       </AppScreen>
     );
   }
@@ -125,11 +143,17 @@ export function MembersScreen({ onBack }: MembersScreenProps) {
         {members.map((member, index) => (
           <ListRow
             key={member.id}
-            leading={<Avatar name={member.name} size={40} accent={index % 2 === 0 ? 'teal' : 'purple'} />}
+            leading={
+              <Avatar name={member.name} size={40} accent={index % 2 === 0 ? 'teal' : 'purple'} />
+            }
             title={member.name}
             trailing={
               <Pill
-                label={member.role === 'editor' ? t('membersScreen.roleEditor') : t('membersScreen.roleViewer')}
+                label={
+                  member.role === 'editor'
+                    ? t('membersScreen.roleEditor')
+                    : t('membersScreen.roleViewer')
+                }
                 background={theme.accents.teal.wash}
                 color={theme.accents.teal.ink}
               />

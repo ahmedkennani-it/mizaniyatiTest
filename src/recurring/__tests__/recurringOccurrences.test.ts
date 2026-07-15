@@ -28,7 +28,9 @@ describe('computeDueOccurrenceDates', () => {
   it('proposes the occurrence once the due date arrives (monthly, prompt mode)', () => {
     const rule = makeRule({ startDate: '2026-07-01', dayOfMonth: 1 });
 
-    expect(computeDueOccurrenceDates(rule, new Date('2026-07-01T09:00:00.000Z'))).toEqual(['2026-07-01']);
+    expect(computeDueOccurrenceDates(rule, new Date('2026-07-01T09:00:00.000Z'))).toEqual([
+      '2026-07-01',
+    ]);
   });
 
   it('is not yet due before its start date', () => {
@@ -42,7 +44,9 @@ describe('computeDueOccurrenceDates', () => {
     // past relative to the rule's own creation, so the first real occurrence is next month.
     const rule = makeRule({ startDate: '2026-07-20', dayOfMonth: 5 });
 
-    expect(computeDueOccurrenceDates(rule, new Date('2026-08-31T00:00:00.000Z'))).toEqual(['2026-08-05']);
+    expect(computeDueOccurrenceDates(rule, new Date('2026-08-31T00:00:00.000Z'))).toEqual([
+      '2026-08-05',
+    ]);
   });
 
   it('a paused rule never proposes/creates a transaction', () => {

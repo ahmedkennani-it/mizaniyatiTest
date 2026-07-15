@@ -41,7 +41,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   }, [refresh]);
 
   const startTrial = useCallback(async () => {
-    const trialEndsAt = new Date(Date.now() + TRIAL_DURATION_DAYS * 24 * 60 * 60 * 1000).toISOString();
+    const trialEndsAt = new Date(
+      Date.now() + TRIAL_DURATION_DAYS * 24 * 60 * 60 * 1000,
+    ).toISOString();
     await upsertSubscription(getDatabase(), { planId: 'pro', status: 'trial', trialEndsAt });
     await refresh();
   }, [refresh]);

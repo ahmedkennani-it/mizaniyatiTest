@@ -36,7 +36,11 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
       typeof options.tabBarLabel === 'string' ? options.tabBarLabel : (options.title ?? route.name);
 
     const onPress = () => {
-      const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+      const event = navigation.emit({
+        type: 'tabPress',
+        target: route.key,
+        canPreventDefault: true,
+      });
       if (!focused && !event.defaultPrevented) {
         navigation.navigate(route.name);
       }
@@ -56,7 +60,11 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
           size={21}
           color={focused ? theme.colors.primary : theme.colors.textSecondary}
         />
-        <Txt size="xs" weight={focused ? 'semibold' : 'regular'} color={focused ? theme.colors.primary : theme.colors.textSecondary}>
+        <Txt
+          size="xs"
+          weight={focused ? 'semibold' : 'regular'}
+          color={focused ? theme.colors.primary : theme.colors.textSecondary}
+        >
           {label}
         </Txt>
       </Pressable>

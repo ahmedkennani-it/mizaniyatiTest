@@ -1,7 +1,13 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
 
-import { createCategory, createMember, createRecurringRule, listRecurringRules, listTransactions } from '../../db/repositories';
+import {
+  createCategory,
+  createMember,
+  createRecurringRule,
+  listRecurringRules,
+  listTransactions,
+} from '../../db/repositories';
 import { createFakeDatabase } from '../../db/testUtils/createFakeDatabase';
 import { LanguageProvider } from '../../i18n';
 import { ThemeProvider } from '../../theme';
@@ -35,7 +41,11 @@ describe('RecurringRulesScreen (US-021)', () => {
   });
 
   it('lists an existing rule with its frequency and mode', async () => {
-    const category = await createCategory(mockFakeDb, { name: 'Logement', icon: 'home', color: '#0D9488' });
+    const category = await createCategory(mockFakeDb, {
+      name: 'Logement',
+      icon: 'home',
+      color: '#0D9488',
+    });
     const member = await createMember(mockFakeDb, { name: 'Youssef' });
     await createRecurringRule(mockFakeDb, {
       type: 'expense',
@@ -82,7 +92,11 @@ describe('RecurringRulesScreen — propositions (US-022)', () => {
   });
 
   async function seedDuePromptRule() {
-    const category = await createCategory(mockFakeDb, { name: 'Logement', icon: 'home', color: '#0D9488' });
+    const category = await createCategory(mockFakeDb, {
+      name: 'Logement',
+      icon: 'home',
+      color: '#0D9488',
+    });
     const member = await createMember(mockFakeDb, { name: 'Youssef' });
     // Exactly one occurrence due (the 1st of the current month) — a start date further in the
     // past would produce one proposal per missed month, breaking the single-match assertions below.

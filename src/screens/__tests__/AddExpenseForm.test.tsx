@@ -132,7 +132,11 @@ describe('AddExpenseForm — édition (US-016)', () => {
 
   beforeEach(async () => {
     mockFakeDb = createFakeDatabase().db;
-    category = await createCategory(mockFakeDb, { name: 'Courses', icon: 'cart', color: '#111111' });
+    category = await createCategory(mockFakeDb, {
+      name: 'Courses',
+      icon: 'cart',
+      color: '#111111',
+    });
     member = await createMember(mockFakeDb, { name: 'Moi' });
     existing = await createTransaction(mockFakeDb, {
       type: 'expense',
@@ -205,7 +209,11 @@ describe('AddExpenseForm — alertes de plafond (US-019)', () => {
 
   beforeEach(async () => {
     mockFakeDb = createFakeDatabase().db;
-    category = await createCategory(mockFakeDb, { name: 'Courses', icon: 'cart', color: '#111111' });
+    category = await createCategory(mockFakeDb, {
+      name: 'Courses',
+      icon: 'cart',
+      color: '#111111',
+    });
     await createMember(mockFakeDb, { name: 'Moi' });
     jest.mocked(notificationClient.presentNow).mockClear();
   });

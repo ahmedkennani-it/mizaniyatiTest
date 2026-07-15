@@ -1,6 +1,14 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { I18nManager, Pressable, StyleProp, StyleSheet, View, ViewStyle, PressableProps } from 'react-native';
+import {
+  I18nManager,
+  Pressable,
+  StyleProp,
+  StyleSheet,
+  View,
+  ViewStyle,
+  PressableProps,
+} from 'react-native';
 
 import { Icon } from './Icon';
 import { Txt } from './Txt';
@@ -62,7 +70,11 @@ export function Button({
         accessibilityRole="button"
         accessibilityState={{ disabled: !!disabled }}
         disabled={disabled}
-        style={({ pressed }) => [{ opacity: disabled ? 0.5 : pressed ? 0.9 : 1 }, styles.shadow, style]}
+        style={({ pressed }) => [
+          { opacity: disabled ? 0.5 : pressed ? 0.9 : 1 },
+          styles.shadow,
+          style,
+        ]}
         {...rest}
       >
         <LinearGradient

@@ -22,12 +22,18 @@ describe('resolveActivePlan', () => {
   });
 
   it('resolves to Pro during an active trial', () => {
-    const subscription = makeSubscription({ status: 'trial', trialEndsAt: '2026-07-20T00:00:00.000Z' });
+    const subscription = makeSubscription({
+      status: 'trial',
+      trialEndsAt: '2026-07-20T00:00:00.000Z',
+    });
     expect(resolveActivePlan(subscription, NOW)).toBe(PRO_PLAN);
   });
 
   it('resolves to the free plan once the trial has ended', () => {
-    const subscription = makeSubscription({ status: 'trial', trialEndsAt: '2026-07-01T00:00:00.000Z' });
+    const subscription = makeSubscription({
+      status: 'trial',
+      trialEndsAt: '2026-07-01T00:00:00.000Z',
+    });
     expect(resolveActivePlan(subscription, NOW)).toBe(FREE_PLAN);
   });
 
@@ -37,7 +43,11 @@ describe('resolveActivePlan', () => {
   });
 
   it('resolves to Pro for an active (paid) subscription', () => {
-    const subscription = makeSubscription({ status: 'active', trialEndsAt: null, renewsAt: '2026-08-01T00:00:00.000Z' });
+    const subscription = makeSubscription({
+      status: 'active',
+      trialEndsAt: null,
+      renewsAt: '2026-08-01T00:00:00.000Z',
+    });
     expect(resolveActivePlan(subscription, NOW)).toBe(PRO_PLAN);
   });
 

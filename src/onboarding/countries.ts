@@ -12,6 +12,8 @@ export interface CountryOption {
   nameKey: string;
 }
 
-export const SUPPORTED_COUNTRIES: CountryOption[] = [{ code: 'MA', currencyCode: 'MAD', nameKey: 'onboarding.countryMorocco' }];
+export const SUPPORTED_COUNTRIES: CountryOption[] = [
+  { code: 'MA', currencyCode: 'MAD', nameKey: 'onboarding.countryMorocco' },
+];
 
 export const DEFAULT_COUNTRY_CODE = SUPPORTED_COUNTRIES[0].code;

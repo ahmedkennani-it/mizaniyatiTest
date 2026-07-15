@@ -4,8 +4,21 @@ import { useTranslation } from 'react-i18next';
 
 import { AppScreen, Button, Card, Chip, ScreenHeader, TextField, Txt } from '../components';
 import { getDatabase } from '../db/client';
-import { createRecurringRule, deleteRecurringRule, listCategories, listMembers, updateRecurringRule } from '../db/repositories';
-import type { Category, Member, RecurringFrequency, RecurringMode, RecurringRule, TransactionType } from '../db/repositories';
+import {
+  createRecurringRule,
+  deleteRecurringRule,
+  listCategories,
+  listMembers,
+  updateRecurringRule,
+} from '../db/repositories';
+import type {
+  Category,
+  Member,
+  RecurringFrequency,
+  RecurringMode,
+  RecurringRule,
+  TransactionType,
+} from '../db/repositories';
 import { DEFAULT_CURRENCY_CODE, parseAmountInput, toMajorUnits } from '../money';
 import { useTheme } from '../theme';
 
@@ -98,7 +111,10 @@ export function RecurringRuleForm({ rule, onSaved, onCancel, onDeleted }: Recurr
     if (endDateInput && (!ISO_DATE_PATTERN.test(endDateInput) || endDateInput <= startDateInput)) {
       nextErrors.endDate = t('recurringForm.errorEndDate');
     }
-    if (frequency === 'monthly' && (!Number.isInteger(dayOfMonth) || dayOfMonth < 1 || dayOfMonth > 31)) {
+    if (
+      frequency === 'monthly' &&
+      (!Number.isInteger(dayOfMonth) || dayOfMonth < 1 || dayOfMonth > 31)
+    ) {
       nextErrors.dayOfMonth = t('recurringForm.errorDayOfMonth');
     }
     setErrors(nextErrors);
@@ -150,8 +166,16 @@ export function RecurringRuleForm({ rule, onSaved, onCancel, onDeleted }: Recurr
           {t('expenseForm.typeLabel')}
         </Txt>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.xs }}>
-          <Chip label={t('expenseForm.typeExpense')} selected={type === 'expense'} onPress={() => setType('expense')} />
-          <Chip label={t('expenseForm.typeIncome')} selected={type === 'income'} onPress={() => setType('income')} />
+          <Chip
+            label={t('expenseForm.typeExpense')}
+            selected={type === 'expense'}
+            onPress={() => setType('expense')}
+          />
+          <Chip
+            label={t('expenseForm.typeIncome')}
+            selected={type === 'income'}
+            onPress={() => setType('income')}
+          />
         </View>
       </View>
 
@@ -270,8 +294,16 @@ export function RecurringRuleForm({ rule, onSaved, onCancel, onDeleted }: Recurr
           {t('recurringForm.modeLabel')}
         </Txt>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.xs }}>
-          <Chip label={t('recurringForm.modePrompt')} selected={mode === 'prompt'} onPress={() => setMode('prompt')} />
-          <Chip label={t('recurringForm.modeAuto')} selected={mode === 'auto'} onPress={() => setMode('auto')} />
+          <Chip
+            label={t('recurringForm.modePrompt')}
+            selected={mode === 'prompt'}
+            onPress={() => setMode('prompt')}
+          />
+          <Chip
+            label={t('recurringForm.modeAuto')}
+            selected={mode === 'auto'}
+            onPress={() => setMode('auto')}
+          />
         </View>
       </View>
 
@@ -300,7 +332,11 @@ export function RecurringRuleForm({ rule, onSaved, onCancel, onDeleted }: Recurr
           {confirmingDelete ? (
             <>
               <Txt size="sm">{t('recurringForm.deleteConfirmMessage')}</Txt>
-              <Button label={t('recurringForm.deleteConfirmYes')} variant="danger" onPress={handleConfirmDelete} />
+              <Button
+                label={t('recurringForm.deleteConfirmYes')}
+                variant="danger"
+                onPress={handleConfirmDelete}
+              />
               <Button
                 label={t('recurringForm.deleteConfirmCancel')}
                 variant="secondary"
@@ -308,7 +344,11 @@ export function RecurringRuleForm({ rule, onSaved, onCancel, onDeleted }: Recurr
               />
             </>
           ) : (
-            <Button label={t('recurringForm.delete')} variant="danger" onPress={() => setConfirmingDelete(true)} />
+            <Button
+              label={t('recurringForm.delete')}
+              variant="danger"
+              onPress={() => setConfirmingDelete(true)}
+            />
           )}
         </Card>
       ) : null}

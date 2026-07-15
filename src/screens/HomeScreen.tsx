@@ -105,7 +105,8 @@ export function HomeScreen() {
 
   // Number-only, LTR, localized digits (currency shown separately in the design).
   const num = useCallback(
-    (minor: number) => forceLTR(toLocalizedDigits(toMajorUnits(minor, DEFAULT_CURRENCY_CODE), language)),
+    (minor: number) =>
+      forceLTR(toLocalizedDigits(toMajorUnits(minor, DEFAULT_CURRENCY_CODE), language)),
     [language],
   );
 
@@ -145,7 +146,11 @@ export function HomeScreen() {
         greeting={t('home.greeting')}
         name={householdName}
         actions={[
-          { icon: 'globe', text: language.toUpperCase(), accessibilityLabel: t('home.a11yLanguage') },
+          {
+            icon: 'globe',
+            text: language.toUpperCase(),
+            accessibilityLabel: t('home.a11yLanguage'),
+          },
           { icon: 'bell', badge: true, accessibilityLabel: t('home.a11yNotifications') },
         ]}
       />
@@ -220,10 +225,16 @@ export function HomeScreen() {
         </View>
       ) : null}
 
-      <SectionHeader title={t('home.recentTitle')} actionLabel={recent.length > 0 ? t('home.seeAll') : undefined} />
+      <SectionHeader
+        title={t('home.recentTitle')}
+        actionLabel={recent.length > 0 ? t('home.seeAll') : undefined}
+      />
 
       {recent.length === 0 ? (
-        <Card elevated style={{ alignItems: 'center', gap: theme.spacing.md, paddingVertical: theme.spacing.xl }}>
+        <Card
+          elevated
+          style={{ alignItems: 'center', gap: theme.spacing.md, paddingVertical: theme.spacing.xl }}
+        >
           <Txt size="sm" color={theme.colors.textSecondary} style={{ textAlign: 'center' }}>
             {t('home.emptyState')}
           </Txt>

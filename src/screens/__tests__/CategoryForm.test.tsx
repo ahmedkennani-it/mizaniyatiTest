@@ -82,7 +82,11 @@ describe('CategoryForm — édition et suppression (US-017)', () => {
   beforeEach(async () => {
     mockFakeDb = createFakeDatabase().db;
     courses = await createCategory(mockFakeDb, { name: 'Courses', icon: 'cart', color: '#1E7B34' });
-    autres = await createCategory(mockFakeDb, { name: 'Autres', icon: 'ellipsis', color: '#54606B' });
+    autres = await createCategory(mockFakeDb, {
+      name: 'Autres',
+      icon: 'ellipsis',
+      color: '#54606B',
+    });
   });
 
   it('pre-fills the form with the existing category', async () => {
@@ -208,7 +212,7 @@ describe('CategoryForm — édition et suppression (US-017)', () => {
   });
 });
 
-describe('CategoryForm — plafond & seuil d\'alerte (US-018)', () => {
+describe("CategoryForm — plafond & seuil d'alerte (US-018)", () => {
   let courses: Category;
 
   beforeEach(async () => {
@@ -252,7 +256,11 @@ describe('CategoryForm — plafond & seuil d\'alerte (US-018)', () => {
     expect(onSaved).toHaveBeenCalledTimes(1);
     const budgets = await listCategoryBudgets(mockFakeDb);
     expect(budgets).toHaveLength(1);
-    expect(budgets[0]).toMatchObject({ categoryId: courses.id, capMinor: 100000, alertThresholdMinor: 100000 });
+    expect(budgets[0]).toMatchObject({
+      categoryId: courses.id,
+      capMinor: 100000,
+      alertThresholdMinor: 100000,
+    });
   });
 
   it('shows a validation error and does not save when the alert threshold exceeds the cap', async () => {
@@ -262,7 +270,9 @@ describe('CategoryForm — plafond & seuil d\'alerte (US-018)', () => {
     await fireEvent.changeText(screen.getByLabelText("Seuil d'alerte"), '1500');
     await fireEvent.press(screen.getByText('Enregistrer'));
 
-    expect(await screen.findByText("Le seuil d'alerte doit être inférieur ou égal au plafond.")).toBeTruthy();
+    expect(
+      await screen.findByText("Le seuil d'alerte doit être inférieur ou égal au plafond."),
+    ).toBeTruthy();
     expect(await listCategoryBudgets(mockFakeDb)).toHaveLength(0);
   });
 
@@ -285,6 +295,10 @@ describe('CategoryForm — plafond & seuil d\'alerte (US-018)', () => {
     expect(onSaved).toHaveBeenCalledTimes(1);
     const budgets = await listCategoryBudgets(mockFakeDb);
     expect(budgets).toHaveLength(1);
-    expect(budgets[0]).toMatchObject({ id: existingBudget.id, capMinor: 120000, alertThresholdMinor: 90000 });
+    expect(budgets[0]).toMatchObject({
+      id: existingBudget.id,
+      capMinor: 120000,
+      alertThresholdMinor: 90000,
+    });
   });
 });

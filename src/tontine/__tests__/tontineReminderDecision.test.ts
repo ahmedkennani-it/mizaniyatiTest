@@ -22,11 +22,15 @@ describe('shouldSendTontineReminder', () => {
   });
 
   it('does not send twice in the same month', () => {
-    expect(shouldSendTontineReminder({ ...baseInput(), alreadyRemindedThisMonth: true })).toBe(false);
+    expect(shouldSendTontineReminder({ ...baseInput(), alreadyRemindedThisMonth: true })).toBe(
+      false,
+    );
   });
 
   it('does not send when the current round is not this month', () => {
-    expect(shouldSendTontineReminder({ ...baseInput(), isCurrentRoundThisMonth: false })).toBe(false);
+    expect(shouldSendTontineReminder({ ...baseInput(), isCurrentRoundThisMonth: false })).toBe(
+      false,
+    );
   });
 
   it('does not send once self has already paid', () => {

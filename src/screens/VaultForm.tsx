@@ -76,7 +76,10 @@ export function VaultForm({ vault, onSaved, onCancel, onDeleted }: VaultFormProp
 
   return (
     <AppScreen scroll contentStyle={{ gap: theme.spacing.md }}>
-      <ScreenHeader title={isEditing ? t('vaultForm.titleEdit') : t('vaultForm.titleNew')} onBack={onCancel} />
+      <ScreenHeader
+        title={isEditing ? t('vaultForm.titleEdit') : t('vaultForm.titleNew')}
+        onBack={onCancel}
+      />
 
       <TextField
         label={t('vaultForm.nameLabel')}
@@ -112,7 +115,11 @@ export function VaultForm({ vault, onSaved, onCancel, onDeleted }: VaultFormProp
           {confirmingDelete ? (
             <>
               <Txt size="sm">{t('vaultForm.deleteConfirmMessage')}</Txt>
-              <Button label={t('vaultForm.deleteConfirmYes')} variant="danger" onPress={handleConfirmDelete} />
+              <Button
+                label={t('vaultForm.deleteConfirmYes')}
+                variant="danger"
+                onPress={handleConfirmDelete}
+              />
               <Button
                 label={t('vaultForm.deleteConfirmCancel')}
                 variant="secondary"
@@ -120,7 +127,11 @@ export function VaultForm({ vault, onSaved, onCancel, onDeleted }: VaultFormProp
               />
             </>
           ) : (
-            <Button label={t('vaultForm.delete')} variant="danger" onPress={() => setConfirmingDelete(true)} />
+            <Button
+              label={t('vaultForm.delete')}
+              variant="danger"
+              onPress={() => setConfirmingDelete(true)}
+            />
           )}
         </Card>
       ) : null}

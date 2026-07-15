@@ -1,7 +1,12 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
 
-import { createMember, createVault, createVaultContribution, listVaultContributions } from '../../db/repositories';
+import {
+  createMember,
+  createVault,
+  createVaultContribution,
+  listVaultContributions,
+} from '../../db/repositories';
 import type { Member, Vault } from '../../db/repositories';
 import { createFakeDatabase } from '../../db/testUtils/createFakeDatabase';
 import { LanguageProvider } from '../../i18n';
@@ -25,7 +30,12 @@ function renderDetail(
   return render(
     <LanguageProvider>
       <ThemeProvider initialColorScheme="light">
-        <VaultDetail vault={vault} onBack={onBack} onVaultChanged={onVaultChanged} onVaultDeleted={onVaultDeleted} />
+        <VaultDetail
+          vault={vault}
+          onBack={onBack}
+          onVaultChanged={onVaultChanged}
+          onVaultDeleted={onVaultDeleted}
+        />
       </ThemeProvider>
     </LanguageProvider>,
   );

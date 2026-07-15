@@ -3,7 +3,11 @@ import { computeMonthlyBalance } from '../monthlyBalance';
 
 let nextId = 0;
 
-function makeTransaction(type: TransactionType, amountMinor: number, occurredAt: string): Transaction {
+function makeTransaction(
+  type: TransactionType,
+  amountMinor: number,
+  occurredAt: string,
+): Transaction {
   nextId += 1;
   return {
     id: `tx-${nextId}`,

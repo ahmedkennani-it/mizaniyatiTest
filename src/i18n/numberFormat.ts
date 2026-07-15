@@ -3,11 +3,14 @@ import type { SupportedLanguage } from './i18n';
 const LOCALE_BY_LANGUAGE: Record<SupportedLanguage, string> = {
   fr: 'fr-MA',
   ar: 'ar-MA',
+  // Anglo-Saxon formatting (comma thousands, dot decimal) for the English catalog.
+  en: 'en-US',
 };
 
 const NUMBERING_SYSTEM_BY_LANGUAGE: Record<SupportedLanguage, string | undefined> = {
   fr: undefined,
   ar: 'arab',
+  en: undefined,
 };
 
 export interface IntlLocale {
@@ -17,7 +20,10 @@ export interface IntlLocale {
 
 /** Resolves the `Intl` locale + numbering system (Arabic-indic for `ar`) for the app language. */
 export function resolveIntlLocale(language: SupportedLanguage): IntlLocale {
-  return { locale: LOCALE_BY_LANGUAGE[language], numberingSystem: NUMBERING_SYSTEM_BY_LANGUAGE[language] };
+  return {
+    locale: LOCALE_BY_LANGUAGE[language],
+    numberingSystem: NUMBERING_SYSTEM_BY_LANGUAGE[language],
+  };
 }
 
 /** Renders digits per the active locale — Arabic-indic (٠١٢…) for `ar`, Western otherwise. */

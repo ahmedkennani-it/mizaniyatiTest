@@ -10,7 +10,12 @@ jest.mock('../../db/client', () => ({
 }));
 
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
-import { createCategory, createMember, createTransaction, upsertCategoryBudget } from '../../db/repositories';
+import {
+  createCategory,
+  createMember,
+  createTransaction,
+  upsertCategoryBudget,
+} from '../../db/repositories';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { EntitlementsProvider } from '../../entitlements';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
@@ -74,8 +79,12 @@ describe('CategoriesScreen', () => {
 
     await renderScreen(TWO_CATEGORY_PLAN);
 
-    expect(await screen.findByText('Limite de catégories atteinte (2) pour votre plan.')).toBeTruthy();
-    expect(screen.getByText('Passez à un forfait supérieur pour créer plus de catégories.')).toBeTruthy();
+    expect(
+      await screen.findByText('Limite de catégories atteinte (2) pour votre plan.'),
+    ).toBeTruthy();
+    expect(
+      screen.getByText('Passez à un forfait supérieur pour créer plus de catégories.'),
+    ).toBeTruthy();
 
     await fireEvent.press(screen.getByLabelText('Ajouter une catégorie'));
     // Still on the list — the limit blocked navigation to the create form.
@@ -91,13 +100,17 @@ describe('CategoriesScreen', () => {
     expect(screen.queryByText(/Limite de catégories atteinte/)).toBeNull();
   });
 
-  describe('plafonds & seuils d\'alerte (US-018)', () => {
+  describe("plafonds & seuils d'alerte (US-018)", () => {
     function currentMonthKey(): string {
       return new Date().toISOString().slice(0, 7);
     }
 
     it('shows the percentage of the cap consumed while under budget', async () => {
-      const courses = await createCategory(mockFakeDb, { name: 'Courses', icon: 'cart', color: '#1E7B34' });
+      const courses = await createCategory(mockFakeDb, {
+        name: 'Courses',
+        icon: 'cart',
+        color: '#1E7B34',
+      });
       const member = await createMember(mockFakeDb, { name: 'Moi' });
       await createTransaction(mockFakeDb, {
         type: 'expense',
@@ -122,7 +135,11 @@ describe('CategoriesScreen', () => {
     });
 
     it('marks a category "dépassé de X" once spending exceeds its cap', async () => {
-      const courses = await createCategory(mockFakeDb, { name: 'Courses', icon: 'cart', color: '#1E7B34' });
+      const courses = await createCategory(mockFakeDb, {
+        name: 'Courses',
+        icon: 'cart',
+        color: '#1E7B34',
+      });
       const member = await createMember(mockFakeDb, { name: 'Moi' });
       await createTransaction(mockFakeDb, {
         type: 'expense',

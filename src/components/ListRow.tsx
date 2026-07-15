@@ -52,10 +52,7 @@ export function ListRow({
   const body = (
     <Card
       elevated
-      style={[
-        { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
-        style,
-      ]}
+      style={[{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }, style]}
     >
       {leading ?? (icon ? <IconTile icon={icon} accent={accent} /> : null)}
       <View style={{ flex: 1, gap: 2 }}>
@@ -74,9 +71,7 @@ export function ListRow({
             {value}
           </Txt>
         ) : null)}
-      {chevron ? (
-        <Icon name="chevron-right" size={18} color={theme.colors.textSecondary} />
-      ) : null}
+      {chevron ? <Icon name="chevron-right" size={18} color={theme.colors.textSecondary} /> : null}
     </Card>
   );
 

@@ -21,7 +21,15 @@ export interface GoalCardProps {
 }
 
 /** Savings-goal / vault card: IconTile, title, progress bar, "saved / target" caption. */
-export function GoalCard({ icon, accent = 'teal', title, progress, caption, onPress, style }: GoalCardProps) {
+export function GoalCard({
+  icon,
+  accent = 'teal',
+  title,
+  progress,
+  caption,
+  onPress,
+  style,
+}: GoalCardProps) {
   const { theme } = useTheme();
 
   const body = (
