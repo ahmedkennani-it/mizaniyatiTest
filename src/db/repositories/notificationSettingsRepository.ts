@@ -37,11 +37,10 @@ export async function setBudgetAlertsEnabled(
     [SETTINGS_ID],
   );
   if (existing) {
-    await db.runAsync('UPDATE notification_settings SET budget_alerts_enabled = ?, updated_at = ? WHERE id = ?;', [
-      enabled ? 1 : 0,
-      now,
-      SETTINGS_ID,
-    ]);
+    await db.runAsync(
+      'UPDATE notification_settings SET budget_alerts_enabled = ?, updated_at = ? WHERE id = ?;',
+      [enabled ? 1 : 0, now, SETTINGS_ID],
+    );
   } else {
     await db.runAsync(
       'INSERT INTO notification_settings (id, budget_alerts_enabled, created_at, updated_at) VALUES (?, ?, ?, ?);',

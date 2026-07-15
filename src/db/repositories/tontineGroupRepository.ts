@@ -34,7 +34,10 @@ function fromRow(row: TontineGroupRow): TontineGroup {
   };
 }
 
-export async function createTontineGroup(db: SqlDatabase, input: NewTontineGroup): Promise<TontineGroup> {
+export async function createTontineGroup(
+  db: SqlDatabase,
+  input: NewTontineGroup,
+): Promise<TontineGroup> {
   const id = generateId();
   const now = new Date().toISOString();
   const reminderEnabled = input.reminderEnabled ?? false;
@@ -67,7 +70,10 @@ export async function createTontineGroup(db: SqlDatabase, input: NewTontineGroup
   };
 }
 
-export async function getTontineGroupById(db: SqlDatabase, id: string): Promise<TontineGroup | null> {
+export async function getTontineGroupById(
+  db: SqlDatabase,
+  id: string,
+): Promise<TontineGroup | null> {
   const row = await db.getFirstAsync<TontineGroupRow>(
     `SELECT ${SELECT_COLUMNS} FROM tontine_groups WHERE id = ?;`,
     [id],

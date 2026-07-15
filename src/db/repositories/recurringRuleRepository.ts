@@ -109,7 +109,10 @@ export async function createRecurringRule(
   };
 }
 
-export async function getRecurringRuleById(db: SqlDatabase, id: string): Promise<RecurringRule | null> {
+export async function getRecurringRuleById(
+  db: SqlDatabase,
+  id: string,
+): Promise<RecurringRule | null> {
   const row = await db.getFirstAsync<RecurringRuleRow>(
     `SELECT ${SELECT_COLUMNS} FROM recurring_rules WHERE id = ?;`,
     [id],

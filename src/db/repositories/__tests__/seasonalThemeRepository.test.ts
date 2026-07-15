@@ -73,7 +73,10 @@ describe('seasonalThemeRepository', () => {
       currencyCode: 'MAD',
     });
 
-    const updated = await updateSeasonalTheme(db, theme.id, { active: false, endDate: '2027-03-29' });
+    const updated = await updateSeasonalTheme(db, theme.id, {
+      active: false,
+      endDate: '2027-03-29',
+    });
 
     expect(updated.active).toBe(false);
     expect(updated.endDate).toBe('2027-03-29');
@@ -81,7 +84,9 @@ describe('seasonalThemeRepository', () => {
 
   it('throws NotFoundError when updating an unknown theme', async () => {
     const { db } = createFakeDatabase();
-    await expect(updateSeasonalTheme(db, 'missing', { active: false })).rejects.toThrow(NotFoundError);
+    await expect(updateSeasonalTheme(db, 'missing', { active: false })).rejects.toThrow(
+      NotFoundError,
+    );
   });
 
   it('lets a category be tagged with a seasonal theme id', async () => {
@@ -108,7 +113,12 @@ describe('seasonalThemeRepository', () => {
     const { db } = createFakeDatabase();
 
     await expect(
-      createCategory(db, { name: 'Iftar', icon: 'utensils', color: '#0D9488', seasonalThemeId: 'missing-theme' }),
+      createCategory(db, {
+        name: 'Iftar',
+        icon: 'utensils',
+        color: '#0D9488',
+        seasonalThemeId: 'missing-theme',
+      }),
     ).rejects.toThrow(/FOREIGN KEY constraint failed/);
   });
 

@@ -34,7 +34,10 @@ function fromRow(row: TransactionRow): Transaction {
   };
 }
 
-export async function createTransaction(db: SqlDatabase, input: NewTransaction): Promise<Transaction> {
+export async function createTransaction(
+  db: SqlDatabase,
+  input: NewTransaction,
+): Promise<Transaction> {
   const id = generateId();
   const now = new Date().toISOString();
   const note = input.note ?? null;

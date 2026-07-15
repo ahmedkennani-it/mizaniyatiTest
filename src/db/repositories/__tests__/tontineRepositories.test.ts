@@ -1,8 +1,21 @@
 import { createFakeDatabase } from '../../testUtils/createFakeDatabase';
 import { NotFoundError } from '../errors';
-import { createTontineGroup, getTontineGroupById, listTontineGroups, updateTontineGroup } from '../tontineGroupRepository';
-import { createTontineMember, getTontineMemberById, listTontineMembers } from '../tontineMemberRepository';
-import { createTontineRound, getTontineRoundById, listTontineRounds } from '../tontineRoundRepository';
+import {
+  createTontineGroup,
+  getTontineGroupById,
+  listTontineGroups,
+  updateTontineGroup,
+} from '../tontineGroupRepository';
+import {
+  createTontineMember,
+  getTontineMemberById,
+  listTontineMembers,
+} from '../tontineMemberRepository';
+import {
+  createTontineRound,
+  getTontineRoundById,
+  listTontineRounds,
+} from '../tontineRoundRepository';
 import {
   createTontinePayment,
   getTontinePaymentById,
@@ -18,7 +31,12 @@ async function seedGroupAndMember(db: ReturnType<typeof createFakeDatabase>['db'
     memberCount: 4,
     startMonth: '2026-07',
   });
-  const member = await createTontineMember(db, { groupId: group.id, name: 'Youssef', roundOrder: 1, isSelf: true });
+  const member = await createTontineMember(db, {
+    groupId: group.id,
+    name: 'Youssef',
+    roundOrder: 1,
+    isSelf: true,
+  });
   return { group, member };
 }
 
@@ -84,7 +102,9 @@ describe('tontineGroupRepository', () => {
 
   it('throws NotFoundError when updating an unknown group', async () => {
     const { db } = createFakeDatabase();
-    await expect(updateTontineGroup(db, 'missing', { reminderEnabled: true })).rejects.toThrow(NotFoundError);
+    await expect(updateTontineGroup(db, 'missing', { reminderEnabled: true })).rejects.toThrow(
+      NotFoundError,
+    );
   });
 });
 
@@ -93,7 +113,11 @@ describe('tontineMemberRepository', () => {
     const { db } = createFakeDatabase();
     const { group } = await seedGroupAndMember(db);
 
-    const member = await createTontineMember(db, { groupId: group.id, name: 'Salma', roundOrder: 2 });
+    const member = await createTontineMember(db, {
+      groupId: group.id,
+      name: 'Salma',
+      roundOrder: 2,
+    });
 
     expect(member.isSelf).toBe(false);
     expect(await getTontineMemberById(db, member.id)).toEqual(member);
@@ -109,7 +133,11 @@ describe('tontineMemberRepository', () => {
   it('lists members ordered by roundOrder', async () => {
     const { db } = createFakeDatabase();
     const { group, member: first } = await seedGroupAndMember(db);
-    const second = await createTontineMember(db, { groupId: group.id, name: 'Salma', roundOrder: 2 });
+    const second = await createTontineMember(db, {
+      groupId: group.id,
+      name: 'Salma',
+      roundOrder: 2,
+    });
 
     expect((await listTontineMembers(db)).map((m) => m.id)).toEqual([first.id, second.id]);
   });
@@ -135,7 +163,12 @@ describe('tontineRoundRepository', () => {
     const { group } = await seedGroupAndMember(db);
 
     await expect(
-      createTontineRound(db, { groupId: group.id, roundNumber: 1, month: '2026-07', beneficiaryMemberId: 'missing' }),
+      createTontineRound(db, {
+        groupId: group.id,
+        roundNumber: 1,
+        month: '2026-07',
+        beneficiaryMemberId: 'missing',
+      }),
     ).rejects.toThrow(/FOREIGN KEY constraint failed/);
   });
 
@@ -188,7 +221,10 @@ describe('tontinePaymentRepository', () => {
     });
     const payment = await createTontinePayment(db, { roundId: round.id, memberId: member.id });
 
-    const updated = await updateTontinePayment(db, payment.id, { status: 'paid', paidAt: '2026-07-05T10:00:00.000Z' });
+    const updated = await updateTontinePayment(db, payment.id, {
+      status: 'paid',
+      paidAt: '2026-07-05T10:00:00.000Z',
+    });
 
     expect(updated.status).toBe('paid');
     expect(updated.paidAt).toBe('2026-07-05T10:00:00.000Z');
@@ -210,6 +246,8 @@ describe('tontinePaymentRepository', () => {
 
   it('throws NotFoundError when updating an unknown payment', async () => {
     const { db } = createFakeDatabase();
-    await expect(updateTontinePayment(db, 'missing', { status: 'paid' })).rejects.toThrow(NotFoundError);
+    await expect(updateTontinePayment(db, 'missing', { status: 'paid' })).rejects.toThrow(
+      NotFoundError,
+    );
   });
 });

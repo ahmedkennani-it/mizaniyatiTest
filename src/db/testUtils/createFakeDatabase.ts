@@ -37,6 +37,10 @@ const FOREIGN_KEYS: Record<string, { column: string; referencesTable: string }[]
     { column: 'round_id', referencesTable: 'tontine_rounds' },
     { column: 'member_id', referencesTable: 'tontine_members' },
   ],
+  transfers: [
+    { column: 'from_member_id', referencesTable: 'members' },
+    { column: 'to_member_id', referencesTable: 'members' },
+  ],
 };
 
 function validateRow(tableName: string, row: Row, tables: Map<string, Map<string, Row>>): void {
@@ -140,7 +144,10 @@ export function createFakeDatabase() {
       statements.push(statement);
       const args = Array.isArray(params) ? params : [];
 
-      if (statement === 'INSERT INTO _migrations (version, name) VALUES (?, ?);' && Array.isArray(params)) {
+      if (
+        statement === 'INSERT INTO _migrations (version, name) VALUES (?, ?);' &&
+        Array.isArray(params)
+      ) {
         migrationsTable.push({
           version: params[0] as number,
           name: params[1] as string,

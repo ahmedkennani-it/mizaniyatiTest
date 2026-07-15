@@ -1,6 +1,12 @@
 import { createFakeDatabase } from '../../testUtils/createFakeDatabase';
 import { NotFoundError } from '../errors';
-import { createVault, deleteVault, getVaultById, listVaults, updateVault } from '../vaultRepository';
+import {
+  createVault,
+  deleteVault,
+  getVaultById,
+  listVaults,
+  updateVault,
+} from '../vaultRepository';
 
 describe('vaultRepository', () => {
   it('creates a vault with a deadline and reads it back', async () => {
@@ -18,10 +24,14 @@ describe('vaultRepository', () => {
     expect(await getVaultById(db, vault.id)).toEqual(vault);
   });
 
-  it('creates a vault without a deadline (fonds d\'urgence)', async () => {
+  it("creates a vault without a deadline (fonds d'urgence)", async () => {
     const { db } = createFakeDatabase();
 
-    const vault = await createVault(db, { name: "Fonds d'urgence", targetMinor: 1000000, currencyCode: 'MAD' });
+    const vault = await createVault(db, {
+      name: "Fonds d'urgence",
+      targetMinor: 1000000,
+      currencyCode: 'MAD',
+    });
 
     expect(vault.deadline).toBeNull();
   });
@@ -42,7 +52,11 @@ describe('vaultRepository', () => {
   it('lists vaults ordered by creation', async () => {
     const { db } = createFakeDatabase();
     const first = await createVault(db, { name: 'Omra', targetMinor: 100000, currencyCode: 'MAD' });
-    const second = await createVault(db, { name: 'Voiture', targetMinor: 500000, currencyCode: 'MAD' });
+    const second = await createVault(db, {
+      name: 'Voiture',
+      targetMinor: 500000,
+      currencyCode: 'MAD',
+    });
 
     const vaults = await listVaults(db);
     expect(vaults.map((v) => v.id)).toEqual([first.id, second.id]);
@@ -52,7 +66,10 @@ describe('vaultRepository', () => {
     const { db } = createFakeDatabase();
     const vault = await createVault(db, { name: 'Omra', targetMinor: 100000, currencyCode: 'MAD' });
 
-    const updated = await updateVault(db, vault.id, { targetMinor: 150000, deadline: '2027-01-01' });
+    const updated = await updateVault(db, vault.id, {
+      targetMinor: 150000,
+      deadline: '2027-01-01',
+    });
 
     expect(updated.targetMinor).toBe(150000);
     expect(updated.deadline).toBe('2027-01-01');

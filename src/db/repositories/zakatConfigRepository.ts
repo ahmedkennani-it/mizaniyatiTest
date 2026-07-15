@@ -48,7 +48,10 @@ export async function getZakatConfig(db: SqlDatabase): Promise<ZakatConfig> {
  * bumps `priceUpdatedAt` to now (a manual price entry) — patching only `madhhab`/`nisabBasis`
  * does not, so "fraîcheur du prix" reflects the price itself, not unrelated config edits.
  */
-export async function updateZakatConfig(db: SqlDatabase, patch: ZakatConfigPatch): Promise<ZakatConfig> {
+export async function updateZakatConfig(
+  db: SqlDatabase,
+  patch: ZakatConfigPatch,
+): Promise<ZakatConfig> {
   const existing = await getZakatConfig(db);
   const updated: ZakatConfig = { ...existing, ...patch };
   const now = new Date().toISOString();
@@ -57,7 +60,9 @@ export async function updateZakatConfig(db: SqlDatabase, patch: ZakatConfigPatch
       ? now
       : existing.priceUpdatedAt;
 
-  const row = await db.getFirstAsync<{ id: string }>('SELECT id FROM zakat_config WHERE id = ?;', [CONFIG_ID]);
+  const row = await db.getFirstAsync<{ id: string }>('SELECT id FROM zakat_config WHERE id = ?;', [
+    CONFIG_ID,
+  ]);
   if (row) {
     await db.runAsync(
       'UPDATE zakat_config SET madhhab = ?, nisab_basis = ?, gold_price_per_gram_minor = ?, silver_price_per_gram_minor = ?, price_updated_at = ?, updated_at = ? WHERE id = ?;',

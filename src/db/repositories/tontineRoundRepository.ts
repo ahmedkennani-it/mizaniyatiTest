@@ -12,7 +12,8 @@ interface TontineRoundRow {
   updated_at: string;
 }
 
-const SELECT_COLUMNS = 'id, group_id, round_number, month, beneficiary_member_id, created_at, updated_at';
+const SELECT_COLUMNS =
+  'id, group_id, round_number, month, beneficiary_member_id, created_at, updated_at';
 
 function fromRow(row: TontineRoundRow): TontineRound {
   return {
@@ -26,7 +27,10 @@ function fromRow(row: TontineRoundRow): TontineRound {
   };
 }
 
-export async function createTontineRound(db: SqlDatabase, input: NewTontineRound): Promise<TontineRound> {
+export async function createTontineRound(
+  db: SqlDatabase,
+  input: NewTontineRound,
+): Promise<TontineRound> {
   const id = generateId();
   const now = new Date().toISOString();
   await db.runAsync(
@@ -44,7 +48,10 @@ export async function createTontineRound(db: SqlDatabase, input: NewTontineRound
   };
 }
 
-export async function getTontineRoundById(db: SqlDatabase, id: string): Promise<TontineRound | null> {
+export async function getTontineRoundById(
+  db: SqlDatabase,
+  id: string,
+): Promise<TontineRound | null> {
   const row = await db.getFirstAsync<TontineRoundRow>(
     `SELECT ${SELECT_COLUMNS} FROM tontine_rounds WHERE id = ?;`,
     [id],

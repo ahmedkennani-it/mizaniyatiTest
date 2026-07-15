@@ -35,7 +35,10 @@ export async function getSubscription(db: SqlDatabase): Promise<Subscription | n
 }
 
 /** Inserts or overwrites the single subscription row (find-or-create by the fixed id). */
-export async function upsertSubscription(db: SqlDatabase, input: NewSubscription): Promise<Subscription> {
+export async function upsertSubscription(
+  db: SqlDatabase,
+  input: NewSubscription,
+): Promise<Subscription> {
   const now = new Date().toISOString();
   const existing = await getSubscription(db);
   const updated: Subscription = {
@@ -49,7 +52,14 @@ export async function upsertSubscription(db: SqlDatabase, input: NewSubscription
   if (existing) {
     await db.runAsync(
       'UPDATE subscriptions SET plan_id = ?, status = ?, trial_ends_at = ?, renews_at = ?, updated_at = ? WHERE id = ?;',
-      [updated.planId, updated.status, updated.trialEndsAt, updated.renewsAt, updated.updatedAt, SUBSCRIPTION_ID],
+      [
+        updated.planId,
+        updated.status,
+        updated.trialEndsAt,
+        updated.renewsAt,
+        updated.updatedAt,
+        SUBSCRIPTION_ID,
+      ],
     );
   } else {
     await db.runAsync(

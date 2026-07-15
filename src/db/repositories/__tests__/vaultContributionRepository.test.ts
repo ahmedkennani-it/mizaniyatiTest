@@ -10,7 +10,11 @@ import {
 } from '../vaultContributionRepository';
 
 async function seedVaultAndMember(db: ReturnType<typeof createFakeDatabase>['db']) {
-  const vault = await createVault(db, { name: 'Omra 2027', targetMinor: 3000000, currencyCode: 'MAD' });
+  const vault = await createVault(db, {
+    name: 'Omra 2027',
+    targetMinor: 3000000,
+    currencyCode: 'MAD',
+  });
   const member = await createMember(db, { name: 'Youssef' });
   return { vault, member };
 }
@@ -91,7 +95,10 @@ describe('vaultContributionRepository', () => {
     });
 
     const contributions = await listVaultContributions(db);
-    expect(contributions.map((c) => c.date)).toEqual(['2026-07-03T10:00:00.000Z', '2026-07-01T10:00:00.000Z']);
+    expect(contributions.map((c) => c.date)).toEqual([
+      '2026-07-03T10:00:00.000Z',
+      '2026-07-01T10:00:00.000Z',
+    ]);
   });
 
   it('deletes a contribution', async () => {

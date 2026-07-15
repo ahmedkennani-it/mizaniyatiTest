@@ -11,7 +11,11 @@ import { NotFoundError } from '../errors';
 describe('categoryRepository', () => {
   it('creates a category and reads it back', async () => {
     const { db } = createFakeDatabase();
-    const category = await createCategory(db, { name: 'Alimentation', icon: 'cart', color: '#00FF00' });
+    const category = await createCategory(db, {
+      name: 'Alimentation',
+      icon: 'cart',
+      color: '#00FF00',
+    });
 
     expect(category.id).toEqual(expect.any(String));
     expect(category.name).toBe('Alimentation');

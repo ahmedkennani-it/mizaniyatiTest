@@ -1,7 +1,12 @@
 import { generateId } from '../id';
 import type { SqlDatabase } from '../types';
 import { NotFoundError } from './errors';
-import type { NewTontinePayment, TontinePayment, TontinePaymentPatch, TontinePaymentStatus } from './types';
+import type {
+  NewTontinePayment,
+  TontinePayment,
+  TontinePaymentPatch,
+  TontinePaymentStatus,
+} from './types';
 
 interface TontinePaymentRow {
   id: string;
@@ -49,7 +54,10 @@ export async function createTontinePayment(
   };
 }
 
-export async function getTontinePaymentById(db: SqlDatabase, id: string): Promise<TontinePayment | null> {
+export async function getTontinePaymentById(
+  db: SqlDatabase,
+  id: string,
+): Promise<TontinePayment | null> {
   const row = await db.getFirstAsync<TontinePaymentRow>(
     `SELECT ${SELECT_COLUMNS} FROM tontine_payments WHERE id = ?;`,
     [id],

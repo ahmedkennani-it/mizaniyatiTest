@@ -40,7 +40,10 @@ describe('categoryBudgetRepository', () => {
       alertThresholdMinor: 80000,
     });
 
-    const updated = await updateCategoryBudget(db, budget.id, { capMinor: 150000, alertThresholdMinor: 120000 });
+    const updated = await updateCategoryBudget(db, budget.id, {
+      capMinor: 150000,
+      alertThresholdMinor: 120000,
+    });
 
     expect(updated.capMinor).toBe(150000);
     expect(updated.alertThresholdMinor).toBe(120000);
@@ -49,13 +52,19 @@ describe('categoryBudgetRepository', () => {
 
   it('throws NotFoundError when updating an unknown budget', async () => {
     const { db } = createFakeDatabase();
-    await expect(updateCategoryBudget(db, 'missing', { capMinor: 100 })).rejects.toThrow(NotFoundError);
+    await expect(updateCategoryBudget(db, 'missing', { capMinor: 100 })).rejects.toThrow(
+      NotFoundError,
+    );
   });
 
   describe('upsertCategoryBudget', () => {
     it('creates a new budget when the category has none yet', async () => {
       const { db } = createFakeDatabase();
-      const category = await createCategory(db, { name: 'Santé', icon: 'health', color: '#0000FF' });
+      const category = await createCategory(db, {
+        name: 'Santé',
+        icon: 'health',
+        color: '#0000FF',
+      });
 
       const budget = await upsertCategoryBudget(db, category.id, {
         month: '2026-07',
@@ -70,7 +79,11 @@ describe('categoryBudgetRepository', () => {
 
     it('updates the existing budget in place instead of creating a second row (one active row per category)', async () => {
       const { db } = createFakeDatabase();
-      const category = await createCategory(db, { name: 'Santé', icon: 'health', color: '#0000FF' });
+      const category = await createCategory(db, {
+        name: 'Santé',
+        icon: 'health',
+        color: '#0000FF',
+      });
       const first = await upsertCategoryBudget(db, category.id, {
         month: '2026-06',
         capMinor: 50000,
@@ -86,7 +99,11 @@ describe('categoryBudgetRepository', () => {
       expect(second.id).toBe(first.id);
       const all = await listCategoryBudgets(db);
       expect(all).toHaveLength(1);
-      expect(all[0]).toMatchObject({ month: '2026-07', capMinor: 70000, alertThresholdMinor: 60000 });
+      expect(all[0]).toMatchObject({
+        month: '2026-07',
+        capMinor: 70000,
+        alertThresholdMinor: 60000,
+      });
     });
   });
 });

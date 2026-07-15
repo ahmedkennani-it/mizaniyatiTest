@@ -490,3 +490,103 @@ export interface NewUserSettings {
   countryCode: string;
   currencyCode: string;
 }
+
+/**
+ * The family budget container ("foyer"). The MVP runs a single implicit household, but the entity
+ * is modeled explicitly so shared/cloud accounts (US-039/US-040) can attach members and data to a
+ * named household later without a schema rewrite.
+ */
+export interface Household {
+  id: string;
+  name: string;
+  currencyCode: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NewHousehold {
+  name: string;
+  currencyCode: string;
+}
+
+export interface HouseholdPatch {
+  name?: string;
+  currencyCode?: string;
+}
+
+/** Whether a debt is money owed *to* the household or money the household *owes*. */
+export type DebtDirection = 'owed_to_household' | 'household_owes';
+
+/**
+ * A tracked debt ("dette") between the household and a free-text counterparty (a person or shop —
+ * not an app member, since debts often involve people outside the household). Journaled only: no
+ * real account is settled, `settled` just flips the local status.
+ */
+export interface Debt {
+  id: string;
+  label: string;
+  counterparty: string;
+  direction: DebtDirection;
+  amountMinor: number;
+  currencyCode: string;
+  /** ISO date `YYYY-MM-DD`, or `null` for a debt with no agreed due date. */
+  dueDate: string | null;
+  settled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NewDebt {
+  label: string;
+  counterparty: string;
+  direction: DebtDirection;
+  amountMinor: number;
+  currencyCode: string;
+  dueDate?: string | null;
+  settled?: boolean;
+}
+
+export interface DebtPatch {
+  label?: string;
+  counterparty?: string;
+  direction?: DebtDirection;
+  amountMinor?: number;
+  currencyCode?: string;
+  dueDate?: string | null;
+  settled?: boolean;
+}
+
+/**
+ * A transfer ("virement") moving money between two household members. Journaled locally like every
+ * other movement — it never touches a real bank account, only the local ledger.
+ */
+export interface Transfer {
+  id: string;
+  amountMinor: number;
+  currencyCode: string;
+  fromMemberId: string;
+  toMemberId: string;
+  /** ISO date `YYYY-MM-DD`. */
+  date: string;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NewTransfer {
+  amountMinor: number;
+  currencyCode: string;
+  fromMemberId: string;
+  toMemberId: string;
+  date: string;
+  note?: string | null;
+}
+
+export interface TransferPatch {
+  amountMinor?: number;
+  currencyCode?: string;
+  fromMemberId?: string;
+  toMemberId?: string;
+  date?: string;
+  note?: string | null;
+}

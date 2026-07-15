@@ -13,6 +13,7 @@ import { seasonalThemesMigration } from './0011_seasonal_themes';
 import { memberRolesMigration } from './0012_member_roles';
 import { subscriptionsMigration } from './0013_subscriptions';
 import { userSettingsMigration } from './0014_user_settings';
+import { householdDebtTransferMigration } from './0015_household_debt_transfer';
 
 /**
  * Ordered registry of schema migrations. Add new entries with a strictly increasing
@@ -34,4 +35,5 @@ export const migrations: Migration[] = [
   memberRolesMigration,
   subscriptionsMigration,
   userSettingsMigration,
+  householdDebtTransferMigration,
 ];

@@ -1,4 +1,10 @@
-export { createMember, getMemberById, listMembers, updateMember, deleteMember } from './memberRepository';
+export {
+  createMember,
+  getMemberById,
+  listMembers,
+  updateMember,
+  deleteMember,
+} from './memberRepository';
 export {
   createCategory,
   getCategoryById,
@@ -41,8 +47,16 @@ export {
   listTontineGroups,
   updateTontineGroup,
 } from './tontineGroupRepository';
-export { createTontineMember, getTontineMemberById, listTontineMembers } from './tontineMemberRepository';
-export { createTontineRound, getTontineRoundById, listTontineRounds } from './tontineRoundRepository';
+export {
+  createTontineMember,
+  getTontineMemberById,
+  listTontineMembers,
+} from './tontineMemberRepository';
+export {
+  createTontineRound,
+  getTontineRoundById,
+  listTontineRounds,
+} from './tontineRoundRepository';
 export {
   createTontinePayment,
   getTontinePaymentById,
@@ -59,6 +73,27 @@ export {
 } from './seasonalThemeRepository';
 export { getSubscription, upsertSubscription } from './subscriptionRepository';
 export { getUserSettings, saveLanguageCountry } from './userSettingsRepository';
+export {
+  createHousehold,
+  getHouseholdById,
+  listHouseholds,
+  updateHousehold,
+  deleteHousehold,
+} from './householdRepository';
+export {
+  createDebt,
+  getDebtById,
+  listDebts,
+  updateDebt,
+  deleteDebt,
+} from './debtRepository';
+export {
+  createTransfer,
+  getTransferById,
+  listTransfers,
+  updateTransfer,
+  deleteTransfer,
+} from './transferRepository';
 export { NotFoundError } from './errors';
 export type {
   Member,
@@ -112,4 +147,14 @@ export type {
   UserSettings,
   NewUserSettings,
   OnboardingStep,
+  Household,
+  NewHousehold,
+  HouseholdPatch,
+  Debt,
+  NewDebt,
+  DebtPatch,
+  DebtDirection,
+  Transfer,
+  NewTransfer,
+  TransferPatch,
 } from './types';

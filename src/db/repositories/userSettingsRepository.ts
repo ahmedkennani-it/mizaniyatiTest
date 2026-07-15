@@ -12,7 +12,8 @@ interface UserSettingsRow {
   updated_at: string;
 }
 
-const SELECT_COLUMNS = 'language_code, country_code, currency_code, onboarding_step, created_at, updated_at';
+const SELECT_COLUMNS =
+  'language_code, country_code, currency_code, onboarding_step, created_at, updated_at';
 
 function fromRow(row: UserSettingsRow): UserSettings {
   return {
@@ -38,7 +39,10 @@ export async function getUserSettings(db: SqlDatabase): Promise<UserSettings | n
  * Persists the "langue & pays" onboarding step (US-023) — the only step this story builds.
  * Find-or-create by the fixed id, same convention as `upsertSubscription`.
  */
-export async function saveLanguageCountry(db: SqlDatabase, input: NewUserSettings): Promise<UserSettings> {
+export async function saveLanguageCountry(
+  db: SqlDatabase,
+  input: NewUserSettings,
+): Promise<UserSettings> {
   const now = new Date().toISOString();
   const existing = await getUserSettings(db);
   const updated: UserSettings = {

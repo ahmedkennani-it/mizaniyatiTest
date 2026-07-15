@@ -40,7 +40,17 @@ export async function createCategory(db: SqlDatabase, input: NewCategory): Promi
   const seasonalThemeId = input.seasonalThemeId ?? null;
   await db.runAsync(
     `INSERT INTO categories (id, name, icon, color, is_default, order_index, seasonal_theme_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-    [id, input.name, input.icon, input.color, isDefault ? 1 : 0, orderIndex, seasonalThemeId, now, now],
+    [
+      id,
+      input.name,
+      input.icon,
+      input.color,
+      isDefault ? 1 : 0,
+      orderIndex,
+      seasonalThemeId,
+      now,
+      now,
+    ],
   );
   return {
     id,
@@ -80,13 +90,10 @@ export async function updateCategory(
     throw new NotFoundError('Category', id);
   }
   const updated: Category = { ...existing, ...patch, updatedAt: new Date().toISOString() };
-  await db.runAsync('UPDATE categories SET name = ?, icon = ?, color = ?, updated_at = ? WHERE id = ?;', [
-    updated.name,
-    updated.icon,
-    updated.color,
-    updated.updatedAt,
-    id,
-  ]);
+  await db.runAsync(
+    'UPDATE categories SET name = ?, icon = ?, color = ?, updated_at = ? WHERE id = ?;',
+    [updated.name, updated.icon, updated.color, updated.updatedAt, id],
+  );
   return updated;
 }
 

@@ -35,18 +35,25 @@ export async function createMember(db: SqlDatabase, input: NewMember): Promise<M
 }
 
 export async function getMemberById(db: SqlDatabase, id: string): Promise<Member | null> {
-  const row = await db.getFirstAsync<MemberRow>(`SELECT ${SELECT_COLUMNS} FROM members WHERE id = ?;`, [
-    id,
-  ]);
+  const row = await db.getFirstAsync<MemberRow>(
+    `SELECT ${SELECT_COLUMNS} FROM members WHERE id = ?;`,
+    [id],
+  );
   return row ? fromRow(row) : null;
 }
 
 export async function listMembers(db: SqlDatabase): Promise<Member[]> {
-  const rows = await db.getAllAsync<MemberRow>(`SELECT ${SELECT_COLUMNS} FROM members ORDER BY name ASC;`);
+  const rows = await db.getAllAsync<MemberRow>(
+    `SELECT ${SELECT_COLUMNS} FROM members ORDER BY name ASC;`,
+  );
   return rows.map(fromRow);
 }
 
-export async function updateMember(db: SqlDatabase, id: string, patch: MemberPatch): Promise<Member> {
+export async function updateMember(
+  db: SqlDatabase,
+  id: string,
+  patch: MemberPatch,
+): Promise<Member> {
   const existing = await getMemberById(db, id);
   if (!existing) {
     throw new NotFoundError('Member', id);

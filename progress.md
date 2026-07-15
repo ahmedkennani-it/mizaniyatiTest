@@ -9,7 +9,7 @@ Suivi des itérations. Portée : **uniquement la phase 1** de
 | --- | --- | --- |
 | 1.1 | Scaffolder le projet Expo + TypeScript | ✅ done |
 | 1.2 | Porte qualité (lint, typecheck, tests, CI) | ✅ done |
-| 1.3 | Modèle de données et persistance locale | ⏳ |
+| 1.3 | Modèle de données et persistance locale | ✅ done |
 | 1.4 | Infrastructure i18n et bascule LTR/RTL | ⏳ |
 | 1.5 | Miroir RTL des composants de base | ⏳ |
 | 1.6 | Formats locaux nombres/dates/devises | ⏳ |
@@ -35,6 +35,20 @@ Suivi des itérations. Portée : **uniquement la phase 1** de
   + tests sur chaque push et PR.
 - Note : la CI restera rouge tant que les tests de phases ultérieures (US-021/
   023/025/028) échouent — c'est le comportement attendu, hors périmètre Phase 1.
+
+### Itération 3 — Tâche 1.3 (Modèle de données et persistance locale) ✅
+- Couche `src/db` existante : `expo-sqlite`, migrations versionnées (0001→0014),
+  un repository par entité avec tests unitaires, aucun appel réseau.
+- Entités déjà présentes : Member, Transaction, Category, Tontine(+Round),
+  Zakat (ZakatAssessment ← « ZakatCalculation »), Settings (UserSettings) ;
+  Goal/GoalDeposit sont modélisés comme Vault/VaultContribution.
+- Ajout des entités manquantes du critère : **Household**, **Debt**, **Transfer**
+  - migration `0015_household_debt_transfer.ts` (tables + CHECK + FK membres),
+  - types + repositories CRUD (`householdRepository`, `debtRepository`,
+    `transferRepository`),
+  - tests unitaires (31 tests), FK `transfers → members` ajoutée au moteur de
+    test `createFakeDatabase`.
+- `npm run typecheck` ✅, `eslint src/db` ✅, suite `src/db` : 136 tests ✅.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

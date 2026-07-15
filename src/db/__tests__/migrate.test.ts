@@ -28,7 +28,9 @@ describe('migrateDatabase', () => {
 
   it('is idempotent: running twice does not reapply already-applied migrations', async () => {
     const { db } = createFakeDatabase();
-    const migrations: Migration[] = [{ version: 1, name: 'first', up: 'CREATE TABLE a (id INTEGER);' }];
+    const migrations: Migration[] = [
+      { version: 1, name: 'first', up: 'CREATE TABLE a (id INTEGER);' },
+    ];
 
     await migrateDatabase(db, migrations);
     const secondRunVersion = await migrateDatabase(db, migrations);

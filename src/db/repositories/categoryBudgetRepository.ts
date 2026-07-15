@@ -118,9 +118,16 @@ export async function updateCategoryBudget(
 export async function upsertCategoryBudget(
   db: SqlDatabase,
   categoryId: string,
-  input: { month: string; capMinor: number; alertThresholdMinor: number; rolloverEnabled?: boolean },
+  input: {
+    month: string;
+    capMinor: number;
+    alertThresholdMinor: number;
+    rolloverEnabled?: boolean;
+  },
 ): Promise<CategoryBudget> {
-  const existing = (await listCategoryBudgets(db)).find((budget) => budget.categoryId === categoryId);
+  const existing = (await listCategoryBudgets(db)).find(
+    (budget) => budget.categoryId === categoryId,
+  );
   if (existing) {
     return updateCategoryBudget(db, existing.id, input);
   }

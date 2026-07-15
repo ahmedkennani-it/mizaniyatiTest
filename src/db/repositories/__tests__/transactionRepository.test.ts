@@ -11,7 +11,11 @@ import {
 } from '../transactionRepository';
 
 async function seedCategoryAndMember(db: ReturnType<typeof createFakeDatabase>['db']) {
-  const category = await createCategory(db, { name: 'Alimentation', icon: 'cart', color: '#00FF00' });
+  const category = await createCategory(db, {
+    name: 'Alimentation',
+    icon: 'cart',
+    color: '#00FF00',
+  });
   const member = await createMember(db, { name: 'Salma' });
   return { category, member };
 }
@@ -165,7 +169,10 @@ describe('transactionRepository', () => {
       occurredAt: '2026-07-05T10:00:00.000Z',
     });
 
-    const updated = await updateTransaction(db, transaction.id, { amountMinor: 1500, note: 'Ajusté' });
+    const updated = await updateTransaction(db, transaction.id, {
+      amountMinor: 1500,
+      note: 'Ajusté',
+    });
 
     expect(updated.amountMinor).toBe(1500);
     expect(updated.note).toBe('Ajusté');
@@ -191,7 +198,9 @@ describe('transactionRepository', () => {
 
   it('throws NotFoundError when updating an unknown transaction', async () => {
     const { db } = createFakeDatabase();
-    await expect(updateTransaction(db, 'missing', { amountMinor: 100 })).rejects.toThrow(NotFoundError);
+    await expect(updateTransaction(db, 'missing', { amountMinor: 100 })).rejects.toThrow(
+      NotFoundError,
+    );
   });
 
   it('deletes a transaction', async () => {

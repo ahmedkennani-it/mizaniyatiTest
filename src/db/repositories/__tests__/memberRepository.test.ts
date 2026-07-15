@@ -1,6 +1,12 @@
 import { createFakeDatabase } from '../../testUtils/createFakeDatabase';
 import { NotFoundError } from '../errors';
-import { createMember, deleteMember, getMemberById, listMembers, updateMember } from '../memberRepository';
+import {
+  createMember,
+  deleteMember,
+  getMemberById,
+  listMembers,
+  updateMember,
+} from '../memberRepository';
 
 describe('memberRepository', () => {
   it('creates a member and reads it back', async () => {

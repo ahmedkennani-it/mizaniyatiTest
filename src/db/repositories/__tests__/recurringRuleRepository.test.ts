@@ -161,7 +161,9 @@ describe('recurringRuleRepository', () => {
 
   it('throws NotFoundError when updating an unknown rule', async () => {
     const { db } = createFakeDatabase();
-    await expect(updateRecurringRule(db, 'missing', { amountMinor: 100 })).rejects.toThrow(NotFoundError);
+    await expect(updateRecurringRule(db, 'missing', { amountMinor: 100 })).rejects.toThrow(
+      NotFoundError,
+    );
   });
 
   it('deletes a rule', async () => {

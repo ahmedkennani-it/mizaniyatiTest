@@ -26,7 +26,10 @@ function fromRow(row: TontineMemberRow): TontineMember {
   };
 }
 
-export async function createTontineMember(db: SqlDatabase, input: NewTontineMember): Promise<TontineMember> {
+export async function createTontineMember(
+  db: SqlDatabase,
+  input: NewTontineMember,
+): Promise<TontineMember> {
   const id = generateId();
   const now = new Date().toISOString();
   const isSelf = input.isSelf ?? false;
@@ -45,7 +48,10 @@ export async function createTontineMember(db: SqlDatabase, input: NewTontineMemb
   };
 }
 
-export async function getTontineMemberById(db: SqlDatabase, id: string): Promise<TontineMember | null> {
+export async function getTontineMemberById(
+  db: SqlDatabase,
+  id: string,
+): Promise<TontineMember | null> {
   const row = await db.getFirstAsync<TontineMemberRow>(
     `SELECT ${SELECT_COLUMNS} FROM tontine_members WHERE id = ?;`,
     [id],

@@ -47,12 +47,17 @@ export async function createVault(db: SqlDatabase, input: NewVault): Promise<Vau
 }
 
 export async function getVaultById(db: SqlDatabase, id: string): Promise<Vault | null> {
-  const row = await db.getFirstAsync<VaultRow>(`SELECT ${SELECT_COLUMNS} FROM vaults WHERE id = ?;`, [id]);
+  const row = await db.getFirstAsync<VaultRow>(
+    `SELECT ${SELECT_COLUMNS} FROM vaults WHERE id = ?;`,
+    [id],
+  );
   return row ? fromRow(row) : null;
 }
 
 export async function listVaults(db: SqlDatabase): Promise<Vault[]> {
-  const rows = await db.getAllAsync<VaultRow>(`SELECT ${SELECT_COLUMNS} FROM vaults ORDER BY created_at ASC;`);
+  const rows = await db.getAllAsync<VaultRow>(
+    `SELECT ${SELECT_COLUMNS} FROM vaults ORDER BY created_at ASC;`,
+  );
   return rows.map(fromRow);
 }
 
@@ -64,7 +69,14 @@ export async function updateVault(db: SqlDatabase, id: string, patch: VaultPatch
   const updated: Vault = { ...existing, ...patch, updatedAt: new Date().toISOString() };
   await db.runAsync(
     'UPDATE vaults SET name = ?, target_minor = ?, currency_code = ?, deadline = ?, updated_at = ? WHERE id = ?;',
-    [updated.name, updated.targetMinor, updated.currencyCode, updated.deadline, updated.updatedAt, id],
+    [
+      updated.name,
+      updated.targetMinor,
+      updated.currencyCode,
+      updated.deadline,
+      updated.updatedAt,
+      id,
+    ],
   );
   return updated;
 }

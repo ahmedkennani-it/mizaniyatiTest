@@ -1,7 +1,12 @@
 import { generateId } from '../id';
 import type { SqlDatabase } from '../types';
 import { NotFoundError } from './errors';
-import type { NewSeasonalTheme, SeasonalTheme, SeasonalThemePatch, SeasonalThemeType } from './types';
+import type {
+  NewSeasonalTheme,
+  SeasonalTheme,
+  SeasonalThemePatch,
+  SeasonalThemeType,
+} from './types';
 
 interface SeasonalThemeRow {
   id: string;
@@ -41,7 +46,17 @@ export async function createSeasonalTheme(
   const active = input.active ?? true;
   await db.runAsync(
     `INSERT INTO seasonal_themes (id, type, active, start_date, end_date, envelope_minor, currency_code, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-    [id, input.type, active ? 1 : 0, input.startDate, input.endDate, input.envelopeMinor, input.currencyCode, now, now],
+    [
+      id,
+      input.type,
+      active ? 1 : 0,
+      input.startDate,
+      input.endDate,
+      input.envelopeMinor,
+      input.currencyCode,
+      now,
+      now,
+    ],
   );
   return {
     id,
@@ -56,7 +71,10 @@ export async function createSeasonalTheme(
   };
 }
 
-export async function getSeasonalThemeById(db: SqlDatabase, id: string): Promise<SeasonalTheme | null> {
+export async function getSeasonalThemeById(
+  db: SqlDatabase,
+  id: string,
+): Promise<SeasonalTheme | null> {
   const row = await db.getFirstAsync<SeasonalThemeRow>(
     `SELECT ${SELECT_COLUMNS} FROM seasonal_themes WHERE id = ?;`,
     [id],
@@ -83,7 +101,14 @@ export async function updateSeasonalTheme(
   const updated: SeasonalTheme = { ...existing, ...patch, updatedAt: new Date().toISOString() };
   await db.runAsync(
     'UPDATE seasonal_themes SET active = ?, start_date = ?, end_date = ?, envelope_minor = ?, updated_at = ? WHERE id = ?;',
-    [updated.active ? 1 : 0, updated.startDate, updated.endDate, updated.envelopeMinor, updated.updatedAt, id],
+    [
+      updated.active ? 1 : 0,
+      updated.startDate,
+      updated.endDate,
+      updated.envelopeMinor,
+      updated.updatedAt,
+      id,
+    ],
   );
   return updated;
 }
