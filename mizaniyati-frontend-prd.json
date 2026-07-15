@@ -121,7 +121,7 @@
         "Workflow GitHub Actions qui lance typecheck + lint + test sur chaque push",
         "npm run typecheck passe sans erreur"
       ],
-      "done": false
+      "done": true
     },
     {
       "id": "1.3",

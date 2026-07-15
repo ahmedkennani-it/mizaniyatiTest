@@ -9,4 +9,21 @@ module.exports = defineConfig([
   {
     ignores: ['dist/*'],
   },
+  {
+    // Jest mocks and colocated tests run in the Jest environment (jest, describe, it, …).
+    files: ['jest/**', '**/__tests__/**', '**/*.test.{ts,tsx}'],
+    languageOptions: {
+      globals: {
+        jest: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+      },
+    },
+  },
 ]);

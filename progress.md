@@ -8,7 +8,7 @@ Suivi des itérations. Portée : **uniquement la phase 1** de
 | Tâche | Titre | Statut |
 | --- | --- | --- |
 | 1.1 | Scaffolder le projet Expo + TypeScript | ✅ done |
-| 1.2 | Porte qualité (lint, typecheck, tests, CI) | ⏳ |
+| 1.2 | Porte qualité (lint, typecheck, tests, CI) | ✅ done |
 | 1.3 | Modèle de données et persistance locale | ⏳ |
 | 1.4 | Infrastructure i18n et bascule LTR/RTL | ⏳ |
 | 1.5 | Miroir RTL des composants de base | ⏳ |
@@ -25,6 +25,16 @@ Suivi des itérations. Portée : **uniquement la phase 1** de
   `src/lib`, `src/types` (barrels réels vers l'architecture par domaine existante,
   pas des dossiers vides).
 - `npm run typecheck` ✅ et `eslint` ✅ sur les nouveaux fichiers.
+
+### Itération 2 — Tâche 1.2 (Porte qualité) ✅
+- Scripts npm présents : `typecheck`, `lint`, `test`, `test:ci`.
+- ESLint + Prettier configurés et passants (`eslint.config.js` avec globals Jest).
+- Jest + `@testing-library/react-native` configurés (preset `jest-expo`), tests
+  témoins passants (ex. `kit.smoke.test.tsx`).
+- Ajout du workflow GitHub Actions `.github/workflows/ci.yml` : typecheck + lint
+  + tests sur chaque push et PR.
+- Note : la CI restera rouge tant que les tests de phases ultérieures (US-021/
+  023/025/028) échouent — c'est le comportement attendu, hors périmètre Phase 1.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

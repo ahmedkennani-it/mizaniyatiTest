@@ -2,6 +2,30 @@
   "name": "mobile",
   "version": "1.0.0",
   "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "web": "expo start --web",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "typecheck": "node --stack-size=8000 ./node_modules/typescript/lib/tsc.js --noEmit",
+    "lint": "eslint .",
+    "test": "jest",
+    "test:ci": "jest --ci --runInBand"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "setupFilesAfterEnv": [
+      "@testing-library/react-native"
+    ],
+    "moduleNameMapper": {
+      "^lucide-react-native$": "<rootDir>/jest/lucideMock.jsx",
+      "^expo-linear-gradient$": "<rootDir>/jest/linearGradientMock.jsx",
+      "^react-native-safe-area-context$": "<rootDir>/jest/safeAreaContextMock.jsx"
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|i18next|react-i18next))"
+    ]
+  },
   "dependencies": {
     "@expo-google-fonts/ibm-plex-sans-arabic": "^0.4.2",
     "@expo-google-fonts/outfit": "^0.4.3",
