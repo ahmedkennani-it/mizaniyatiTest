@@ -22,7 +22,21 @@ describe('design palette (US-073)', () => {
   it('defines the three text tones', () => {
     expect(lightColors.textPrimary).toBe('#0F172A');
     expect(lightColors.textSecondary).toBe('#334155');
-    expect(lightColors.textTertiary).toBe('#64748B');
+  });
+
+  /**
+   * Where a design swatch fails WCAG AA, the token takes the closest passing shade of the same hue
+   * — the rule `primary` (teal-700, not teal-600) and `danger` (rose-700) already follow. These
+   * assertions exist so the deviation stays deliberate: the exact ratios live in `contrast.test.ts`.
+   */
+  it('darkens the third text tone off its design swatch to clear AA', () => {
+    expect(lightColors.textTertiary).not.toBe('#64748B');
+    expect(lightColors.textTertiary).toBe('#5F6F87');
+  });
+
+  it('lightens dark danger off its design swatch to clear AA on a dark card', () => {
+    expect(darkColors.danger).not.toBe('#F43F5E');
+    expect(darkColors.danger).toBe('#FB7185');
   });
 
   it('defines the teal family, including the dark shade and the wash', () => {

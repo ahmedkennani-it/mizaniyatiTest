@@ -90,7 +90,7 @@ export function BalanceHeroCard({
         </View>
       ) : null}
 
-      <Txt size="sm" color={onAccent.textMuted}>
+      <Txt size="sm" color={onAccent.text}>
         {label}
       </Txt>
 
@@ -109,7 +109,7 @@ export function BalanceHeroCard({
         >
           {amountText}
         </Txt>
-        <Txt color={onAccent.textStrong} weight="semibold" size="md">
+        <Txt color={onAccent.text} weight="semibold" size="md">
           {currencyCode}
         </Txt>
       </View>
@@ -146,7 +146,7 @@ export function BalanceHeroCard({
         >
           {footerStart ? (
             <View>
-              <Txt size="xs" color={onAccent.textSubtle}>
+              <Txt size="xs" color={onAccent.text}>
                 {footerStart.label}
               </Txt>
               <Txt weight="semibold" size="sm" color={onAccent.text}>
@@ -158,7 +158,7 @@ export function BalanceHeroCard({
           )}
           {footerEnd ? (
             <View style={{ alignItems: 'flex-end' }}>
-              <Txt size="xs" color={onAccent.textSubtle}>
+              <Txt size="xs" color={onAccent.text}>
                 {footerEnd.label}
               </Txt>
               <Txt weight="semibold" size="sm" color={onAccent.text}>

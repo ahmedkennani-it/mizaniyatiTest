@@ -26,10 +26,9 @@ export const lightColors = {
   border: '#E2E8F0',
   textPrimary: '#0F172A',
   textSecondary: '#334155',
-  // The design's third text tone. AA-safe on `surface`/`background` (4.76:1 / 4.55:1) but **not**
-  // on `surfaceAlt` (4.23:1) — reserve it for text on white/background grounds. `textSecondary`
-  // is the safe choice everywhere else.
-  textTertiary: '#64748B',
+  // The design's third text tone, nudged one step darker: its `#64748B` fails AA on `surfaceAlt`
+  // (4.23:1). This is the closest shade clearing 4.5:1 on every ground.
+  textTertiary: '#5F6F87',
   primary: '#0F766E',
   primaryText: '#FFFFFF',
   success: '#1E7B34',
@@ -44,14 +43,14 @@ export const darkColors = {
   border: '#334155',
   textPrimary: '#F1F5F9',
   textSecondary: '#94A3B8',
-  // Dark counterpart of light's `textTertiary`, carrying the same constraint: AA on `surface`
-  // (4.80:1) and `background` (6.18:1), but not on `surfaceAlt` (4.24:1).
-  textTertiary: '#8595AC',
+  textTertiary: '#8B9AB0',
   primary: '#5EEAD4',
   primaryText: '#04312C',
   success: '#79D98C',
   warning: '#F2B84B',
-  danger: '#F43F5E',
+  // Rose-400, not the design's rose-500 `#F43F5E`, which reads at only 3.98:1 on the dark
+  // `surface` — a negative amount on a dark card would fall below AA.
+  danger: '#FB7185',
 } as const;
 
 export const baseTypography = {
@@ -101,7 +100,7 @@ export const fontFamilies = {
 // Used by IconTile / ProgressBar / DonutBreakdown; distinct from the semantic `colors` tokens.
 export const lightAccents = {
   teal: { solid: '#0D9488', wash: '#CCFBF1', ink: '#0F766E' },
-  gold: { solid: '#D97706', wash: '#FEF3E2', ink: '#B45309' },
+  gold: { solid: '#D97706', wash: '#FEF3E2', ink: '#A9500A' },
   coral: { solid: '#F43F5E', wash: '#FFE4E6', ink: '#BE123C' },
   purple: { solid: '#7C3AED', wash: '#F1E9FE', ink: '#6D28D9' },
   blue: { solid: '#2563EB', wash: '#E8EFFE', ink: '#1D4ED8' },
@@ -118,13 +117,15 @@ export const darkAccents = {
 // ── On-accent ────────────────────────────────────────────────────────────────
 // Text/decoration sitting on a saturated brand ground — a gradient hero card, the FAB, a solid
 // accent tile. The ground there is the accent itself, not `surface`, so these stay fixed across
-// light and dark, unlike the `colors` tokens. White-on-teal/purple clears AA at every alpha below.
+// light and dark, unlike the `colors` tokens.
+//
+// There is deliberately **one** text color here, opaque white. Dimming small text with opacity to
+// build hierarchy is an accessibility anti-pattern: white at 85% over the teal gradient reads at
+// 3.80:1, under AA, while the design's hierarchy is already carried by size and weight. The
+// translucent tokens below are for **decoration only**, which answers to the 3:1 non-text bar.
 export const onAccent = {
   text: '#FFFFFF',
-  textStrong: 'rgba(255,255,255,0.9)',
-  textMuted: 'rgba(255,255,255,0.85)',
-  textSubtle: 'rgba(255,255,255,0.8)',
-  textFaint: 'rgba(255,255,255,0.75)',
+  /** Decorative glyph on a dark accent ground (the voice card's chevron). Non-text: 3:1. */
   icon: 'rgba(255,255,255,0.6)',
   /** Chip/divider fill on an accent ground. */
   fill: 'rgba(255,255,255,0.22)',
@@ -164,11 +165,13 @@ export const darkBanner = {
 // (mirrored for RTL). Balance/voice/fab read well on both light and dark grounds, so they're
 // shared; only surfaces around them change with the scheme.
 export const gradients = {
-  balance: ['#0F766E', '#0D9488'],
+  // The light stop is teal-600 `#0D9488` in the mockup, where opaque white reads at 3.74:1 —
+  // under AA for the card's small label. Darkened just enough to clear it (4.63:1).
+  balance: ['#0F766E', '#0F8377'],
   tontine: ['#7C3AED', '#6D28D9'],
   ramadan: ['#1E293B', '#0F766E'],
   voice: ['#0F172A', '#134E4A'],
-  fab: ['#0D9488', '#0F766E'],
+  fab: ['#0F8377', '#0F766E'],
 } as const;
 
 // Warm seasonal surface used by the Ramadan screen (applied locally there, not app-wide).

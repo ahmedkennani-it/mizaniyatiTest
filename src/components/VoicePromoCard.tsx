@@ -70,7 +70,7 @@ export function VoicePromoCard({ title, subtitle, badge, onPress }: VoicePromoCa
               </View>
             ) : null}
           </View>
-          <Txt size="xs" color={theme.onAccent.textFaint}>
+          <Txt size="xs" color={theme.onAccent.text}>
             {subtitle}
           </Txt>
         </View>

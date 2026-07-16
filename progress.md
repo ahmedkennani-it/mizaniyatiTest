@@ -40,7 +40,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 2.1 | Design tokens et palette | ✅ done |
 | 2.2 | Composants de base : Header, Bouton, Tag, Card | ✅ done |
 | 2.3 | Composants financiers : Montant, Progression, Anneau, Ligne, Avatar | ✅ done |
-| 2.4 | Contraste et mise à l'échelle des textes | ⏳ |
+| 2.4 | Contraste et mise à l'échelle des textes | ✅ done |
 | 2.5 | Libellés pour lecteurs d'écran | ⏳ |
 
 ## Journal
@@ -295,6 +295,48 @@ demandés n'existaient pas.
 - Tests : `Amount` (14), `ProgressBar` (15), `ProgressRing` (13), `TransactionRow`
   (12), `Avatar` (9), date relative (8).
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **902/902, 97 suites** ✅.
+
+### Itération 12 — Tâche 2.4 (Contraste et mise à l'échelle des textes) ✅
+Le test de contraste systématique (167 assertions : chaque token de texte × chaque
+fond × 4 thèmes) a révélé **deux vrais défauts d'accessibilité livrés**, plus deux
+de mes propres erreurs de la 2.1.
+
+- 🐛 **`danger` en thème sombre échouait AA** : `#F43F5E` ne donne que **3.98:1** sur
+  `surface`. Un montant négatif sur une carte sombre était sous le seuil. → `#FB7185`
+  (rose-400), qui passe partout (5.44 / 4.80).
+- 🐛 **Le dégradé `balance` échouait AA** : sur sa teinte claire `#0D9488`, le blanc
+  **opaque** ne donne que 3.74:1. Le gros montant passe (texte large, seuil 3:1) mais
+  le petit label « Solde du mois » non. → teinte assombrie à `#0F8377` (4.63:1).
+- 🐛 **Mon commentaire de la 2.1 était faux** : j'y affirmais que « le blanc sur
+  teal/purple passe AA à tous les niveaux d'alpha ». Calcul fait : **tous** les
+  niveaux translucides échouaient (0.85 → 3.80:1 ; même sur la teinte la plus sombre
+  du dégradé, 4.42). J'ai **supprimé les 4 tokens de texte translucides**
+  (`textStrong`/`textMuted`/`textSubtle`/`textFaint`) : diminuer du petit texte par
+  l'opacité est un anti-pattern d'accessibilité, et la hiérarchie de la maquette est
+  déjà portée par la taille et la graisse. Il reste **un** blanc opaque pour le texte
+  sur aplat ; les alphas ne servent plus qu'à la décoration (seuil 3:1).
+- 🐛 **Mon `textTertiary` de la 2.1** (`#64748B`, valeur maquette) échouait sur
+  `surfaceAlt` (4.23). Je l'avais documenté comme une contrainte d'usage — mais rien
+  ne l'aurait fait respecter. Aligné sur la politique déjà établie dans le projet
+  (« AA l'emporte sur le swatch ») : `#5F6F87`, la teinte passante la plus proche.
+  Idem pour l'ink `gold` (`#B45309` → `#A9500A`, 4.46 → 4.86 sur `surfaceAlt`).
+- Le test compose les couleurs translucides sur leur fond avant de mesurer — sans ça
+  un blanc à 85% se noterait comme du blanc opaque et masquerait l'échec.
+- Mise à l'échelle : garde statique (un cas par fichier) contre
+  `allowFontScaling={false}` et `maxFontSizeMultiplier` — suivre le Dynamic Type se
+  résume à **ne pas s'en désinscrire**. Plus : les composants à texte se dimensionnent
+  en `minHeight` et jamais en `height` fixe.
+- Couleur jamais seule : chaque cas assère le **porteur non-coloré** (signe du montant,
+  glyphe d'alerte, état d'accessibilité de la puce), jamais la couleur.
+- Vérifié par mutation : remettre `#F43F5E` ou le dégradé de la maquette fait bien
+  échouer le test.
+- ⚠️ **Effet visuel à valider** : la carte de solde change légèrement — teinte claire
+  du dégradé un peu plus sombre, et labels en blanc opaque au lieu de 85%.
+- 🔎 **Trouvé, non corrigé (hors critères 2.4)** : les boutons icône de `ScreenHeader`
+  font 34×34 px et les chevrons de `MonthSelector` n'ont pas de taille explicite —
+  sous le `minTouchTarget` de 44 px que le thème définit lui-même. Correction propre :
+  `hitSlop` (garde le visuel de la maquette, agrandit la zone tactile).
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1141/1141, 100 suites** ✅.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 
