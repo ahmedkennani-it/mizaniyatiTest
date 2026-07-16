@@ -518,6 +518,42 @@ export const fr = {
     startButton: 'Commencer',
     signInLink: "J'ai déjà un compte",
   },
+  privacy: {
+    title: 'Vos données vous appartiennent',
+    subtitle: 'Trois engagements, avant même de commencer.',
+    commitmentBankTitle: 'Zéro accès bancaire',
+    commitmentBankBody:
+      "Mizaniyati ne se connecte à aucune banque et ne demande jamais de RIB, de carte ni d'identifiants bancaires.",
+    commitmentDeviceTitle: 'Stockage sur votre appareil',
+    commitmentDeviceBody:
+      'Vos opérations restent sur ce téléphone. Rien ne part vers un serveur.',
+    commitmentFamilyTitle: 'Partage familial sur invitation uniquement',
+    commitmentFamilyBody:
+      "Personne ne rejoint votre foyer sans que vous l'invitiez explicitement.",
+    manualEntryNote:
+      "La saisie est manuelle : vous entrez vous-même vos opérations. L'app n'effectue aucun prélèvement et ne déplace jamais d'argent.",
+    policyLink: 'Lire la politique de confidentialité complète',
+    acceptButton: "J'ai compris, continuer",
+  },
+  privacyPolicy: {
+    title: 'Politique de confidentialité',
+    intro: 'Ce que Mizaniyati fait — et ne fait pas — de vos données.',
+    collectTitle: 'Données collectées',
+    collectBody:
+      "Uniquement ce que vous saisissez : opérations, catégories, membres du foyer, objectifs. Aucune donnée n'est collectée à votre insu.",
+    storageTitle: 'Où elles sont stockées',
+    storageBody:
+      "Dans une base de données locale, sur cet appareil uniquement. L'app ne comporte aucun appel réseau.",
+    sharingTitle: 'Partage',
+    sharingBody:
+      "Aucun partage avec des tiers. Aucune publicité, aucun traceur, aucune revente de données.",
+    bankTitle: 'Accès bancaire',
+    bankBody:
+      "Aucun. L'app ne se connecte à aucun établissement financier et n'effectue aucun prélèvement.",
+    deletionTitle: 'Suppression',
+    deletionBody:
+      "Désinstaller l'app efface définitivement vos données. Aucune copie ne subsiste ailleurs.",
+  },
   signIn: {
     title: 'Connexion',
     unavailableMessage:

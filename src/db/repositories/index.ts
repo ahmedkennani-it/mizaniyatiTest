@@ -72,7 +72,7 @@ export {
   updateSeasonalTheme,
 } from './seasonalThemeRepository';
 export { getSubscription, upsertSubscription } from './subscriptionRepository';
-export { getUserSettings, saveLanguageCountry } from './userSettingsRepository';
+export { acceptPrivacy, getUserSettings, saveLanguageCountry } from './userSettingsRepository';
 export {
   createHousehold,
   getHouseholdById,

@@ -66,7 +66,9 @@ function AppNavigation() {
     ensureMigrated()
       .then(() => getUserSettings(getDatabase()))
       .then(async (settings) => {
-        if (!settings) {
+        // No row at all means onboarding never ran; a row without a privacy acceptance means it
+        // was interrupted before US-004's step, and the promise must not be skipped silently.
+        if (!settings || !settings.privacyAcceptedAt) {
           setNeedsOnboarding(true);
           setReady(true);
           return;

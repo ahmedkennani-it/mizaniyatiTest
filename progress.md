@@ -57,7 +57,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 4.1 | Écran de bienvenue | ✅ done |
 | 4.2 | Choix de la langue | ✅ done |
 | 4.3 | Choix du pays / marché et devise | ✅ done |
-| 4.4 | Écran de confidentialité | ⏳ |
+| 4.4 | Écran de confidentialité | ✅ done |
 | 4.5 | Création du foyer | ⏳ |
 | 4.6 | Connexion à un compte existant | ⏳ — dépend de la sauvegarde chiffrée (phase 17) |
 
@@ -492,6 +492,33 @@ de mes propres erreurs de la 2.1.
   utilisateur. Doublon de test supprimé au passage (le seeding est déjà couvert, et par
   nom de catégorie, dans la suite US-023).
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1263/1263, 109 suites** ✅
+  (2 runs complets).
+
+### Itération 18 — Tâche 4.4 (Écran de confidentialité) ✅
+- Migration **0016** : `privacy_accepted_at` sur `user_settings` — exactement l'`ALTER
+  TABLE` que la note de la migration 0014 avait anticipé. **Nullable à dessein** : un
+  foyer ayant fait l'étape langue/pays avant cette colonne n'a aucune acceptation à
+  rétro-remplir, et en inventer une reviendrait à fabriquer le consentement même que la
+  colonne enregistre.
+- `acceptPrivacy` **conserve la première acceptation** plutôt que de l'écraser : la date
+  qui compte est la première, et repasser sur l'écran ne doit pas réécrire l'histoire.
+  `saveLanguageCountry` ne l'efface jamais non plus.
+- **Le dashboard est désormais gardé** : `App.tsx` traitait « pas de ligne » comme
+  « onboarding à faire ». Une ligne **sans acceptation** (flux interrompu) renvoie
+  maintenant aussi vers l'onboarding — la promesse ne doit pas être sautée en silence.
+- L'étape confidentialité vient **après** langue/pays : les engagements méritent d'être
+  lus dans sa propre langue, et c'est cette étape qui crée la ligne sur laquelle
+  l'horodatage s'écrit.
+- **La politique complète vit dans l'app**, pas derrière une URL : toute la promesse du
+  produit est que rien ne quitte l'appareil ; renvoyer vers une page web pour lire ça
+  serait une petite contradiction, et exigerait l'appel réseau que l'app refuse. Son
+  texte décrit ce que le code fait réellement — vérifiable, la garde de la 1.7 échouant
+  si un fichier source appelle `fetch`.
+- 🚩 **À faire valider** : ce texte n'est **pas** un document juridique relu. Si une
+  politique formelle est requise (stores, RGPD), elle doit remplacer ce contenu.
+- 🐛 Trouvé au passage : la fausse base rendait `undefined` là où SQLite rend `null`,
+  car mon `INSERT` n'écrivait pas la nouvelle colonne. Corrigé des deux côtés.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1289/1289, 110 suites** ✅
   (2 runs complets).
 
 ## Notes / blocages connus (hors périmètre Phase 1)

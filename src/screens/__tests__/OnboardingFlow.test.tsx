@@ -17,6 +17,10 @@ import { LanguageProvider } from '../../i18n';
 // eslint-disable-next-line import/first -- must come after jest.mock('expo-sqlite', ...) above
 import { fr } from '../../i18n/locales/fr';
 // eslint-disable-next-line import/first -- must come after jest.mock('expo-sqlite', ...) above
+import { getDatabase } from '../../db/client';
+// eslint-disable-next-line import/first -- must come after jest.mock('expo-sqlite', ...) above
+import { getUserSettings } from '../../db/repositories';
+// eslint-disable-next-line import/first -- must come after jest.mock('expo-sqlite', ...) above
 import { ThemeProvider } from '../../theme';
 // eslint-disable-next-line import/first -- must come after jest.mock('expo-sqlite', ...) above
 import { OnboardingFlow } from '../OnboardingFlow';
@@ -53,6 +57,54 @@ describe('OnboardingFlow (US-001)', () => {
     expect(screen.getByText(fr.onboarding.languageLabel)).toBeTruthy();
     expect(screen.getByText(fr.onboarding.countryLabel)).toBeTruthy();
     expect(screen.queryByText(fr.welcome.pitch)).toBeNull();
+  });
+
+  /**
+   * Privacy comes after language & country on purpose: the commitments are worth reading in one's
+   * own language, and that step is what creates the row the acceptance is timestamped onto.
+   */
+  it('reaches the privacy step after language & country, not before', async () => {
+    await renderFlow();
+
+    await fireEvent.press(screen.getByText(fr.welcome.startButton));
+    expect(screen.queryByText(fr.privacy.title)).toBeNull();
+
+    await fireEvent.press(screen.getByText(fr.onboarding.countryMorocco));
+    await fireEvent.press(screen.getByText(fr.onboarding.continueButton));
+
+    expect(await screen.findByText(fr.privacy.title)).toBeTruthy();
+  });
+
+  it('completes only once the privacy commitments are accepted', async () => {
+    const { onComplete } = await renderFlow();
+
+    await fireEvent.press(screen.getByText(fr.welcome.startButton));
+    await fireEvent.press(screen.getByText(fr.onboarding.countryMorocco));
+    await fireEvent.press(screen.getByText(fr.onboarding.continueButton));
+    await screen.findByText(fr.privacy.title);
+
+    // The language & country step alone must not let the household through.
+    expect(onComplete).not.toHaveBeenCalled();
+
+    await fireEvent.press(screen.getByText(fr.privacy.acceptButton));
+
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    expect((await getUserSettings(getDatabase()))?.privacyAcceptedAt).toEqual(expect.any(String));
+  });
+
+  it('opens the full policy from the privacy step and comes back', async () => {
+    await renderFlow();
+
+    await fireEvent.press(screen.getByText(fr.welcome.startButton));
+    await fireEvent.press(screen.getByText(fr.onboarding.countryMorocco));
+    await fireEvent.press(screen.getByText(fr.onboarding.continueButton));
+    await screen.findByText(fr.privacy.title);
+
+    await fireEvent.press(screen.getByText(fr.privacy.policyLink));
+    expect(screen.getByText(fr.privacyPolicy.intro)).toBeTruthy();
+
+    await fireEvent.press(screen.getByLabelText(fr.a11y.back));
+    expect(screen.getByText(fr.privacy.title)).toBeTruthy();
   });
 
   it('goes to sign-in on "J’ai déjà un compte"', async () => {

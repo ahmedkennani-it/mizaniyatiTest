@@ -511,6 +511,37 @@ export const en: TranslationSchema = {
     startButton: 'Get started',
     signInLink: 'I already have an account',
   },
+  privacy: {
+    title: 'Your data is yours',
+    subtitle: 'Three commitments, before you even start.',
+    commitmentBankTitle: 'No bank access',
+    commitmentBankBody:
+      'Mizaniyati connects to no bank and never asks for account details, a card, or banking credentials.',
+    commitmentDeviceTitle: 'Stored on your device',
+    commitmentDeviceBody: 'Your transactions stay on this phone. Nothing goes to a server.',
+    commitmentFamilyTitle: 'Family sharing by invitation only',
+    commitmentFamilyBody: 'Nobody joins your household unless you explicitly invite them.',
+    manualEntryNote:
+      'Entry is manual: you enter your own transactions. The app takes no payment and never moves money.',
+    policyLink: 'Read the full privacy policy',
+    acceptButton: 'Got it, continue',
+  },
+  privacyPolicy: {
+    title: 'Privacy policy',
+    intro: 'What Mizaniyati does — and does not do — with your data.',
+    collectTitle: 'Data collected',
+    collectBody:
+      'Only what you enter: transactions, categories, household members, goals. Nothing is collected without your knowledge.',
+    storageTitle: 'Where it is stored',
+    storageBody: 'In a local database, on this device only. The app makes no network calls.',
+    sharingTitle: 'Sharing',
+    sharingBody: 'No sharing with third parties. No ads, no trackers, no data resale.',
+    bankTitle: 'Bank access',
+    bankBody: 'None. The app connects to no financial institution and takes no payment.',
+    deletionTitle: 'Deletion',
+    deletionBody:
+      'Uninstalling the app erases your data permanently. No copy remains anywhere else.',
+  },
   signIn: {
     title: 'Sign in',
     unavailableMessage:

@@ -468,7 +468,7 @@ export interface NewSubscription {
  * US-024 (confidentialité) / US-025 (compte local vs cloud) will widen this union as they add
  * their own steps to the sequence described in `docs/specs/onboarding-confidentialite.md`.
  */
-export type OnboardingStep = 'language_country';
+export type OnboardingStep = 'language_country' | 'privacy';
 
 /**
  * Single fixed-`id='default'` row (US-023, `docs/specs/onboarding-confidentialite.md`'s
@@ -481,6 +481,8 @@ export interface UserSettings {
   countryCode: string;
   currencyCode: string;
   onboardingStep: OnboardingStep;
+  /** When the household accepted the privacy commitments (US-004); `null` until they do. */
+  privacyAcceptedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

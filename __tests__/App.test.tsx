@@ -29,6 +29,8 @@ async function completeOnboarding() {
   // The market is never pre-selected (US-003): "Continuer" stays disabled until it is chosen.
   await fireEvent.press(screen.getByText('Maroc'));
   await fireEvent.press(screen.getByText('Continuer'));
+  // The privacy commitments gate the dashboard (US-004).
+  await fireEvent.press(await screen.findByText("J'ai compris, continuer"));
   // "Accueil" is ambiguous once the dashboard mounts (tab bar label + screen title) — wait on a
   // dashboard-only string instead.
   await screen.findByText('Ajouter une opération');
@@ -62,6 +64,10 @@ describe('App', () => {
 
     await fireEvent.press(screen.getByText('Maroc'));
     await fireEvent.press(screen.getByText('Continuer'));
+
+    // US-004: the zero-bank promise is acknowledged before the dashboard, never assumed.
+    expect(await screen.findByText('Zéro accès bancaire')).toBeTruthy();
+    await fireEvent.press(screen.getByText("J'ai compris, continuer"));
 
     expect(await screen.findByText('Ajouter une opération')).toBeTruthy();
     expect(screen.getAllByText('Accueil').length).toBeGreaterThan(0);
