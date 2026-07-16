@@ -1,11 +1,11 @@
 import type { SupportedLanguage } from './i18n';
 
 const LOCALE_BY_LANGUAGE: Record<SupportedLanguage, string> = {
-  // `fr-FR`, not `fr-MA`, on purpose. CLDR groups Moroccan French thousands with a period
-  // (`1.234,50`), but US-062 specifies a non-breaking space (`1 234,50`) — and `fr-FR` is the only
-  // difference-free way to get it: the two locales are otherwise identical here (same comma
-  // decimal, same date patterns, same month names).
-  fr: 'fr-FR',
+  // Moroccan French, the launch market's own convention: thousands grouped with a period
+  // (`1.234,50`), comma decimal. This is CLDR's `fr-MA` and differs from metropolitan `fr-FR`
+  // (which groups with a non-breaking space) on that separator alone — dates and month names are
+  // identical between the two.
+  fr: 'fr-MA',
   ar: 'ar-MA',
   // Anglo-Saxon formatting (comma thousands, dot decimal) for the English catalog.
   en: 'en-US',

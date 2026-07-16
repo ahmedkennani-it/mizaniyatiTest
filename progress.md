@@ -97,13 +97,16 @@ Suivi des itérations. Portée : **uniquement la phase 1** de
   (mêmes 9 échecs préexistants qu'avant l'itération, aucun régressé).
 
 ### Itération 6 — Tâche 1.6 (Formats locaux nombres/dates/devises) ✅
-- ⚠️ **Décision à valider** : la locale française passe de `fr-MA` à **`fr-FR`**.
-  CLDR groupe les milliers du français marocain avec un **point** (`1.234,50`),
-  alors que le critère US-062 exige une **espace insécable** (`1 234,50`). Les deux
-  locales ne diffèrent *que* là-dessus (mêmes décimales, mêmes dates, mêmes noms
-  de mois — vérifié), donc `fr-FR` donne le format spécifié sans rien perdre.
-  Si le format marocain CLDR est en fait le bon, c'est ce choix qu'il faut revoir,
-  pas le reste de l'itération.
+- ⚠️ **Locale française : `fr-MA`, tranché par le décideur produit.** Les milliers
+  sont donc groupés par un **point** (`1.234,50`), la convention CLDR du français
+  marocain — le marché de lancement. J'avais d'abord basculé sur `fr-FR` pour
+  respecter la lettre du critère US-062 (« espace insécable ») ; décision inverse
+  prise le 2026-07-16, retour à `fr-MA`.
+- 🚩 **Le texte du critère US-062 contredit désormais l'implémentation** : il exige
+  « les milliers sont séparés par une espace insécable ». Le comportement voulu est
+  le point. **Le critère du PRD est à corriger** — sans quoi la tâche 1.6 est
+  marquée `done: true` alors qu'elle échoue à son propre critère écrit. Les deux
+  locales ne diffèrent que sur ce séparateur (dates et noms de mois identiques).
 - Le test existant `formatMoney` s'appelait « period thousands separator » et
   passait par accident : `/1.234,50.*MAD/` — le `.` du regex matchait l'espace.
   Nouveau `localeFormats.test.ts` qui assère les **codepoints réels** des

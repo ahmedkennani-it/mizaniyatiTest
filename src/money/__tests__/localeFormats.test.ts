@@ -1,8 +1,6 @@
 import { formatMoney } from '../money';
 import { toLocalizedDigits } from '../../i18n/numberFormat';
 
-const NO_BREAK_SPACE = '\u00A0';
-const NARROW_NO_BREAK_SPACE = '\u202F';
 const ARABIC_THOUSANDS_SEPARATOR = '\u066C';
 const ARABIC_DECIMAL_SEPARATOR = '\u066B';
 
@@ -12,30 +10,22 @@ function unwrap(formatted: string): string {
 }
 
 /**
- * US-062, market-by-market number conventions. These assert the *actual* separator codepoints
- * rather than a loose regex — `/1.234,50/` silently passes on `1 234,50` too, since `.` matches
- * any character, which is how the French grouping went unnoticed.
+ * US-062, market-by-market number conventions. These assert exact separators rather than a loose
+ * regex — `/1.234,50/` silently passes on `1 234,50` too, since `.` matches any character, which
+ * is how the French grouping went unchecked for so long.
  */
 describe('French (fr) number formats', () => {
-  it('groups thousands with a non-breaking space and uses a comma decimal', () => {
-    const formatted = unwrap(formatMoney(123450, 'MAD', 'fr'));
-    const separator = formatted.includes(NARROW_NO_BREAK_SPACE)
-      ? NARROW_NO_BREAK_SPACE
-      : NO_BREAK_SPACE;
-    expect(formatted).toContain(`1${separator}234,50`);
-    // A plain space (U+0020) would be allowed to line-break mid-amount.
-    expect(formatted).not.toContain('1\u0020234');
+  it('groups thousands with a period and uses a comma decimal (Moroccan French)', () => {
+    expect(unwrap(formatMoney(123450, 'MAD', 'fr'))).toContain('1.234,50');
   });
 
   it('groups every three digits on larger amounts', () => {
-    const formatted = unwrap(toLocalizedDigits(1234567, 'fr'));
-    expect(formatted).toMatch(
-      new RegExp(`^1[${NARROW_NO_BREAK_SPACE}${NO_BREAK_SPACE}]234[${NARROW_NO_BREAK_SPACE}${NO_BREAK_SPACE}]567$`),
-    );
+    expect(unwrap(toLocalizedDigits(1234567, 'fr'))).toBe('1.234.567');
   });
 
-  it('never groups with a period (the CLDR fr-MA convention US-062 overrides)', () => {
-    expect(unwrap(formatMoney(123450, 'MAD', 'fr'))).not.toContain('1.234');
+  // Metropolitan `fr-FR` groups with a space; the launch market's `fr-MA` must not.
+  it('does not group with a space of any kind', () => {
+    expect(unwrap(formatMoney(123450, 'MAD', 'fr'))).not.toMatch(/1[\u0020\u00A0\u202F]234/);
   });
 });
 
