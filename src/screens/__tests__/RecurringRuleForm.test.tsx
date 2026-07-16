@@ -50,7 +50,8 @@ describe('RecurringRuleForm — création (US-021)', () => {
     await renderForm(undefined, onSaved);
 
     await fireEvent.changeText(screen.getByLabelText('Montant'), '1400');
-    await fireEvent.press(screen.getByText('Logement'));
+    // `findBy*`: the category and member chips are loaded from the db after the first render.
+    await fireEvent.press(await screen.findByText('Logement'));
     await fireEvent.press(screen.getByText('Youssef'));
     await fireEvent.changeText(screen.getByLabelText('Jour du mois'), '5');
     await fireEvent.changeText(screen.getByLabelText('Date de début'), '2026-08-01');
@@ -76,7 +77,7 @@ describe('RecurringRuleForm — création (US-021)', () => {
     await renderForm();
 
     await fireEvent.changeText(screen.getByLabelText('Montant'), '50');
-    await fireEvent.press(screen.getByText('Logement'));
+    await fireEvent.press(await screen.findByText('Logement'));
     await fireEvent.press(screen.getByText('Youssef'));
     await fireEvent.press(screen.getByText('Hebdomadaire'));
     await fireEvent.press(screen.getByText('Vendredi'));

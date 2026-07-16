@@ -372,7 +372,8 @@ describe('HomeScreen under RTL and LTR', () => {
     await renderHome();
 
     await fireEvent.press(await screen.findByText('Ajouter une opération'));
-    await fireEvent.press(screen.getByText('Courses'));
+    // `findBy*`: the form loads its category chips from the db, so they land a tick after it opens.
+    await fireEvent.press(await screen.findByText('Courses'));
     await pressMemberChip('Moi');
     await fireEvent.changeText(screen.getByLabelText('Montant'), '15');
     await fireEvent.press(screen.getByText('Enregistrer'));

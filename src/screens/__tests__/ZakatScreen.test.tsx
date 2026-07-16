@@ -64,7 +64,8 @@ describe('ZakatScreen (US-025)', () => {
   it('computes the nisab once a gold price is entered and saved', async () => {
     await renderScreen(jest.fn(), ZAKAT_PLAN);
 
-    await fireEvent.changeText(screen.getByLabelText("Prix de l'or (par gramme)"), '600');
+    // `findBy*`: the screen loads its config asynchronously, so the fields only exist a tick later.
+    await fireEvent.changeText(await screen.findByLabelText("Prix de l'or (par gramme)"), '600');
     await fireEvent.press(screen.getByText('Mettre à jour la configuration'));
 
     // Nisab = 600 MAD/g * 85g = 51 000 MAD.
@@ -74,7 +75,7 @@ describe('ZakatScreen (US-025)', () => {
   it('computes base and due, and marks above nisab once assets clear it', async () => {
     await renderScreen(jest.fn(), ZAKAT_PLAN);
 
-    await fireEvent.changeText(screen.getByLabelText("Prix de l'or (par gramme)"), '100');
+    await fireEvent.changeText(await screen.findByLabelText("Prix de l'or (par gramme)"), '100');
     await fireEvent.press(screen.getByText('Mettre à jour la configuration'));
     // Nisab = 100 * 85 = 8 500 MAD.
 
@@ -89,7 +90,7 @@ describe('ZakatScreen (US-025)', () => {
   it('floors the base at zero when debts exceed assets', async () => {
     await renderScreen(jest.fn(), ZAKAT_PLAN);
 
-    await fireEvent.changeText(screen.getByLabelText('Liquidités & comptes'), '100');
+    await fireEvent.changeText(await screen.findByLabelText('Liquidités & comptes'), '100');
     await fireEvent.changeText(screen.getByLabelText('Dettes à déduire'), '500');
 
     expect(await screen.findByText(/Base zakatable: .?0,00 MAD/)).toBeTruthy();
@@ -98,7 +99,7 @@ describe('ZakatScreen (US-025)', () => {
   it('saves an assessment to history', async () => {
     await renderScreen(jest.fn(), ZAKAT_PLAN);
 
-    await fireEvent.changeText(screen.getByLabelText('Liquidités & comptes'), '1000');
+    await fireEvent.changeText(await screen.findByLabelText('Liquidités & comptes'), '1000');
     await fireEvent.press(screen.getByText('Enregistrer ce calcul'));
 
     const assessments = await listZakatAssessments(mockFakeDb);

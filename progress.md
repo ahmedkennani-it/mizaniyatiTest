@@ -18,9 +18,7 @@ Suivi des itérations. Portée : **uniquement la phase 1** de
 | 1.7 | Stockage local des données | ⚠️ `done: false` — 3/4 critères, bloqué sur le chiffrement |
 
 Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
-`npx jest` **703/712** (9 échecs préexistants de features des phases 5/14/16 —
-ZakatScreen, VaultDetail, LockScreen, RecurringRuleForm, HomeScreen ; hors
-périmètre phase 1, aucun régressé par ces itérations).
+`npx jest` **712/712, 87 suites — suite entièrement verte**.
 
 ### Ce qui bloque la clôture de la phase 1
 
@@ -192,17 +190,36 @@ lui-même (la règle d'arrêt de `CLAUDE.md` est donc levée explicitement).
 - **Action requise** : rétablir l'accès (charger la clé SSH, ou basculer le remote
   sur HTTPS avec un token), puis `git push`.
 
+### Itération 8 — Réparation des 9 tests rouges (préalable au développement des US) ✅
+
+Les 5 suites rouges depuis le début de la boucle échouaient toutes pour **la même
+raison**, et **aucune n'était un bug produit** : elles interrogeaient l'écran avec
+`getBy*` (synchrone) alors que ces écrans chargent leurs données en asynchrone
+(config zakat, puces de catégories/membres, `settings` du verrou). Les assertions
+tombaient avant que les champs existent.
+
+- `ZakatScreen` (4) · `RecurringRuleForm` (2) · `HomeScreen` (1) → `findBy*` sur la
+  première requête suivant le rendu ou l'ouverture d'un formulaire.
+- `VaultDetail` (1) · `LockScreen` (1) → `waitFor` : ces deux-là assèrent une
+  *disparition* ou un *appel de mock*, pour lesquels `findBy*` ne convient pas.
+- Piste écartée : sur `HomeScreen`, le tableau de bord affiché sans l'opération
+  laissait croire à un défaut de rafraîchissement après retour de l'écran de
+  confirmation. En réalité le formulaire n'avait jamais été rempli — `getByText`
+  échouait en amont, ligne 375. Le câblage `dataVersion` fonctionne.
+
+**Suite entièrement verte : 712/712, 87 suites.** Plus aucun échec préexistant à
+traîner — chaque tâche suivante peut désormais être marquée `done` sur une porte
+qualité honnête.
+
 ## Notes / blocages connus (hors périmètre Phase 1)
 
 - L'arbre de travail contient des changements accumulés multi-phases non
   committés (écrans/db/composants d'autres phases). Ils sont laissés à leurs
   phases respectives.
-- Échecs de tests pré-existants dans des features de phases ultérieures
-  (US-021 RecurringRuleForm, US-023 VaultDetail, US-025 ZakatScreen,
-  US-028 LockScreen, plus « retour au dashboard depuis l'écran de confirmation »
-  dans HomeScreen.rtl / US-012). 5 suites, 9 tests. Ce sont de vrais échecs
-  fonctionnels de ces features, pas des problèmes d'i18n — hors périmètre Phase 1,
-  à traiter dans leurs phases respectives.
+- ~~Échecs de tests pré-existants dans des features de phases ultérieures~~ →
+  **résolus à l'itération 8**. Diagnostic initial erroné : notés ici comme « de
+  vrais échecs fonctionnels », c'étaient en fait des assertions synchrones sur des
+  écrans asynchrones. Aucun bug produit.
 - **Vérification navigateur (LTR/RTL) non effectuée** : la skill `dev-browser`
   demandée par les critères d'acceptation n'est pas disponible dans cet
   environnement et aucun outil de pilotage de navigateur n'y est exposé. La

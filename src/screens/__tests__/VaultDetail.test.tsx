@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
 import {
@@ -89,7 +89,8 @@ describe('VaultDetail (US-023)', () => {
     await fireEvent.press(screen.getByText('Oui, supprimer'));
 
     expect(await listVaultContributions(mockFakeDb)).toHaveLength(0);
-    expect(screen.queryByText('Premier versement')).toBeNull();
+    // The row disappears only once the screen has reloaded the list from the db.
+    await waitFor(() => expect(screen.queryByText('Premier versement')).toBeNull());
   });
 
   it('marks the vault reached once contributions cover the target', async () => {

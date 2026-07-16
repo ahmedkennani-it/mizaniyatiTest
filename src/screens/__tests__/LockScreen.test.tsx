@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
 import '../../i18n';
@@ -67,7 +67,8 @@ describe('LockScreen (US-028)', () => {
 
     await renderScreen();
 
-    expect(mockAuthenticate).toHaveBeenCalled();
+    // The auto-prompt only fires once `AppLockProvider` has loaded `settings.mode`.
+    await waitFor(() => expect(mockAuthenticate).toHaveBeenCalled());
     expect(await screen.findByLabelText('Code PIN')).toBeTruthy();
   });
 
