@@ -26,6 +26,8 @@ async function goToProfileTab() {
 async function completeOnboarding() {
   await fireEvent.press(await screen.findByText('Commencer'));
   await screen.findByText('Bienvenue sur Mizaniyati');
+  // The market is never pre-selected (US-003): "Continuer" stays disabled until it is chosen.
+  await fireEvent.press(screen.getByText('Maroc'));
   await fireEvent.press(screen.getByText('Continuer'));
   // "Accueil" is ambiguous once the dashboard mounts (tab bar label + screen title) — wait on a
   // dashboard-only string instead.
@@ -56,9 +58,9 @@ describe('App', () => {
     await fireEvent.press(screen.getByText('Commencer'));
 
     expect(await screen.findByText('Bienvenue sur Mizaniyati')).toBeTruthy();
-    expect(screen.getByText('Maroc')).toBeTruthy();
     expect(screen.getByText('Devise : MAD')).toBeTruthy();
 
+    await fireEvent.press(screen.getByText('Maroc'));
     await fireEvent.press(screen.getByText('Continuer'));
 
     expect(await screen.findByText('Ajouter une opération')).toBeTruthy();

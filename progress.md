@@ -56,7 +56,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | --- | --- | --- |
 | 4.1 | Écran de bienvenue | ✅ done |
 | 4.2 | Choix de la langue | ✅ done |
-| 4.3 | Choix du pays / marché et devise | ⏳ |
+| 4.3 | Choix du pays / marché et devise | ✅ done |
 | 4.4 | Écran de confidentialité | ⏳ |
 | 4.5 | Création du foyer | ⏳ |
 | 4.6 | Connexion à un compte existant | ⏳ — dépend de la sauvegarde chiffrée (phase 17) |
@@ -464,6 +464,34 @@ de mes propres erreurs de la 2.1.
   global ; le test RTL d'`App` le laissait désormais en anglais et décidait de la copie
   vue par le test suivant. `afterEach` remet le français.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1234/1234, 107 suites** ✅
+  (2 runs complets).
+
+### Itération 17 — Tâche 4.3 (Choix du pays / marché et devise) ✅
+- ⚠️ **Conflit avec ma propre 3.2** : la règle métier de US-003 dit « Maroc/DZ/TN →
+  tontine ; France/US → remittances ; **Golfe → les deux** ». Mon modèle de la 3.2
+  faisait tontine **ou** transferts, sans exprimer le cas « les deux ». Remplacé par
+  un vrai registre `src/market/markets.ts` (pays → devise + modules), dont
+  `resolveTabs` **dérive** désormais. La barre garde une seule case pour un module
+  local : un marché du Golfe y met **Tontine** (rituel hebdomadaire) et garde le
+  module Transferts actif ailleurs — un 5e onglet rétrécirait toutes les cibles, à
+  rebours de la règle des 44 pt de US-013 elle-même.
+- 🐛 **Le bouton « Continuer » n'était jamais désactivé** : le pays était pré-sélectionné
+  sur le Maroc. Le critère exige un choix explicite — le pays décide de la devise et
+  des modules, le laisser implicite serait le supposer. Il démarre vide.
+- **Duplication supprimée** : `src/onboarding/countries.ts` et le registre de marchés
+  décrivaient tous deux les pays. L'ancien est supprimé, le registre est la seule source.
+- Marchés annoncés (DZD, TND, EGP, EUR, AED, SAR) mentionnés sans être sélectionnables,
+  comme les packs de langues de la 4.2. Le MVP reste Maroc seul (PRD §4).
+- ⚠️ **J'ai retiré des marchés que j'avais inventés en 3.2** (SN, CI, CM, ML) : absents
+  du PRD, ils revendiquaient une devise (XOF) que le produit n'a jamais spécifiée. Le
+  registre ne couvre que les 7 marchés nommés par le PRD. Un marché non profilé retombe
+  sur `transfers` : afficher une tontine à un foyer qui n'en pratique pas est pire que
+  de l'omettre.
+- Effet de bord assumé : la fin de la pré-sélection a cassé tous les tests qui
+  traversaient l'onboarding — ils choisissent maintenant le marché, comme un vrai
+  utilisateur. Doublon de test supprimé au passage (le seeding est déjà couvert, et par
+  nom de catégorie, dans la suite US-023).
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1263/1263, 109 suites** ✅
   (2 runs complets).
 
 ## Notes / blocages connus (hors périmètre Phase 1)

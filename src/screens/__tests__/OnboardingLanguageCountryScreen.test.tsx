@@ -34,14 +34,15 @@ describe('OnboardingLanguageCountryScreen (US-023)', () => {
     mockFakeDb = createFakeDatabase().db;
   });
 
-  it('defaults to Maroc/MAD, persists the choice and seeds defaults on continue', async () => {
+  it('persists the Maroc/MAD choice and seeds defaults on continue', async () => {
     const onComplete = jest.fn();
     await renderScreen(onComplete);
 
     expect(await screen.findByText('Bienvenue sur Mizaniyati')).toBeTruthy();
-    expect(screen.getByText('Maroc')).toBeTruthy();
     expect(screen.getByText('Devise : MAD')).toBeTruthy();
 
+    // The market is an explicit choice, never pre-selected (US-003).
+    await fireEvent.press(screen.getByText('Maroc'));
     await fireEvent.press(screen.getByText('Continuer'));
 
     expect(onComplete).toHaveBeenCalled();
@@ -65,6 +66,7 @@ describe('OnboardingLanguageCountryScreen (US-023)', () => {
     await renderScreen(onComplete);
 
     await fireEvent.press(await screen.findByText('العربية'));
+    await fireEvent.press(screen.getByText('المغرب'));
     await fireEvent.press(screen.getByText('متابعة'));
 
     expect(onComplete).toHaveBeenCalled();

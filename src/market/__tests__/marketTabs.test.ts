@@ -1,20 +1,26 @@
 import { marketHasTontine, resolveTabs } from '../marketTabs';
 
 describe('marketHasTontine (US-013)', () => {
-  it.each(['MA', 'DZ', 'TN', 'SN'])('is true for %s, where the practice is everyday', (code) => {
+  it.each(['MA', 'DZ', 'TN', 'EG'])('is true for %s, where the practice is everyday', (code) => {
     expect(marketHasTontine(code)).toBe(true);
   });
 
-  it.each(['FR', 'ES', 'BE', 'CA'])('is false for the diaspora market %s', (code) => {
-    expect(marketHasTontine(code)).toBe(false);
+  // The Gulf runs both, so it still has a tontine tab (US-003's rule).
+  it.each(['AE', 'SA'])('is true for the Gulf market %s, which runs both modules', (code) => {
+    expect(marketHasTontine(code)).toBe(true);
+  });
+
+  it('is false for the diaspora market FR', () => {
+    expect(marketHasTontine('FR')).toBe(false);
   });
 
   it('accepts a lowercase code', () => {
     expect(marketHasTontine('ma')).toBe(true);
   });
 
-  it('treats an unknown market as having no tontine', () => {
-    expect(marketHasTontine('ZZ')).toBe(false);
+  // Unprofiled markets fall back to the diaspora guess — see `marketModules`.
+  it.each(['ES', 'BE', 'CA', 'ZZ'])('is false for the unprofiled market %s', (code) => {
+    expect(marketHasTontine(code)).toBe(false);
   });
 });
 
@@ -36,11 +42,17 @@ describe('resolveTabs (US-013)', () => {
     expect(france.indexOf('transfers')).toBe(morocco.indexOf('tontine'));
   });
 
+  // The bar has one slot for a local module, so even a market running both never shows two.
   it('never shows Tontine and Transferts at once', () => {
-    for (const country of ['MA', 'FR', 'DZ', 'ES']) {
+    for (const country of ['MA', 'FR', 'DZ', 'ES', 'AE', 'SA']) {
       const tabs = resolveTabs(country, false);
       expect(tabs.includes('tontine') && tabs.includes('transfers')).toBe(false);
     }
+  });
+
+  // A Gulf household runs both; the bar shows the weekly ritual, not the monthly transfer.
+  it('gives the tontine slot to a market running both modules', () => {
+    expect(resolveTabs('AE', false)).toEqual(['home', 'categories', 'tontine', 'profile']);
   });
 
   describe('senior mode', () => {

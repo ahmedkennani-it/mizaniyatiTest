@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { AppScreen, Avatar, Button, Icon, ListRow, TrustChip, Txt } from '../components';
 import { ensureAppReady, getDatabase, saveLanguageCountry } from '../db';
 import { LANGUAGE_OPTIONS, useLanguage } from '../i18n';
-import { DEFAULT_COUNTRY_CODE, SUPPORTED_COUNTRIES } from '../onboarding';
+import { ANNOUNCED_MARKETS, SELECTABLE_MARKETS } from '../market';
 import { useTheme } from '../theme';
 
 export interface OnboardingLanguageCountryScreenProps {
@@ -30,14 +30,18 @@ export function OnboardingLanguageCountryScreen({
   const { theme } = useTheme();
   const { language, setLanguage } = useLanguage();
 
-  const [selectedCountryCode, setSelectedCountryCode] = useState(DEFAULT_COUNTRY_CODE);
+  // Starts empty on purpose: US-003 wants "Continuer" disabled until the market is an explicit
+  // choice. Pre-selecting the only market today would make the country silently assumed, and the
+  // country is what decides the currency and the local modules.
+  const [selectedCountryCode, setSelectedCountryCode] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const selectedCountry =
-    SUPPORTED_COUNTRIES.find((country) => country.code === selectedCountryCode) ??
-    SUPPORTED_COUNTRIES[0];
+  const selectedCountry = SELECTABLE_MARKETS.find((market) => market.code === selectedCountryCode);
 
   async function handleContinue() {
+    if (!selectedCountry) {
+      return;
+    }
     setSaving(true);
     await saveLanguageCountry(getDatabase(), {
       languageCode: language,
@@ -114,27 +118,39 @@ export function OnboardingLanguageCountryScreen({
       <Txt weight="semibold" size="md">
         {t('onboarding.countryLabel')}
       </Txt>
-      {SUPPORTED_COUNTRIES.map((country) => {
-        const active = selectedCountryCode === country.code;
+      {SELECTABLE_MARKETS.map((market) => {
+        const active = selectedCountryCode === market.code;
         return (
           <ListRow
-            key={country.code}
+            key={market.code}
             icon="map-pin"
             accent="gold"
-            title={t(country.nameKey)}
-            subtitle={t('onboarding.currencyNote', { currency: country.currencyCode })}
+            title={t(market.nameKey)}
+            subtitle={t('onboarding.currencyNote', { currency: market.currencyCode })}
             trailing={
               active ? (
                 <Icon name="check-circle" size={22} color={theme.colors.primary} />
               ) : undefined
             }
-            onPress={() => setSelectedCountryCode(country.code)}
+            onPress={() => setSelectedCountryCode(market.code)}
             style={selectedBorder(active)}
           />
         );
       })}
 
-      <Button label={t('onboarding.continueButton')} onPress={handleContinue} disabled={saving} />
+      {/* Named but not selectable, like the language packs: says where the app is going without
+          implying these markets work yet. */}
+      <Txt size="xs" color={theme.colors.textSecondary}>
+        {t('onboarding.otherMarketsNote', {
+          markets: ANNOUNCED_MARKETS.map((market) => market.currencyCode).join(', '),
+        })}
+      </Txt>
+
+      <Button
+        label={t('onboarding.continueButton')}
+        onPress={handleContinue}
+        disabled={saving || selectedCountry === undefined}
+      />
     </AppScreen>
   );
 }

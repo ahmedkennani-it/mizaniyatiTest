@@ -120,6 +120,7 @@ describe('onboarding language step (US-002)', () => {
     const { onComplete } = await renderStep();
 
     await fireEvent.press(screen.getByText(fr.language.nativeArabic));
+    await fireEvent.press(screen.getByText(ar.onboarding.countryMorocco));
     await fireEvent.press(screen.getByText(ar.onboarding.continueButton));
 
     expect(onComplete).toHaveBeenCalledTimes(1);
@@ -130,6 +131,7 @@ describe('onboarding language step (US-002)', () => {
     await renderStep();
 
     await fireEvent.press(screen.getByText(fr.language.nativeEnglish));
+    await fireEvent.press(screen.getByText('Morocco'));
     await fireEvent.press(screen.getByText('Continue'));
 
     expect(await getUserSettings(mockFakeDb)).toMatchObject({ languageCode: 'en' });

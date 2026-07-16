@@ -2,8 +2,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useTranslation } from 'react-i18next';
 
 import { FloatingTabBar } from './FloatingTabBar';
-import { DEFAULT_COUNTRY_CODE } from '../onboarding';
-import { resolveTabs } from '../market';
+import { DEFAULT_COUNTRY_CODE, resolveTabs } from '../market';
 import type { TabName } from '../market';
 import {
   CategoriesScreen,
