@@ -59,7 +59,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 4.3 | Choix du pays / marché et devise | ✅ done |
 | 4.4 | Écran de confidentialité | ✅ done |
 | 4.5 | Création du foyer | ✅ done |
-| 4.6 | Connexion à un compte existant | ⏳ — dépend de la sauvegarde chiffrée (phase 17) |
+| 4.6 | Connexion à un compte existant | 🚨 `done: false` — bloquée par des dépendances de phase 17 |
 
 ## Journal
 
@@ -541,6 +541,32 @@ de mes propres erreurs de la 2.1.
   confidentialité en 4.4. Un dashboard sans famille à nommer n'a pas de sens.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1322/1322, 112 suites** ✅
   (2 runs complets).
+
+### Itération 20 — Tâche 4.6 (Connexion à un compte existant) 🚨 laissée `done: false`
+
+**Bloquée par des dépendances qui vivent trois phases plus loin.** Sur ses 3 critères
+fonctionnels, seul le premier est faisable :
+
+- ✅ « quand je tape "J'ai déjà un compte", l'écran de connexion s'affiche » — livré en
+  4.1, et l'écran dit franchement qu'il n'y a rien à restaurer.
+- 🚨 « identifiants valides + **sauvegarde chiffrée existante** → données restaurées sur
+  le nouvel appareil » — exige :
+  1. un **système de comptes**, qui n'existe nulle part dans le code ;
+  2. l'**infrastructure de sauvegarde chiffrée**, spécifiée par **US-071a/b (phase 17)** ;
+  3. la décision de **chiffrement au repos** de la **1.7**, toujours ouverte ;
+  4. une **couche réseau**, que la garde statique de la 1.7 interdit aujourd'hui à dessein.
+- 🚨 « identifiants invalides → message d'erreur explicite » — sans notion d'identifiant
+  valide, il n'y a rien à invalider.
+
+**Pourquoi ne pas la bricoler** : un écran de connexion factice qui prétend authentifier
+serait exactement la fabrication que les garde-fous interdisent, et exigerait un backend
+codé en dur. Le PRD ordonne 4.6 avant la phase 17 dont elle dépend — c'est un **problème
+d'ordonnancement du PRD**, pas un manque de travail.
+
+**À faire quand la phase 17 arrivera** : reprendre 4.6 juste après 17.2/17.3, et
+**assouplir la garde réseau** (`src/db/__tests__/offlineStorage.test.ts`) pour le seul
+module de sauvegarde — elle protège le garde-fou « aucune connexion bancaire », pas une
+interdiction éternelle du réseau.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 
