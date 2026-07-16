@@ -506,6 +506,18 @@ export const ar: TranslationSchema = {
     startButton: 'ابدأ',
     signInLink: 'لدي حساب بالفعل',
   },
+  household: {
+    title: 'عائلتك',
+    subtitle: 'لنرحّب بك باسمك ونسمّي ميزانية العائلة.',
+    firstNameLabel: 'اسمك الشخصي',
+    firstNamePlaceholder: 'مثال: يوسف',
+    nameLabel: 'اسم العائلة',
+    namePlaceholder: 'مثال: عائلة بنعلي',
+    adminNote: 'ستكون مدير العائلة: يمكنك تعديل كل شيء، ولاحقاً دعوة أفراد عائلتك.',
+    submit: 'إنشاء عائلتي',
+    errorFirstName: 'أدخل اسمك الشخصي.',
+    errorName: 'أدخل اسم العائلة.',
+  },
   privacy: {
     title: 'بياناتك ملك لك',
     subtitle: 'ثلاثة التزامات، قبل أن تبدأ.',

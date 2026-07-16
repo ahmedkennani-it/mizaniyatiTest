@@ -6,11 +6,15 @@ import { AppScreen, Avatar, Button, Icon, ListRow, TrustChip, Txt } from '../com
 import { ensureAppReady, getDatabase, saveLanguageCountry } from '../db';
 import { LANGUAGE_OPTIONS, useLanguage } from '../i18n';
 import { ANNOUNCED_MARKETS, SELECTABLE_MARKETS } from '../market';
+import type { Market } from '../market';
 import { useTheme } from '../theme';
 
 export interface OnboardingLanguageCountryScreenProps {
-  /** Called once the choice is persisted and the chosen language's defaults have been seeded. */
-  onComplete: () => void;
+  /**
+   * Called once the choice is persisted and the chosen language's defaults have been seeded, with
+   * the chosen market — the next step needs its currency for the household budget.
+   */
+  onComplete: (market: Market) => void;
 }
 
 /**
@@ -51,7 +55,7 @@ export function OnboardingLanguageCountryScreen({
     // Default categories/member are seeded here (in the just-chosen language), not earlier at
     // app mount — seeding before the user picks a language would lock in the device-detected one.
     await ensureAppReady(language);
-    onComplete();
+    onComplete(selectedCountry);
   }
 
   function selectedBorder(active: boolean) {

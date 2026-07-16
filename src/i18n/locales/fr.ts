@@ -518,6 +518,18 @@ export const fr = {
     startButton: 'Commencer',
     signInLink: "J'ai déjà un compte",
   },
+  household: {
+    title: 'Votre foyer',
+    subtitle: 'Pour vous accueillir par votre prénom et nommer le budget de la famille.',
+    firstNameLabel: 'Votre prénom',
+    firstNamePlaceholder: 'Ex. Youssef',
+    nameLabel: 'Nom du foyer',
+    namePlaceholder: 'Ex. Famille Benali',
+    adminNote: 'Vous serez administrateur du foyer : vous pourrez tout modifier et, plus tard, inviter votre famille.',
+    submit: 'Créer mon foyer',
+    errorFirstName: 'Saisissez votre prénom.',
+    errorName: 'Saisissez un nom de foyer.',
+  },
   privacy: {
     title: 'Vos données vous appartiennent',
     subtitle: 'Trois engagements, avant même de commencer.',

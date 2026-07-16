@@ -20,6 +20,7 @@ import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ensureAppReady, ensureMigrated, getDatabase, getUserSettings } from './src/db';
+import { listHouseholds } from './src/db/repositories';
 import { EntitlementsProvider } from './src/entitlements';
 import { LanguageProvider, useLanguage } from './src/i18n';
 import { RootNavigator, toNavigationTheme } from './src/navigation';
@@ -69,6 +70,13 @@ function AppNavigation() {
         // No row at all means onboarding never ran; a row without a privacy acceptance means it
         // was interrupted before US-004's step, and the promise must not be skipped silently.
         if (!settings || !settings.privacyAcceptedAt) {
+          setNeedsOnboarding(true);
+          setReady(true);
+          return;
+        }
+        // Same reasoning one step further: no household means US-005 never ran, and the dashboard
+        // has no family to name.
+        if ((await listHouseholds(getDatabase())).length === 0) {
           setNeedsOnboarding(true);
           setReady(true);
           return;

@@ -1,5 +1,8 @@
 import { useState } from 'react';
 
+import { DEFAULT_CURRENCY_CODE } from '../money';
+
+import { HouseholdSetupScreen } from './HouseholdSetupScreen';
 import { OnboardingLanguageCountryScreen } from './OnboardingLanguageCountryScreen';
 import { PrivacyPolicyScreen } from './PrivacyPolicyScreen';
 import { PrivacyScreen } from './PrivacyScreen';
@@ -11,12 +14,12 @@ export interface OnboardingFlowProps {
   onComplete: () => void;
 }
 
-type Step = 'welcome' | 'languageCountry' | 'privacy' | 'privacyPolicy' | 'signIn';
+type Step = 'welcome' | 'languageCountry' | 'privacy' | 'privacyPolicy' | 'household' | 'signIn';
 
 /**
- * Sequences the onboarding screens (US-001 → US-004): welcome → language & country → privacy →
- * dashboard. `App.tsx` renders this instead of `RootNavigator` whenever `getUserSettings` returns
- * `null`, i.e. no onboarding has been completed on this device.
+ * Sequences the onboarding screens (US-001 → US-005): welcome → language & country → privacy →
+ * household → dashboard. `App.tsx` renders this instead of `RootNavigator` until the sequence has
+ * been seen through on this device.
  *
  * Privacy comes **after** language & country, not before: the commitments are worth reading in
  * one's own language, and that step is what creates the `user_settings` row the acceptance
@@ -27,15 +30,30 @@ type Step = 'welcome' | 'languageCountry' | 'privacy' | 'privacyPolicy' | 'signI
  */
 export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const [step, setStep] = useState<Step>('welcome');
+  const [currencyCode, setCurrencyCode] = useState(DEFAULT_CURRENCY_CODE);
 
   if (step === 'languageCountry') {
-    return <OnboardingLanguageCountryScreen onComplete={() => setStep('privacy')} />;
+    return (
+      <OnboardingLanguageCountryScreen
+        onComplete={(market) => {
+          setCurrencyCode(market.currencyCode);
+          setStep('privacy');
+        }}
+      />
+    );
   }
 
   if (step === 'privacy') {
     return (
-      <PrivacyScreen onAccepted={onComplete} onOpenPolicy={() => setStep('privacyPolicy')} />
+      <PrivacyScreen
+        onAccepted={() => setStep('household')}
+        onOpenPolicy={() => setStep('privacyPolicy')}
+      />
     );
+  }
+
+  if (step === 'household') {
+    return <HouseholdSetupScreen currencyCode={currencyCode} onCreated={onComplete} />;
   }
 
   if (step === 'privacyPolicy') {

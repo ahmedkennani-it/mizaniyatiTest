@@ -19,7 +19,7 @@ import { fr } from '../../i18n/locales/fr';
 // eslint-disable-next-line import/first -- must come after jest.mock('expo-sqlite', ...) above
 import { getDatabase } from '../../db/client';
 // eslint-disable-next-line import/first -- must come after jest.mock('expo-sqlite', ...) above
-import { getUserSettings } from '../../db/repositories';
+import { getUserSettings, listHouseholds } from '../../db/repositories';
 // eslint-disable-next-line import/first -- must come after jest.mock('expo-sqlite', ...) above
 import { ThemeProvider } from '../../theme';
 // eslint-disable-next-line import/first -- must come after jest.mock('expo-sqlite', ...) above
@@ -75,7 +75,7 @@ describe('OnboardingFlow (US-001)', () => {
     expect(await screen.findByText(fr.privacy.title)).toBeTruthy();
   });
 
-  it('completes only once the privacy commitments are accepted', async () => {
+  it('records the acceptance and moves to the household step, not to the dashboard', async () => {
     const { onComplete } = await renderFlow();
 
     await fireEvent.press(screen.getByText(fr.welcome.startButton));
@@ -88,8 +88,26 @@ describe('OnboardingFlow (US-001)', () => {
 
     await fireEvent.press(screen.getByText(fr.privacy.acceptButton));
 
-    expect(onComplete).toHaveBeenCalledTimes(1);
     expect((await getUserSettings(getDatabase()))?.privacyAcceptedAt).toEqual(expect.any(String));
+    expect(await screen.findByText(fr.household.title)).toBeTruthy();
+    expect(onComplete).not.toHaveBeenCalled();
+  });
+
+  it('completes only once the household is named (US-005)', async () => {
+    const { onComplete } = await renderFlow();
+
+    await fireEvent.press(screen.getByText(fr.welcome.startButton));
+    await fireEvent.press(screen.getByText(fr.onboarding.countryMorocco));
+    await fireEvent.press(screen.getByText(fr.onboarding.continueButton));
+    await fireEvent.press(await screen.findByText(fr.privacy.acceptButton));
+    await screen.findByText(fr.household.title);
+
+    await fireEvent.changeText(screen.getByLabelText(fr.household.firstNameLabel), 'Youssef');
+    await fireEvent.changeText(screen.getByLabelText(fr.household.nameLabel), 'Famille Benali');
+    await fireEvent.press(screen.getByText(fr.household.submit));
+
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    expect(await listHouseholds(getDatabase())).toMatchObject([{ name: 'Famille Benali' }]);
   });
 
   it('opens the full policy from the privacy step and comes back', async () => {

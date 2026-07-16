@@ -31,6 +31,10 @@ async function completeOnboarding() {
   await fireEvent.press(screen.getByText('Continuer'));
   // The privacy commitments gate the dashboard (US-004).
   await fireEvent.press(await screen.findByText("J'ai compris, continuer"));
+  // …and the household has to be named before it (US-005).
+  await fireEvent.changeText(await screen.findByLabelText('Votre prénom'), 'Youssef');
+  await fireEvent.changeText(screen.getByLabelText('Nom du foyer'), 'Famille Benali');
+  await fireEvent.press(screen.getByText('Créer mon foyer'));
   // "Accueil" is ambiguous once the dashboard mounts (tab bar label + screen title) — wait on a
   // dashboard-only string instead.
   await screen.findByText('Ajouter une opération');
@@ -69,7 +73,14 @@ describe('App', () => {
     expect(await screen.findByText('Zéro accès bancaire')).toBeTruthy();
     await fireEvent.press(screen.getByText("J'ai compris, continuer"));
 
+    // US-005: the household is named, and the dashboard greets by first name.
+    await fireEvent.changeText(await screen.findByLabelText('Votre prénom'), 'Youssef');
+    await fireEvent.changeText(screen.getByLabelText('Nom du foyer'), 'Famille Benali');
+    await fireEvent.press(screen.getByText('Créer mon foyer'));
+
     expect(await screen.findByText('Ajouter une opération')).toBeTruthy();
+    expect(await screen.findByText('Bonjour, Youssef')).toBeTruthy();
+    expect(screen.getByText('Famille Benali')).toBeTruthy();
     expect(screen.getAllByText('Accueil').length).toBeGreaterThan(0);
   });
 

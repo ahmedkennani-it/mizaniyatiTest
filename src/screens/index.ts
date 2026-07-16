@@ -4,6 +4,8 @@ export { TontineScreen } from './TontineScreen';
 export { ProfileScreen } from './ProfileScreen';
 export { PlaceholderScreen } from './PlaceholderScreen';
 export { TransfersScreen } from './TransfersScreen';
+export { HouseholdSetupScreen } from './HouseholdSetupScreen';
+export type { HouseholdSetupScreenProps } from './HouseholdSetupScreen';
 export { OnboardingFlow } from './OnboardingFlow';
 export type { OnboardingFlowProps } from './OnboardingFlow';
 export { PrivacyScreen } from './PrivacyScreen';

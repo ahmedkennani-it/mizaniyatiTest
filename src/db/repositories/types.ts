@@ -1,12 +1,13 @@
 import type { SupportedLanguage } from '../../i18n/i18n';
 
-export type MemberRole = 'editor' | 'viewer';
+export type MemberRole = 'admin' | 'editor' | 'viewer';
 
 /**
  * `role` only has real teeth once a shared cloud account exists (US-039/US-040, per
  * `docs/specs/profil-reglages.md`) — on this single-device MVP it's stored but not enforced
  * anywhere. Defaults to `'editor'` (matches how `seedDefaultMember`'s solo "Moi" member and any
- * locally-added member behave today: full local access).
+ * locally-added member behave today: full local access). The household's creator gets `'admin'`
+ * (US-005): admin implies edit rights, so `canEdit` covers both.
  */
 export interface Member {
   id: string;

@@ -30,10 +30,18 @@ describe('ScreenHeader (US-074a)', () => {
     expect(screen.getByText('Catégories')).toBeTruthy();
   });
 
-  it('renders the greeting variant with an avatar initial', async () => {
-    await renderHeader(<ScreenHeader greeting="Bonjour" name="Famille Benali" />);
-    expect(screen.getByText('Bonjour')).toBeTruthy();
+  it('greets the person by name, with the household underneath (US-005)', async () => {
+    await renderHeader(
+      <ScreenHeader greeting="Bonjour" name="Youssef" householdName="Famille Benali" />,
+    );
+    expect(screen.getByText('Bonjour, Youssef')).toBeTruthy();
     expect(screen.getByText('Famille Benali')).toBeTruthy();
+  });
+
+  // The name arrives a tick after the household loads; a dangling comma would look broken.
+  it('greets without a trailing comma while the name is still loading', async () => {
+    await renderHeader(<ScreenHeader greeting="Bonjour" householdName="Famille Benali" />);
+    expect(screen.getByText('Bonjour')).toBeTruthy();
   });
 
   it('shows no back button unless onBack is given', async () => {

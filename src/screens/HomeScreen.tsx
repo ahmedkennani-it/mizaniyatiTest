@@ -24,12 +24,20 @@ import { categoryAccent, categoryIconName } from '../categories/categoryVisual';
 import { getDatabase } from '../db/client';
 import {
   listCategories,
+  listHouseholds,
   listMembers,
   listTransactions,
   listVaultContributions,
   listVaults,
 } from '../db/repositories';
-import type { Category, Member, Transaction, Vault, VaultContribution } from '../db/repositories';
+import type {
+  Category,
+  Household,
+  Member,
+  Transaction,
+  Vault,
+  VaultContribution,
+} from '../db/repositories';
 import { useLanguage } from '../i18n';
 import { formatMonthLabel, monthKeyOf, monthKeyToDate } from '../i18n/dateFormat';
 import { forceLTR, toLocalizedDigits } from '../i18n/numberFormat';
@@ -49,6 +57,7 @@ export function HomeScreen() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
+  const [households, setHouseholds] = useState<Household[]>([]);
   const [vaults, setVaults] = useState<Vault[]>([]);
   const [contributions, setContributions] = useState<VaultContribution[]>([]);
   const [monthKey, setMonthKey] = useState<string>(() => monthKeyOf(new Date()));
@@ -58,6 +67,7 @@ export function HomeScreen() {
     listTransactions(db).then(setTransactions);
     listCategories(db).then(setCategories);
     listMembers(db).then(setMembers);
+    listHouseholds(db).then(setHouseholds);
     listVaults(db).then(setVaults);
     listVaultContributions(db).then(setContributions);
   }, []);
@@ -103,7 +113,10 @@ export function HomeScreen() {
 
   const monthLabel = useMemo(() => formatMonthLabel(monthKey, language), [language, monthKey]);
 
-  const householdName = members[0]?.name ?? t('home.household');
+  // The member is the person greeted; the household is the budget's name. They used to be the
+  // same string, which greeted the user with "Moi" (US-005).
+  const firstName = members[0]?.name;
+  const householdName = households[0]?.name ?? t('home.household');
 
   const segments: DonutSegment[] = breakdown.map((entry) => ({
     label: entry.categoryName,
@@ -124,7 +137,8 @@ export function HomeScreen() {
     <AppScreen scroll bottomInset={110} contentStyle={{ gap: theme.spacing.md }}>
       <ScreenHeader
         greeting={t('home.greeting')}
-        name={householdName}
+        name={firstName}
+        householdName={householdName}
         actions={[
           {
             icon: 'globe',

@@ -58,7 +58,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 4.2 | Choix de la langue | ✅ done |
 | 4.3 | Choix du pays / marché et devise | ✅ done |
 | 4.4 | Écran de confidentialité | ✅ done |
-| 4.5 | Création du foyer | ⏳ |
+| 4.5 | Création du foyer | ✅ done |
 | 4.6 | Connexion à un compte existant | ⏳ — dépend de la sauvegarde chiffrée (phase 17) |
 
 ## Journal
@@ -519,6 +519,27 @@ de mes propres erreurs de la 2.1.
 - 🐛 Trouvé au passage : la fausse base rendait `undefined` là où SQLite rend `null`,
   car mon `INSERT` n'écrivait pas la nouvelle colonne. Corrigé des deux côtés.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1289/1289, 110 suites** ✅
+  (2 runs complets).
+
+### Itération 19 — Tâche 4.5 (Création du foyer) ✅
+- 🐛 **Le dashboard confondait membre et foyer** : `householdName = members[0]?.name`,
+  donc l'en-tête affichait « Bonjour / Moi ». Ce sont deux choses différentes — la
+  personne saluée et le nom du budget familial. L'en-tête affiche désormais
+  « Bonjour, {prénom} » avec le foyer en dessous, comme l'exige le critère.
+- **Rôle `admin` ajouté** (`MemberRole`) : `role` est une colonne TEXT sans contrainte
+  CHECK, donc aucune migration nécessaire. `canEdit`/`isAdmin` nomment la règle en un
+  seul endroit — non appliquée aujourd'hui (elle n'a de sens qu'avec le compte partagé
+  d'US-039/040), mais la donnée est correcte dès maintenant.
+- **`setupHousehold` renomme le membre semé au lieu d'en ajouter un second** :
+  `ensureAppReady` crée un « Moi » de remplacement à l'étape langue/pays pour que le
+  sélecteur de membre ne soit jamais vide ; le laisser aurait donné deux membres à un
+  foyer d'une personne dès la première minute. Idempotent : un onboarding interrompu se
+  rejoue sans empiler de doublons.
+- Le foyer hérite de la **devise du marché choisi** — l'étape langue/pays remonte
+  désormais le marché retenu au flux.
+- **Garde étendue** : plus de foyer = onboarding, même logique que l'acceptation de
+  confidentialité en 4.4. Un dashboard sans famille à nommer n'a pas de sens.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1322/1322, 112 suites** ✅
   (2 runs complets).
 
 ## Notes / blocages connus (hors périmètre Phase 1)

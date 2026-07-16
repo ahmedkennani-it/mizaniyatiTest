@@ -511,6 +511,19 @@ export const en: TranslationSchema = {
     startButton: 'Get started',
     signInLink: 'I already have an account',
   },
+  household: {
+    title: 'Your household',
+    subtitle: 'So we can greet you by name and label the family budget.',
+    firstNameLabel: 'Your first name',
+    firstNamePlaceholder: 'E.g. Youssef',
+    nameLabel: 'Household name',
+    namePlaceholder: 'E.g. Benali family',
+    adminNote:
+      'You will be the household admin: you can change anything and, later, invite your family.',
+    submit: 'Create my household',
+    errorFirstName: 'Enter your first name.',
+    errorName: 'Enter a household name.',
+  },
   privacy: {
     title: 'Your data is yours',
     subtitle: 'Three commitments, before you even start.',

@@ -21,9 +21,11 @@ export interface HeaderAction {
 export interface ScreenHeaderProps {
   /** Large page title (list/detail screens). Omit when using `greeting`+`name`. */
   title?: string;
-  /** Greeting header variant: avatar + greeting + name. */
+  /** Greeting header variant: avatar + "greeting, name" + the household underneath. */
   greeting?: string;
   name?: string;
+  /** The household this person belongs to — shown under the greeting (US-005). */
+  householdName?: string;
   /** Back chevron on the reading-start side. */
   onBack?: () => void;
   /** Trailing action buttons (bell, language, add…). */
@@ -91,7 +93,14 @@ function ActionButton({ action }: { action: HeaderAction }) {
  * chevron, trailing actions) for list/detail screens. `flexDirection: 'row'` mirrors under RTL and
  * the back chevron auto-flips (shared `Icon`). Pass either `title` or `greeting`+`name`.
  */
-export function ScreenHeader({ title, greeting, name, onBack, actions }: ScreenHeaderProps) {
+export function ScreenHeader({
+  title,
+  greeting,
+  name,
+  householdName,
+  onBack,
+  actions,
+}: ScreenHeaderProps) {
   const { t } = useTranslation();
   const { theme } = useTheme();
 
@@ -132,12 +141,14 @@ export function ScreenHeader({ title, greeting, name, onBack, actions }: ScreenH
           >
             <Avatar name={name ?? ''} />
             <View style={{ flex: 1 }}>
-              <Txt size="xs" color={theme.colors.textSecondary}>
-                {greeting}
-              </Txt>
               <Txt weight="semibold" size="md">
-                {name}
+                {name ? `${greeting}, ${name}` : greeting}
               </Txt>
+              {householdName ? (
+                <Txt size="xs" color={theme.colors.textSecondary}>
+                  {householdName}
+                </Txt>
+              ) : null}
             </View>
           </View>
         ) : (
