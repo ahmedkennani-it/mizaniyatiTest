@@ -19,6 +19,7 @@
       "<rootDir>/jest/setupTests.js"
     ],
     "moduleNameMapper": {
+      "^\\./intlPolyfills$": "<rootDir>/jest/intlPolyfillsMock.js",
       "^lucide-react-native$": "<rootDir>/jest/lucideMock.jsx",
       "^expo-linear-gradient$": "<rootDir>/jest/linearGradientMock.jsx",
       "^react-native-safe-area-context$": "<rootDir>/jest/safeAreaContextMock.jsx"
@@ -30,6 +31,10 @@
   "dependencies": {
     "@expo-google-fonts/ibm-plex-sans-arabic": "^0.4.2",
     "@expo-google-fonts/outfit": "^0.4.3",
+    "@formatjs/intl-getcanonicallocales": "^3.2.11",
+    "@formatjs/intl-locale": "^5.3.10",
+    "@formatjs/intl-pluralrules": "^6.3.13",
+    "@formatjs/intl-relativetimeformat": "^12.3.13",
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/native": "^7.1.17",
     "expo": "~54.0.0",

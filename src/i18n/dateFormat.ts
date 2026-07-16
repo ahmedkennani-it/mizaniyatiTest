@@ -1,5 +1,5 @@
 import type { SupportedLanguage } from './i18n';
-import { resolveIntlLocale, resolveIntlLocaleTag } from './numberFormat';
+import { resolveIntlLocale, toLocalizedDigits } from './numberFormat';
 
 /** `YYYY-MM` → a first-of-month local `Date`, the shape month labels are formatted from. */
 export function monthKeyToDate(monthKey: string): Date {
@@ -68,10 +68,15 @@ export function formatRelativeDate(
   if (daysAgo < 0 || daysAgo > RELATIVE_DAY_LIMIT) {
     return formatShortDate(date, language);
   }
-  // `RelativeTimeFormat` takes no `numberingSystem` option, so the numbering system has to ride
-  // in on the locale tag — otherwise Arabic comes out with latin digits.
-  return new Intl.RelativeTimeFormat(resolveIntlLocaleTag(language), { numeric: 'auto' }).format(
-    -daysAgo,
-    'day',
-  );
+  // The day count is rendered through `toLocalizedDigits` and spliced back into the formatted
+  // parts rather than left to `RelativeTimeFormat`, which offers no dependable control over its
+  // numbering system: the CLDR polyfill standing in for it on Hermes (`intlPolyfills.ts`) always
+  // resolves `nu` to `latn` — whatever the locale tag or the `numberingSystem` option asks for —
+  // so Arabic read "قبل 3 أيام" there while reading "قبل ٣ أيام" under Node. Formatting the digits
+  // ourselves keeps the two engines in agreement. Days 0–2 come back as a single literal
+  // ("aujourd'hui", "أمس") under `numeric: 'auto'` and pass through untouched.
+  return new Intl.RelativeTimeFormat(resolveIntlLocale(language).locale, { numeric: 'auto' })
+    .formatToParts(-daysAgo, 'day')
+    .map((part) => (part.type === 'literal' ? part.value : toLocalizedDigits(daysAgo, language)))
+    .join('');
 }

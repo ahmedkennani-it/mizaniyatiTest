@@ -1,3 +1,7 @@
+// Must come first: it fills in the `Intl` APIs Hermes lacks, and `i18next.init` below resolves
+// plural rules through `Intl.PluralRules` as soon as it runs.
+import './intlPolyfills';
+
 import * as Localization from 'expo-localization';
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';

@@ -30,16 +30,6 @@ export function resolveIntlLocale(language: SupportedLanguage): IntlLocale {
   };
 }
 
-/**
- * The same locale as a BCP 47 tag with the numbering system folded in (`ar-MA-u-nu-arab`), for the
- * `Intl` formatters that take no `numberingSystem` option — `RelativeTimeFormat` is one, and
- * without the extension it renders Arabic with latin digits.
- */
-export function resolveIntlLocaleTag(language: SupportedLanguage): string {
-  const { locale, numberingSystem } = resolveIntlLocale(language);
-  return numberingSystem ? `${locale}-u-nu-${numberingSystem}` : locale;
-}
-
 /** Renders digits per the active locale — Arabic-indic (٠١٢…) for `ar`, Western otherwise. */
 export function toLocalizedDigits(value: number, language: SupportedLanguage): string {
   const { locale, numberingSystem } = resolveIntlLocale(language);

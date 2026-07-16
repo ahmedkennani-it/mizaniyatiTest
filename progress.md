@@ -747,6 +747,32 @@ interdiction éternelle du réseau.
   l'utilisateur ne demande. Un test figeait l'ancien comportement.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1484/1484, 125 suites** ✅ (2 runs).
 
+### Itération 30 — 🐛 `Intl` manquant sur Hermes (correctif, hors tâche) ✅
+- **Le symptôme** : tout écran affichant une `TransactionRow` **crashait sur appareil**
+  (`TypeError: Cannot read property 'prototype' of undefined`), la suite restant verte.
+  Hermes ne fournit qu'un sous-ensemble d'`Intl` : `NumberFormat` et `DateTimeFormat` sont
+  natifs, mais `RelativeTimeFormat`, `PluralRules`, `Locale` et `getCanonicalLocales` **non**.
+  `formatRelativeDate` appelait le premier ; `i18next.init` résout ses pluriels via le second.
+- **`intlPolyfills.ts` (nouveau)** : polyfills `@formatjs`, importés en tête de `i18n.ts` car
+  `i18next.init` touche `Intl.PluralRules` dès son exécution. L'ordre d'import suit la chaîne
+  de dépendances et est porteur. Seules les données CLDR des trois langues sont chargées —
+  le jeu complet pèse des mégaoctets.
+- **Pourquoi aucun test ne pouvait l'attraper** : Jest tourne sur Node, qui a l'ICU complet.
+  C'est précisément l'asymétrie qui a laissé passer le bug. La vérification honnête est donc
+  le bundle réel : `npx expo export --platform ios` compile en bytecode Hermes (5,66 Mo) et
+  les données des polyfills y sont bien présentes, arabe compris (stocké en UTF-16 par Hermes).
+- 🐛 **Trouvé au passage — les chiffres arabes divergeaient entre moteurs** : le polyfill
+  CLDR résout toujours `nu` vers `latn`, quels que soient le tag de locale ou l'option
+  `numberingSystem`. « قبل ٣ أيام » sous Node devenait « قبل 3 أيام » sur Hermes. Le compte
+  passe maintenant par `toLocalizedDigits` et est réinjecté dans les parts formatées, ce qui
+  met les deux moteurs d'accord. `resolveIntlLocaleTag`, dont c'était l'unique raison d'être,
+  est supprimé.
+- **Compromis assumé** : un mock Jest neutralise `intlPolyfills.ts` sous test — les bundles
+  `@formatjs` publiés utilisent des blocs statiques de classe que le Babel de ce projet ne
+  transforme pas pour Jest (Metro, si). Le module n'est donc pas exercé par la suite ;
+  `typecheck` valide ses imports et l'export réel prouve son chargement.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1486/1486, 125 suites** ✅.
+
 ## Notes / blocages connus (hors périmètre Phase 1)
 
 - L'arbre de travail contient des changements accumulés multi-phases non

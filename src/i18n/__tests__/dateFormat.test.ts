@@ -74,6 +74,28 @@ describe('formatRelativeDate', () => {
     expect(label).not.toMatch(/[0-9]/);
   });
 
+  /**
+   * Node (what Jest runs on) has the full ICU and renders the count in Arabic-indic digits by
+   * itself, so the assertion above passes either way. Hermes doesn't: `RelativeTimeFormat` is
+   * polyfilled there (`intlPolyfills.ts`) and always resolves `nu` to `latn`, whatever the locale
+   * tag asks for. Forcing latin parts here is what pins the digits to `toLocalizedDigits` instead
+   * of to whichever engine happens to be running.
+   */
+  it('localizes the count itself, even when the engine returns latin digits', () => {
+    const spy = jest
+      .spyOn(Intl.RelativeTimeFormat.prototype, 'formatToParts')
+      .mockReturnValue([
+        { type: 'literal', value: 'قبل ' },
+        { type: 'integer', value: '3', unit: 'day' },
+        { type: 'literal', value: ' أيام' },
+      ] as Intl.RelativeTimeFormatPart[]);
+    try {
+      expect(formatRelativeDate(new Date(2026, 6, 13, 10, 0), 'ar', now)).toBe('قبل ٣ أيام');
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
   it('renders relative days in English', () => {
     expect(formatRelativeDate(new Date(2026, 6, 15, 10, 0), 'en', now)).toBe('yesterday');
   });
