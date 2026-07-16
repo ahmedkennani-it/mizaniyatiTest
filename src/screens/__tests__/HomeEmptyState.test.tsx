@@ -196,7 +196,7 @@ describe('dashboard empty state (US-015)', () => {
       await fireEvent.press(await screen.findByText('Courses'));
       const chips = await screen.findAllByText('Youssef');
       await fireEvent.press(chips[chips.length - 1]);
-      await fireEvent.changeText(screen.getByLabelText(fr.expenseForm.amountLabel), '15');
+      await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '15');
       await fireEvent.press(screen.getByText(fr.expenseForm.submit));
 
       expect(await screen.findByText(fr.confirmation.title)).toBeTruthy();

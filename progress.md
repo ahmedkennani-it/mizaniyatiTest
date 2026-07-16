@@ -74,6 +74,22 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 5.7 | Aperçu des objectifs | ✅ done |
 | 5.8 | Bandeau de découverte vocale | ✅ done |
 
+## État des tâches Phase 6 (Saisie des opérations)
+
+| Tâche | Titre | Statut |
+| --- | --- | --- |
+| 6.1 | Saisie rapide au pavé numérique | ✅ done |
+| 6.2 | Sélection de catégorie par chips | ⏳ |
+| 6.3 | Capture audio et état d'écoute (Pro) | ⏳ |
+| 6.4 | Transcription vocale multilingue (Pro) | ⏳ |
+| 6.5 | Extraction du montant depuis la dictée (Pro) | ⏳ |
+| 6.6 | Déduction catégorie/libellé et confirmation (Pro) | ⏳ |
+| 6.7 | Confirmation d'ajout | ⏳ |
+| 6.8 | Saisie d'un revenu | ⏳ |
+| 6.9 | Modification et suppression | ⏳ |
+| 6.10 | Attribution à un membre | ⏳ |
+| 6.11 | Choix de la date | ⏳ |
+
 ## Journal
 
 ### Itération 1 — Tâche 1.1 (Scaffold Expo + TypeScript) ✅
@@ -712,6 +728,24 @@ interdiction éternelle du réseau.
 - 🐛 Trouvé au passage : le moteur de la fausse base ne parse pas un littéral dans un
   `UPDATE ... SET col = 1` — la valeur doit être paramétrée. Mon test l'a attrapé.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1445/1445, 123 suites** ✅.
+
+### Itération 29 — Tâche 6.1 (Saisie au pavé numérique) ✅
+- **`NumericKeypad` (nouveau)** : le formulaire s'appuyait sur le clavier natif, le critère
+  demande un **pavé custom**. Il l'est pour une raison concrète : le pavé décimal de l'OS
+  varie selon la plateforme et la locale, **y compris le séparateur décimal qu'il propose** —
+  c'est ainsi que « 42,50 » devient improbable à parser sur un appareil et correct sur un autre.
+- **Décimales par devise** : une devise sans décimale (JPY) n'a **aucune touche décimale**,
+  plutôt qu'une touche qui ne ferait rien. Une saisie qui dépasserait les décimales de la
+  devise est **refusée, pas tronquée** : couper un chiffre que l'utilisateur vient de taper
+  ferait diverger le montant affiché de ce qu'il a pressé — c'est ainsi qu'un mauvais
+  montant se sauvegarde.
+- 🐛 **La devise du foyer était encore ignorée ici** : `DEFAULT_CURRENCY_CODE` codé en dur
+  dans le formulaire, y compris à l'enregistrement. Une opération éditée garde en revanche
+  la devise dans laquelle elle a été saisie.
+- 🐛 **Le bouton Enregistrer n'était pas désactivé à zéro** : il affichait une erreur après
+  la pression. La réponse à « puis-je enregistrer ceci ? » est connue **avant** que
+  l'utilisateur ne demande. Un test figeait l'ancien comportement.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1484/1484, 125 suites** ✅ (2 runs).
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

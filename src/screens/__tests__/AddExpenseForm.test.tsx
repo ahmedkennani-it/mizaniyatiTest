@@ -65,13 +65,29 @@ describe('AddExpenseForm', () => {
     await createMember(mockFakeDb, { name: 'Moi' });
   });
 
-  it('shows validation errors and does not save when the amount is invalid', async () => {
+  /**
+   * US-016 asks for Save to be *disabled* at zero rather than to error after the press: the answer
+   * to "can I save this?" is known before the user asks, so asking is the wrong moment to say no.
+   */
+  it('disables Enregistrer until the amount is usable', async () => {
     await renderForm();
-
     await screen.findByText('Courses');
+
+    expect(screen.getByRole('button', { name: 'Enregistrer' })).toBeDisabled();
+
+    await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '0');
+    expect(screen.getByRole('button', { name: 'Enregistrer' })).toBeDisabled();
+
+    await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '42');
+    expect(screen.getByRole('button', { name: 'Enregistrer' })).toBeEnabled();
+  });
+
+  it('saves nothing while the amount is unusable', async () => {
+    await renderForm();
+    await screen.findByText('Courses');
+
     await fireEvent.press(screen.getByText('Enregistrer'));
 
-    expect(await screen.findByText(/Saisissez un montant valide/)).toBeTruthy();
     expect(await listTransactions(mockFakeDb)).toHaveLength(0);
   });
 
@@ -82,7 +98,7 @@ describe('AddExpenseForm', () => {
     await screen.findByText('Courses');
     await fireEvent.press(screen.getByText('Courses'));
     await fireEvent.press(screen.getByText('Moi'));
-    await fireEvent.changeText(screen.getByLabelText('Montant'), '42.50');
+    await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '42.50');
 
     await fireEvent.press(screen.getByText('Enregistrer'));
 
@@ -104,7 +120,7 @@ describe('AddExpenseForm', () => {
 
     await fireEvent.press(screen.getByText('Courses'));
     await fireEvent.press(screen.getByText('Moi'));
-    await fireEvent.changeText(screen.getByLabelText('Montant'), '5000');
+    await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '5000');
     await fireEvent.press(screen.getByText('Enregistrer'));
 
     expect(onSaved).toHaveBeenCalledTimes(1);
@@ -153,7 +169,7 @@ describe('AddExpenseForm — édition (US-016)', () => {
     await renderEditForm(existing);
 
     expect(await screen.findByText('Modifier la dépense')).toBeTruthy();
-    expect(screen.getByLabelText('Montant').props.value).toBe('42.5');
+    expect(screen.getByLabelText('Montant (MAD)').props.value).toBe('42.5');
     expect(screen.getByLabelText('Date').props.value).toBe('2026-01-15');
     expect(screen.getByLabelText('Note (optionnel)').props.value).toBe('Courses de la semaine');
   });
@@ -163,7 +179,7 @@ describe('AddExpenseForm — édition (US-016)', () => {
     await renderEditForm(existing, onSaved);
 
     await screen.findByText('Modifier la dépense');
-    await fireEvent.changeText(screen.getByLabelText('Montant'), '100');
+    await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '100');
     await fireEvent.press(screen.getByText('Enregistrer'));
 
     expect(onSaved).toHaveBeenCalledTimes(1);
@@ -227,7 +243,7 @@ describe('AddExpenseForm — alertes de plafond (US-019)', () => {
     await screen.findByText('Courses');
     await fireEvent.press(screen.getByText('Courses'));
     await fireEvent.press(screen.getByText('Moi'));
-    await fireEvent.changeText(screen.getByLabelText('Montant'), '90');
+    await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '90');
     await fireEvent.press(screen.getByText('Enregistrer'));
   }
 

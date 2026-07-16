@@ -3,10 +3,20 @@ import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { computeCategoryBudgetStatus } from '../categories';
-import { AppScreen, Button, Card, Chip, ScreenHeader, TextField, Txt } from '../components';
+import {
+  AppScreen,
+  Button,
+  Card,
+  Chip,
+  NumericKeypad,
+  ScreenHeader,
+  TextField,
+  Txt,
+} from '../components';
 import { getDatabase } from '../db/client';
 import {
   listCategories,
+  listHouseholds,
   listMembers,
   listCategoryBudgets,
   listTransactions,
@@ -16,7 +26,13 @@ import {
   updateTransaction,
   deleteTransaction,
 } from '../db/repositories';
-import type { Category, Member, Transaction, TransactionType } from '../db/repositories';
+import type {
+  Category,
+  Household,
+  Member,
+  Transaction,
+  TransactionType,
+} from '../db/repositories';
 import { useLanguage } from '../i18n';
 import { DEFAULT_CURRENCY_CODE, formatMoney, parseAmountInput, toMajorUnits } from '../money';
 import { notificationClient, shouldSendBudgetAlert } from '../notifications';
@@ -49,6 +65,7 @@ export function AddExpenseForm({ transaction, onSaved, onCancel, onDeleted }: Ad
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
+  const [households, setHouseholds] = useState<Household[]>([]);
   const [type, setType] = useState<TransactionType>(transaction?.type ?? 'expense');
   const [amountInput, setAmountInput] = useState(
     transaction ? String(toMajorUnits(transaction.amountMinor, transaction.currencyCode)) : '',
@@ -67,8 +84,20 @@ export function AddExpenseForm({ transaction, onSaved, onCancel, onDeleted }: Ad
   }>({});
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
+  // An edited transaction keeps the currency it was recorded in; a new one takes the household's.
+  const currencyCode =
+    transaction?.currencyCode ?? households[0]?.currencyCode ?? DEFAULT_CURRENCY_CODE;
+
+  /**
+   * US-016: Save is disabled at zero rather than erroring after the fact. `parseAmountInput`
+   * already rejects zero, empty and non-numeric input, so this is the same rule the submit uses —
+   * asked before the press instead of after it.
+   */
+  const hasUsableAmount = parseAmountInput(amountInput, currencyCode) !== null;
+
   useEffect(() => {
     const db = getDatabase();
+    listHouseholds(db).then(setHouseholds);
     listCategories(db).then((loaded) => {
       setCategories(loaded);
       setCategoryId((current) => current ?? loaded[0]?.id ?? null);
@@ -113,14 +142,14 @@ export function AddExpenseForm({ transaction, onSaved, onCancel, onDeleted }: Ad
       title: t('notifications.budgetAlertTitle'),
       body: t('notifications.budgetAlertBody', {
         category: category?.name ?? '',
-        amount: formatMoney(budgetStatus.spentMinor, DEFAULT_CURRENCY_CODE, language),
+        amount: formatMoney(budgetStatus.spentMinor, currencyCode, language),
       }),
     });
     await updateCategoryBudget(db, budget.id, { lastAlertedMonth: monthKey });
   }
 
   async function handleSubmit() {
-    const amountMinor = parseAmountInput(amountInput, DEFAULT_CURRENCY_CODE);
+    const amountMinor = parseAmountInput(amountInput, currencyCode);
     const nextErrors: typeof errors = {};
     if (amountMinor === null) {
       nextErrors.amount = t('expenseForm.errorAmount');
@@ -145,7 +174,7 @@ export function AddExpenseForm({ transaction, onSaved, onCancel, onDeleted }: Ad
       await updateTransaction(getDatabase(), transaction.id, {
         type,
         amountMinor,
-        currencyCode: DEFAULT_CURRENCY_CODE,
+        currencyCode,
         categoryId,
         memberId,
         occurredAt,
@@ -155,7 +184,7 @@ export function AddExpenseForm({ transaction, onSaved, onCancel, onDeleted }: Ad
       await createTransaction(getDatabase(), {
         type,
         amountMinor,
-        currencyCode: DEFAULT_CURRENCY_CODE,
+        currencyCode,
         categoryId,
         memberId,
         occurredAt,
@@ -206,14 +235,27 @@ export function AddExpenseForm({ transaction, onSaved, onCancel, onDeleted }: Ad
         </View>
       </View>
 
-      <TextField
-        label={t('expenseForm.amountLabel')}
-        placeholder={t('expenseForm.amountPlaceholder')}
-        value={amountInput}
-        onChangeText={setAmountInput}
-        keyboardType="decimal-pad"
-        errorMessage={errors.amount}
-      />
+      <View style={{ gap: theme.spacing.sm }}>
+        <TextField
+          label={t('expenseForm.amountLabelWithCurrency', { currency: currencyCode })}
+          placeholder={t('expenseForm.amountPlaceholder')}
+          value={amountInput}
+          onChangeText={setAmountInput}
+          keyboardType="decimal-pad"
+          autoFocus
+          errorMessage={errors.amount}
+        />
+        {/* The keypad is the intended input; the field above stays editable so a hardware
+            keyboard, a paste, or a screen reader's own input still work. */}
+        <NumericKeypad
+          value={amountInput}
+          onChange={(next: string) => {
+            setAmountInput(next);
+            setErrors((previous) => ({ ...previous, amount: undefined }));
+          }}
+          currencyCode={currencyCode}
+        />
+      </View>
 
       <View style={{ gap: theme.spacing.xs }}>
         <Txt size="sm" color={theme.colors.textSecondary}>
@@ -272,7 +314,7 @@ export function AddExpenseForm({ transaction, onSaved, onCancel, onDeleted }: Ad
       />
 
       <View style={{ gap: theme.spacing.sm }}>
-        <Button label={t('expenseForm.submit')} onPress={handleSubmit} />
+        <Button label={t('expenseForm.submit')} onPress={handleSubmit} disabled={!hasUsableAmount} />
         <Button label={t('expenseForm.cancel')} variant="secondary" onPress={onCancel} />
       </View>
 

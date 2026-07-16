@@ -5,3 +5,4 @@ export {
   parseAmountInput,
   parseNonNegativeAmountInput,
 } from './money';
+export { acceptsAmountInput, currencyDecimals } from './currencyDecimals';

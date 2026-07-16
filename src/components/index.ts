@@ -30,6 +30,8 @@ export { ListRow } from './ListRow';
 export type { ListRowProps } from './ListRow';
 export { MonthSelector } from './MonthSelector';
 export type { MonthSelectorProps } from './MonthSelector';
+export { NumericKeypad } from './NumericKeypad';
+export type { NumericKeypadProps } from './NumericKeypad';
 export { Pill } from './Pill';
 export type { PillProps } from './Pill';
 export { ProgressBar } from './ProgressBar';

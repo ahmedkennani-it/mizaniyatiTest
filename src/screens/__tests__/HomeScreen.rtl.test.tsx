@@ -305,9 +305,9 @@ describe('HomeScreen under RTL and LTR', () => {
     const coursesRows = await screen.findAllByText('Courses');
     await fireEvent.press(coursesRows[1]);
     expect(await screen.findByText('Modifier la dépense')).toBeTruthy();
-    expect(screen.getByLabelText('Montant').props.value).toBe('20');
+    expect(screen.getByLabelText('Montant (MAD)').props.value).toBe('20');
 
-    await fireEvent.changeText(screen.getByLabelText('Montant'), '75');
+    await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '75');
     await fireEvent.press(screen.getByText('Enregistrer'));
 
     // Back on the summary (the edit overlay closes straight away — no confirmation screen for an
@@ -363,7 +363,7 @@ describe('HomeScreen under RTL and LTR', () => {
     // "Moi" also appears in the dashboard greeting header underneath the overlay, so target the
     // member chip inside the form (rendered last in the tree).
     await pressMemberChip('Moi');
-    await fireEvent.changeText(screen.getByLabelText('Montant'), '15');
+    await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '15');
     await fireEvent.press(screen.getByText('Enregistrer'));
 
     expect(await screen.findByText('Opération enregistrée !')).toBeTruthy();
@@ -383,7 +383,7 @@ describe('HomeScreen under RTL and LTR', () => {
     // `findBy*`: the form loads its category chips from the db, so they land a tick after it opens.
     await fireEvent.press(await screen.findByText('Courses'));
     await pressMemberChip('Moi');
-    await fireEvent.changeText(screen.getByLabelText('Montant'), '15');
+    await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '15');
     await fireEvent.press(screen.getByText('Enregistrer'));
 
     await fireEvent.press(await screen.findByText("Retour à l'accueil"));

@@ -177,7 +177,7 @@ describe('balance hero (US-007)', () => {
     await fireEvent.press(await screen.findByText('Courses'));
     const memberChips = await screen.findAllByText('Youssef');
     await fireEvent.press(memberChips[memberChips.length - 1]);
-    await fireEvent.changeText(screen.getByLabelText(fr.expenseForm.amountLabel), '1500');
+    await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '1500');
     await fireEvent.press(screen.getByText(fr.expenseForm.submit));
 
     // The dashboard underneath the confirmation is already down 1500. `waitFor`, because saving
