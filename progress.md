@@ -71,7 +71,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 5.4 | Dernières transactions | ✅ done |
 | 5.5 | État vide du dashboard | ✅ done |
 | 5.6 | Chip de confiance « saisie manuelle » | ✅ done |
-| 5.7 | Aperçu des objectifs | ⏳ |
+| 5.7 | Aperçu des objectifs | ✅ done |
 | 5.8 | Bandeau de découverte vocale | ⏳ |
 
 ## Journal
@@ -685,6 +685,15 @@ interdiction éternelle du réseau.
   (4.86 en clair, 6.41 en sombre) *et* par un test qui assère que le fond vient bien du
   token et non de la page.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1410/1410, 120 suites** ✅.
+
+### Itération 27 — Tâche 5.7 (Aperçu des objectifs) ✅
+- 🐛 **Le dashboard affichait tous les coffres**, le critère en demande **2**.
+- 🐛 **« Voir tout » ne menait nulle part** ; il ouvre `VaultsScreen`, qui existait déjà
+  mais n'était atteignable que depuis le Profil.
+- 🐛 **La section disparaissait entièrement sans objectif** : un foyer qui n'a jamais
+  épargné n'avait donc **aucun moyen de découvrir la fonction**. La section reste, avec
+  une invitation à créer un premier objectif.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1418/1418, 121 suites** ✅.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

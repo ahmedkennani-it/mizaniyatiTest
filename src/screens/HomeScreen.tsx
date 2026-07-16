@@ -5,6 +5,7 @@ import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 
 import { useExpenseEntry } from './ExpenseEntryProvider';
 import { TransactionHistoryScreen } from './TransactionHistoryScreen';
+import { VaultsScreen } from './VaultsScreen';
 import {
   AppScreen,
   BalanceHeroCard,
@@ -53,6 +54,9 @@ const GOAL_ACCENTS: AccentName[] = ['teal', 'gold', 'purple', 'blue', 'coral'];
 
 const RECENT_TRANSACTION_COUNT = 4;
 
+/** US-011: the dashboard previews the first two goals; the rest live behind "Voir tout". */
+const GOAL_PREVIEW_COUNT = 2;
+
 /**
  * React Navigation hands every tab screen its `navigation`; it is optional here so the screen
  * still mounts on its own in tests, like every other screen in this codebase, which take plain
@@ -62,7 +66,7 @@ export type HomeScreenProps = Partial<Pick<BottomTabScreenProps<RootTabParamList
 
 export function HomeScreen({ navigation }: HomeScreenProps = {}) {
   const { t } = useTranslation();
-  const [view, setView] = useState<'dashboard' | 'history'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'history' | 'vaults'>('dashboard');
   const { theme } = useTheme();
   const { language } = useLanguage();
   const { openEntry, dataVersion } = useExpenseEntry();
@@ -200,6 +204,10 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
     return <TransactionHistoryScreen onBack={() => setView('dashboard')} />;
   }
 
+  if (view === 'vaults') {
+    return <VaultsScreen onBack={() => setView('dashboard')} />;
+  }
+
   return (
     <AppScreen scroll bottomInset={110} contentStyle={{ gap: theme.spacing.md }}>
       <ScreenHeader
@@ -266,15 +274,33 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
         )}
       </Card>
 
-      {vaults.length > 0 ? (
-        <View style={{ gap: theme.spacing.sm }}>
-          <SectionHeader title={t('home.goalsTitle')} actionLabel={t('home.seeAll')} />
+      <View style={{ gap: theme.spacing.sm }}>
+        <SectionHeader
+          title={t('home.goalsTitle')}
+          actionLabel={vaults.length > 0 ? t('home.seeAll') : undefined}
+          onActionPress={() => setView('vaults')}
+        />
+        {vaults.length === 0 ? (
+          // The section stays, with an invitation: hiding it entirely would leave a household
+          // that has never saved with no way to discover goals at all (US-011).
+          <Card elevated style={{ alignItems: 'center', gap: theme.spacing.sm }}>
+            <Txt size="sm" color={theme.colors.textSecondary}>
+              {t('home.goalsEmpty')}
+            </Txt>
+            <Button
+              label={t('home.goalsEmptyCta')}
+              variant="secondary"
+              icon="piggy-bank"
+              onPress={() => setView('vaults')}
+            />
+          </Card>
+        ) : (
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ gap: theme.spacing.sm, paddingVertical: 2 }}
           >
-            {vaults.map((vault, index) => {
+            {vaults.slice(0, GOAL_PREVIEW_COUNT).map((vault, index) => {
               const status = computeVaultStatus(vault, contributionsUpToMonth);
               return (
                 <GoalCard
@@ -284,13 +310,14 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
                   title={vault.name}
                   progress={status.percentage === Infinity ? 1 : status.percentage / 100}
                   caption={`${num(status.savedMinor)} / ${num(vault.targetMinor)} ${vault.currencyCode}`}
+                  onPress={() => setView('vaults')}
                   style={{ width: 160 }}
                 />
               );
             })}
           </ScrollView>
-        </View>
-      ) : null}
+        )}
+      </View>
 
       <SectionHeader
         title={t('home.recentTitle')}

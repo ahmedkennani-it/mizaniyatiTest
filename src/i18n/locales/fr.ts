@@ -76,6 +76,8 @@ export const fr = {
     voiceSubtitle: '« Quarante-deux dirhams de café » — dans ta langue',
     voiceBadge: 'NOUVEAU',
     goalsTitle: 'Objectifs & coffres',
+    goalsEmpty: 'Aucun objectif pour le moment.',
+    goalsEmptyCta: 'Créer un premier objectif',
     seeAll: 'Voir tout',
     a11yNotifications: 'Notifications',
     a11yLanguage: 'Changer de langue',

@@ -72,6 +72,8 @@ export const ar: TranslationSchema = {
     voiceSubtitle: '«اثنان وأربعون درهماً للقهوة» — بلغتك',
     voiceBadge: 'جديد',
     goalsTitle: 'الأهداف والحصالات',
+    goalsEmpty: 'لا توجد أهداف بعد.',
+    goalsEmptyCta: 'أنشئ هدفك الأول',
     seeAll: 'عرض الكل',
     a11yNotifications: 'الإشعارات',
     a11yLanguage: 'تغيير اللغة',
