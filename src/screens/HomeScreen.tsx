@@ -26,6 +26,8 @@ import type { DonutSegment } from '../components';
 import { categoryAccent, categoryIconName } from '../categories/categoryVisual';
 import { getDatabase } from '../db/client';
 import {
+  dismissVoicePromo,
+  getUserSettings,
   listCategories,
   listHouseholds,
   listMembers,
@@ -38,6 +40,7 @@ import type {
   Household,
   Member,
   Transaction,
+  UserSettings,
   Vault,
   VaultContribution,
 } from '../db/repositories';
@@ -48,6 +51,7 @@ import { DEFAULT_CURRENCY_CODE, formatMoney, toMajorUnits } from '../money';
 import { useTheme } from '../theme';
 import { computeCategoryBreakdown, rankCategories } from '../transactions';
 import { computeVaultStatus } from '../vaults';
+import { shouldShowVoicePromo } from '../voice';
 import type { RootTabParamList } from '../navigation';
 
 const GOAL_ACCENTS: AccentName[] = ['teal', 'gold', 'purple', 'blue', 'coral'];
@@ -75,6 +79,7 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [households, setHouseholds] = useState<Household[]>([]);
+  const [settings, setSettings] = useState<UserSettings | null>(null);
   const [vaults, setVaults] = useState<Vault[]>([]);
   const [contributions, setContributions] = useState<VaultContribution[]>([]);
   const [monthKey, setMonthKey] = useState<string>(() => monthKeyOf(new Date()));
@@ -85,6 +90,7 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
     listCategories(db).then(setCategories);
     listMembers(db).then(setMembers);
     listHouseholds(db).then(setHouseholds);
+    getUserSettings(db).then(setSettings);
     listVaults(db).then(setVaults);
     listVaultContributions(db).then(setContributions);
   }, []);
@@ -249,12 +255,23 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
 
       <TrustChip label={t('home.disclaimer')} />
 
-      <VoicePromoCard
-        title={t('home.voiceTitle')}
-        subtitle={t('home.voiceSubtitle')}
-        badge={t('home.voiceBadge')}
-        onPress={() => openEntry()}
-      />
+      {/* A discovery aid, not a permanent ad: it retires itself once the household has used
+          voice or said no thanks (US-014). */}
+      {shouldShowVoicePromo(settings) ? (
+        <VoicePromoCard
+          title={t('home.voiceTitle')}
+          subtitle={t('home.voiceSubtitle')}
+          badge={t('home.voiceBadge')}
+          // Voice capture itself lands with the entry stories (phase 6); until then this opens
+          // the same sheet rather than a screen that pretends to listen.
+          onPress={() => openEntry()}
+          onDismiss={async () => {
+            await dismissVoicePromo(getDatabase());
+            setSettings(await getUserSettings(getDatabase()));
+          }}
+          dismissLabel={t('home.voiceDismiss')}
+        />
+      ) : null}
 
       <Card elevated testID="category-breakdown">
         <Txt weight="semibold" size="md" style={{ marginBottom: theme.spacing.sm }}>

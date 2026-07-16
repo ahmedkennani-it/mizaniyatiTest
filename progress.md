@@ -61,7 +61,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 4.5 | Création du foyer | ✅ done |
 | 4.6 | Connexion à un compte existant | 🚨 `done: false` — bloquée par des dépendances de phase 17 |
 
-## État des tâches Phase 5 (Dashboard — Solde du mois)
+## État des tâches Phase 5 (Dashboard — Solde du mois) — ✅ 8/8
 
 | Tâche | Titre | Statut |
 | --- | --- | --- |
@@ -72,7 +72,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 5.5 | État vide du dashboard | ✅ done |
 | 5.6 | Chip de confiance « saisie manuelle » | ✅ done |
 | 5.7 | Aperçu des objectifs | ✅ done |
-| 5.8 | Bandeau de découverte vocale | ⏳ |
+| 5.8 | Bandeau de découverte vocale | ✅ done |
 
 ## Journal
 
@@ -694,6 +694,24 @@ interdiction éternelle du réseau.
   épargné n'avait donc **aucun moyen de découvrir la fonction**. La section reste, avec
   une invitation à créer un premier objectif.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1418/1418, 121 suites** ✅.
+
+### Itération 28 — Tâche 5.8 (Bandeau de découverte vocale) ✅ — phase 5 terminée
+- 🐛 **Le bandeau s'affichait en permanence** : aucune des deux règles de retrait
+  n'existait, et **il n'y avait même pas de bouton de fermeture** alors que le critère
+  parle de « fermer le bandeau ».
+- Migration **0017** : `voice_entry_count` et `voice_promo_dismissed` sur `user_settings`.
+  **Deux colonnes distinctes à dessein** : « je connais et je n'en veux pas » n'est pas
+  « je m'en sers ». Les fusionner ferait passer un refus pour un usage que le foyer n'a
+  jamais eu — un test l'épingle.
+- `shouldShowVoicePromo` est une règle pure et testée : retrait au 3e usage, ou sur refus
+  quel que soit le compteur.
+- ⚠️ **`recordVoiceEntry` n'a pas encore d'appelant** : la saisie vocale arrive en phase 6.
+  La règle et son stockage sont livrés et testés ; la phase 6 branchera l'incrément. Le
+  tap du bandeau ouvre la feuille clavier en attendant, plutôt qu'un écran qui ferait
+  semblant d'écouter.
+- 🐛 Trouvé au passage : le moteur de la fausse base ne parse pas un littéral dans un
+  `UPDATE ... SET col = 1` — la valeur doit être paramétrée. Mon test l'a attrapé.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1445/1445, 123 suites** ✅.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

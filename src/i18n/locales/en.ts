@@ -71,6 +71,7 @@ export const en: TranslationSchema = {
     voiceTitle: 'Add by voice',
     voiceSubtitle: '"Forty-two dirhams for coffee" — in your language',
     voiceBadge: 'NEW',
+    voiceDismiss: 'Hide the voice suggestion',
     goalsTitle: 'Goals & vaults',
     goalsEmpty: 'No goals yet.',
     goalsEmptyCta: 'Create a first goal',

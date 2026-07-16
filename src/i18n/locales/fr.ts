@@ -75,6 +75,7 @@ export const fr = {
     voiceTitle: 'Ajoute par la voix',
     voiceSubtitle: '« Quarante-deux dirhams de café » — dans ta langue',
     voiceBadge: 'NOUVEAU',
+    voiceDismiss: 'Masquer la suggestion vocale',
     goalsTitle: 'Objectifs & coffres',
     goalsEmpty: 'Aucun objectif pour le moment.',
     goalsEmptyCta: 'Créer un premier objectif',

@@ -10,12 +10,14 @@ interface UserSettingsRow {
   currency_code: string;
   onboarding_step: string;
   privacy_accepted_at: string | null;
+  voice_entry_count: number | null;
+  voice_promo_dismissed: number | null;
   created_at: string;
   updated_at: string;
 }
 
 const SELECT_COLUMNS =
-  'language_code, country_code, currency_code, onboarding_step, privacy_accepted_at, created_at, updated_at';
+  'language_code, country_code, currency_code, onboarding_step, privacy_accepted_at, voice_entry_count, voice_promo_dismissed, created_at, updated_at';
 
 function fromRow(row: UserSettingsRow): UserSettings {
   return {
@@ -25,6 +27,8 @@ function fromRow(row: UserSettingsRow): UserSettings {
     onboardingStep: row.onboarding_step as UserSettings['onboardingStep'],
     // `?? null`: a row inserted before migration 0016 has no such column at all.
     privacyAcceptedAt: row.privacy_accepted_at ?? null,
+    voiceEntryCount: row.voice_entry_count ?? 0,
+    voicePromoDismissed: Boolean(row.voice_promo_dismissed),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -56,6 +60,8 @@ export async function saveLanguageCountry(
     onboardingStep: 'language_country',
     // Never cleared here: re-running this step must not erase an acceptance already given.
     privacyAcceptedAt: existing?.privacyAcceptedAt ?? null,
+    voiceEntryCount: existing?.voiceEntryCount ?? 0,
+    voicePromoDismissed: existing?.voicePromoDismissed ?? false,
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };
@@ -73,7 +79,7 @@ export async function saveLanguageCountry(
     );
   } else {
     await db.runAsync(
-      'INSERT INTO user_settings (id, language_code, country_code, currency_code, onboarding_step, privacy_accepted_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?);',
+      'INSERT INTO user_settings (id, language_code, country_code, currency_code, onboarding_step, privacy_accepted_at, voice_entry_count, voice_promo_dismissed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);',
       [
         USER_SETTINGS_ID,
         updated.languageCode,
@@ -81,6 +87,8 @@ export async function saveLanguageCountry(
         updated.currencyCode,
         updated.onboardingStep,
         updated.privacyAcceptedAt,
+        updated.voiceEntryCount,
+        updated.voicePromoDismissed ? 1 : 0,
         updated.createdAt,
         updated.updatedAt,
       ],
@@ -117,4 +125,43 @@ export async function acceptPrivacy(db: SqlDatabase, acceptedAt = new Date().toI
     [updated.onboardingStep, updated.privacyAcceptedAt, updated.updatedAt, USER_SETTINGS_ID],
   );
   return updated;
+}
+
+/** Records that the household dictated a transaction (US-014) — the banner retires itself at 3. */
+export async function recordVoiceEntry(db: SqlDatabase): Promise<UserSettings> {
+  const existing = await requireSettings(db);
+  const updated: UserSettings = {
+    ...existing,
+    voiceEntryCount: existing.voiceEntryCount + 1,
+    updatedAt: new Date().toISOString(),
+  };
+  await db.runAsync('UPDATE user_settings SET voice_entry_count = ?, updated_at = ? WHERE id = ?;', [
+    updated.voiceEntryCount,
+    updated.updatedAt,
+    USER_SETTINGS_ID,
+  ]);
+  return updated;
+}
+
+/** Records that the household closed the voice discovery banner (US-014). */
+export async function dismissVoicePromo(db: SqlDatabase): Promise<UserSettings> {
+  const existing = await requireSettings(db);
+  const updated: UserSettings = {
+    ...existing,
+    voicePromoDismissed: true,
+    updatedAt: new Date().toISOString(),
+  };
+  await db.runAsync(
+    'UPDATE user_settings SET voice_promo_dismissed = ?, updated_at = ? WHERE id = ?;',
+    [1, updated.updatedAt, USER_SETTINGS_ID],
+  );
+  return updated;
+}
+
+async function requireSettings(db: SqlDatabase): Promise<UserSettings> {
+  const existing = await getUserSettings(db);
+  if (!existing) {
+    throw new NotFoundError('user_settings', USER_SETTINGS_ID);
+  }
+  return existing;
 }

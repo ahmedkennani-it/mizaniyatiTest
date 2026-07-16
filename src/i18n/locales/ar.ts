@@ -71,6 +71,7 @@ export const ar: TranslationSchema = {
     voiceTitle: 'أضف بصوتك',
     voiceSubtitle: '«اثنان وأربعون درهماً للقهوة» — بلغتك',
     voiceBadge: 'جديد',
+    voiceDismiss: 'إخفاء اقتراح الصوت',
     goalsTitle: 'الأهداف والحصالات',
     goalsEmpty: 'لا توجد أهداف بعد.',
     goalsEmptyCta: 'أنشئ هدفك الأول',

@@ -72,7 +72,13 @@ export {
   updateSeasonalTheme,
 } from './seasonalThemeRepository';
 export { getSubscription, upsertSubscription } from './subscriptionRepository';
-export { acceptPrivacy, getUserSettings, saveLanguageCountry } from './userSettingsRepository';
+export {
+  acceptPrivacy,
+  dismissVoicePromo,
+  getUserSettings,
+  recordVoiceEntry,
+  saveLanguageCountry,
+} from './userSettingsRepository';
 export {
   createHousehold,
   getHouseholdById,

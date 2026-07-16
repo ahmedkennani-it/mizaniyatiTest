@@ -12,13 +12,23 @@ export interface VoicePromoCardProps {
   /** Small badge (e.g. "NOUVEAU" / "جديد"). */
   badge?: string;
   onPress?: () => void;
+  /** Closes the banner for good. Without it there is no way to answer "no thanks" (US-014). */
+  onDismiss?: () => void;
+  dismissLabel?: string;
 }
 
 /**
  * Dark-gradient promo for voice entry: a teal mic tile, title + optional badge, a sample-phrase
  * subtitle, and a chevron toward the reading end. Mirrors under RTL (row + gradient direction).
  */
-export function VoicePromoCard({ title, subtitle, badge, onPress }: VoicePromoCardProps) {
+export function VoicePromoCard({
+  title,
+  subtitle,
+  badge,
+  onPress,
+  onDismiss,
+  dismissLabel,
+}: VoicePromoCardProps) {
   const { theme } = useTheme();
   const rtl = I18nManager.isRTL;
   const colors = theme.gradients.voice as [string, string, ...string[]];
@@ -74,7 +84,18 @@ export function VoicePromoCard({ title, subtitle, badge, onPress }: VoicePromoCa
             {subtitle}
           </Txt>
         </View>
-        <Icon name="chevron-right" size={19} color={theme.onAccent.icon} />
+        {onDismiss ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={dismissLabel}
+            onPress={onDismiss}
+            hitSlop={12}
+          >
+            <Icon name="x" size={18} color={theme.onAccent.icon} />
+          </Pressable>
+        ) : (
+          <Icon name="chevron-right" size={19} color={theme.onAccent.icon} />
+        )}
       </LinearGradient>
     </Pressable>
   );

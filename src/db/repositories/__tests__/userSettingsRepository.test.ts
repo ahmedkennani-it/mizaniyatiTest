@@ -1,6 +1,12 @@
 import { createFakeDatabase } from '../../testUtils/createFakeDatabase';
 import { NotFoundError } from '../errors';
-import { acceptPrivacy, getUserSettings, saveLanguageCountry } from '../userSettingsRepository';
+import {
+  acceptPrivacy,
+  dismissVoicePromo,
+  getUserSettings,
+  recordVoiceEntry,
+  saveLanguageCountry,
+} from '../userSettingsRepository';
 
 describe('userSettingsRepository', () => {
   it('returns null when onboarding has never been completed', async () => {
@@ -95,5 +101,75 @@ describe('acceptPrivacy', () => {
   it('refuses to record an acceptance with no settings row to attach it to', async () => {
     const { db } = createFakeDatabase();
     await expect(acceptPrivacy(db)).rejects.toThrow(NotFoundError);
+  });
+});
+
+/** US-014: the banner retires itself once voice has been found, or refused. */
+describe('voice promo state', () => {
+  async function seed(db: ReturnType<typeof createFakeDatabase>['db']) {
+    await saveLanguageCountry(db, { languageCode: 'fr', countryCode: 'MA', currencyCode: 'MAD' });
+  }
+
+  it('starts at zero uses, not dismissed', async () => {
+    const { db } = createFakeDatabase();
+    await seed(db);
+
+    expect(await getUserSettings(db)).toMatchObject({
+      voiceEntryCount: 0,
+      voicePromoDismissed: false,
+    });
+  });
+
+  it('counts each dictated transaction', async () => {
+    const { db } = createFakeDatabase();
+    await seed(db);
+
+    await recordVoiceEntry(db);
+    await recordVoiceEntry(db);
+
+    expect((await getUserSettings(db))?.voiceEntryCount).toBe(2);
+  });
+
+  it('records a dismissal', async () => {
+    const { db } = createFakeDatabase();
+    await seed(db);
+
+    await dismissVoicePromo(db);
+
+    expect((await getUserSettings(db))?.voicePromoDismissed).toBe(true);
+  });
+
+  /** Dismissing is not using: folding them would credit the household with voice it never used. */
+  it('keeps the count and the dismissal independent', async () => {
+    const { db } = createFakeDatabase();
+    await seed(db);
+    await recordVoiceEntry(db);
+
+    await dismissVoicePromo(db);
+
+    expect(await getUserSettings(db)).toMatchObject({
+      voiceEntryCount: 1,
+      voicePromoDismissed: true,
+    });
+  });
+
+  it('never clears the voice state when the language & country step is re-run', async () => {
+    const { db } = createFakeDatabase();
+    await seed(db);
+    await recordVoiceEntry(db);
+    await dismissVoicePromo(db);
+
+    await saveLanguageCountry(db, { languageCode: 'ar', countryCode: 'MA', currencyCode: 'MAD' });
+
+    expect(await getUserSettings(db)).toMatchObject({
+      voiceEntryCount: 1,
+      voicePromoDismissed: true,
+    });
+  });
+
+  it('refuses to record voice state with no settings row', async () => {
+    const { db } = createFakeDatabase();
+    await expect(recordVoiceEntry(db)).rejects.toThrow(NotFoundError);
+    await expect(dismissVoicePromo(db)).rejects.toThrow(NotFoundError);
   });
 });

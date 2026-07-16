@@ -484,6 +484,10 @@ export interface UserSettings {
   onboardingStep: OnboardingStep;
   /** When the household accepted the privacy commitments (US-004); `null` until they do. */
   privacyAcceptedAt: string | null;
+  /** How many transactions the household has dictated (US-014). */
+  voiceEntryCount: number;
+  /** The household closed the voice discovery banner (US-014). */
+  voicePromoDismissed: boolean;
   createdAt: string;
   updatedAt: string;
 }
