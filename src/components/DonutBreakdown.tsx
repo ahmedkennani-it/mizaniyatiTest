@@ -1,5 +1,5 @@
 import React from 'react';
-import { I18nManager, View } from 'react-native';
+import { I18nManager, Pressable, View } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 
 import { Txt } from './Txt';
@@ -13,6 +13,8 @@ export interface DonutSegment {
   /** Preformatted amount shown in the legend. */
   valueLabel: string;
   accent: AccentName;
+  /** Opens this slice's detail. Omit for a slice that stands for several categories ("Autres"). */
+  onPress?: () => void;
 }
 
 export interface DonutBreakdownProps {
@@ -121,27 +123,45 @@ export function DonutBreakdown({
       </View>
 
       <View style={{ flex: 1, gap: theme.spacing.sm }}>
-        {segments.map((segment, index) => (
-          <View
-            key={`${segment.label}-legend-${index}`}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}
-          >
-            <View
-              style={{
-                width: 9,
-                height: 9,
-                borderRadius: 3,
-                backgroundColor: theme.accents[segment.accent].solid,
-              }}
-            />
-            <Txt size="xs" color={theme.colors.textSecondary} style={{ flex: 1 }}>
-              {segment.label}
-            </Txt>
-            <Txt weight="semibold" size="xs">
-              {segment.valueLabel}
-            </Txt>
-          </View>
-        ))}
+        {segments.map((segment, index) => {
+          const row = (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
+              <View
+                style={{
+                  width: 9,
+                  height: 9,
+                  borderRadius: 3,
+                  backgroundColor: theme.accents[segment.accent].solid,
+                }}
+              />
+              <Txt size="xs" color={theme.colors.textSecondary} style={{ flex: 1 }}>
+                {segment.label}
+              </Txt>
+              <Txt weight="semibold" size="xs">
+                {segment.valueLabel}
+              </Txt>
+            </View>
+          );
+
+          const key = `${segment.label}-legend-${index}`;
+          if (!segment.onPress) {
+            return <View key={key}>{row}</View>;
+          }
+          // The legend is the tappable surface, not the arc: a 19px-wide slice of a ring is not a
+          // target anyone can hit, and the row next to it says the same thing with a name on it.
+          return (
+            <Pressable
+              key={key}
+              accessibilityRole="button"
+              accessibilityLabel={segment.label}
+              onPress={segment.onPress}
+              hitSlop={6}
+              style={{ minHeight: theme.minTouchTarget, justifyContent: 'center' }}
+            >
+              {row}
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   );

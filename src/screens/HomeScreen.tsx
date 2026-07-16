@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 
 import { useExpenseEntry } from './ExpenseEntryProvider';
 import {
@@ -43,12 +44,20 @@ import { formatMonthLabel, monthKeyOf, monthKeyToDate } from '../i18n/dateFormat
 import { forceLTR, toLocalizedDigits } from '../i18n/numberFormat';
 import { DEFAULT_CURRENCY_CODE, formatMoney, toMajorUnits } from '../money';
 import { useTheme } from '../theme';
-import { computeCategoryBreakdown } from '../transactions';
+import { computeCategoryBreakdown, rankCategories } from '../transactions';
 import { computeVaultStatus } from '../vaults';
+import type { RootTabParamList } from '../navigation';
 
 const GOAL_ACCENTS: AccentName[] = ['teal', 'gold', 'purple', 'blue', 'coral'];
 
-export function HomeScreen() {
+/**
+ * React Navigation hands every tab screen its `navigation`; it is optional here so the screen
+ * still mounts on its own in tests, like every other screen in this codebase, which take plain
+ * callbacks rather than reaching for a navigation container.
+ */
+export type HomeScreenProps = Partial<Pick<BottomTabScreenProps<RootTabParamList, 'home'>, 'navigation'>>;
+
+export function HomeScreen({ navigation }: HomeScreenProps = {}) {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const { language } = useLanguage();
@@ -122,12 +131,22 @@ export function HomeScreen() {
   const firstName = members[0]?.name;
   const householdName = households[0]?.name ?? t('home.household');
 
-  const segments: DonutSegment[] = breakdown.map((entry) => ({
-    label: entry.categoryName,
-    value: entry.totalMinor,
-    valueLabel: num(entry.totalMinor),
-    accent: categoryAccent(categoryById.get(entry.categoryId)?.color),
-  }));
+  /**
+   * Top categories plus an aggregate "Autres" (US-010). The tail is summed rather than dropped, so
+   * the slices still add up to the figure in the middle of the ring.
+   */
+  const segments: DonutSegment[] = rankCategories(breakdown, t('home.breakdownOthers')).map(
+    (entry) => ({
+      label: entry.categoryName,
+      value: entry.totalMinor,
+      valueLabel: num(entry.totalMinor),
+      accent: entry.isOthers ? 'blue' : categoryAccent(categoryById.get(entry.categoryId)?.color),
+      // "Autres" stands for several categories, so there is no single detail to open.
+      // The per-category detail screen lands with the categories stories (phase 7); until then a
+      // slice opens the Categories tab, which is where that detail will live.
+      onPress: entry.isOthers ? undefined : () => navigation?.navigate('categories'),
+    }),
+  );
 
   // The current month is the ceiling: there is nothing to show past it, and letting the user walk
   // into empty future months reads as a bug rather than a feature (US-008).
@@ -208,7 +227,7 @@ export function HomeScreen() {
         onPress={() => openEntry()}
       />
 
-      <Card elevated>
+      <Card elevated testID="category-breakdown">
         <Txt weight="semibold" size="md" style={{ marginBottom: theme.spacing.sm }}>
           {t('home.breakdownTitle')}
         </Txt>

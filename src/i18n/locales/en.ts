@@ -56,6 +56,7 @@ export const en: TranslationSchema = {
     addButton: 'Add a transaction',
     breakdownTitle: 'Breakdown by category',
     breakdownEmpty: 'No categorized spending this month.',
+    breakdownOthers: 'Others',
     recentTitle: 'Latest transactions',
     emptyState: 'No transactions yet. Tap "Add a transaction" to get started.',
     greeting: 'Hello',

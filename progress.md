@@ -67,7 +67,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | --- | --- | --- |
 | 5.1 | Hero solde du mois restant | ✅ done |
 | 5.2 | Sélecteur de mois | ✅ done |
-| 5.3 | Anneau de répartition par catégorie | ⏳ |
+| 5.3 | Anneau de répartition par catégorie | ✅ done |
 | 5.4 | Dernières transactions | ⏳ |
 | 5.5 | État vide du dashboard | ⏳ |
 | 5.6 | Chip de confiance « saisie manuelle » | ⏳ |
@@ -616,6 +616,29 @@ interdiction éternelle du réseau.
 - Deux tests dataient leurs opérations en janvier 2026, un mois passé : ils devenaient
   invisibles une fois la liste scopée. Recalés sur le mois courant, intention préservée.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1345/1345, 114 suites** ✅
+  (2 runs).
+
+### Itération 23 — Tâche 5.3 (Anneau de répartition) ✅
+- **Agrégation « Autres » (nouveau)** : au-delà de 4 catégories, `rankCategories` garde
+  les 4 premières et **somme** la queue plutôt que de la jeter — un anneau dont les
+  parts ne font pas le tout serait pire que pas d'anneau. Le libellé est passé par
+  l'appelant : ce module n'a pas à connaître la langue active.
+- **Légende tappable (nouveau)** : c'est **la légende** qui est la surface tactile, pas
+  l'arc — une tranche d'anneau de 19 px de large n'est pas une cible atteignable, et la
+  ligne d'à côté dit la même chose avec un nom dessus. Cible de 44 pt.
+- « Autres » est **inerte** : elle représente plusieurs catégories, il n'y a pas un
+  détail unique à ouvrir.
+- ⚠️ **Approximation assumée** : l'écran de détail d'une catégorie n'existe pas encore
+  (phase 7). Le tap ouvre l'onglet Catégories, là où ce détail vivra.
+- **Convention respectée** : j'avais d'abord utilisé `useNavigation`, ce qui a cassé 31
+  tests — les tests d'écran ne montent pas de `NavigationContainer`, et **tous les autres
+  écrans du projet reçoivent des callbacks** plutôt que de connaître la navigation.
+  `HomeScreen` prend désormais `navigation` en prop optionnelle, comme React Navigation
+  la fournit déjà aux écrans d'onglets.
+- Pièges de test rencontrés : le nom de catégorie apparaissait **deux fois** (légende +
+  ligne de transaction, qui retombe sur le nom sans note) ; et mon jeu de données faisait
+  collider le total « Autres » (300) avec celui de Santé (300).
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1363/1363, 116 suites** ✅
   (2 runs).
 
 ## Notes / blocages connus (hors périmètre Phase 1)

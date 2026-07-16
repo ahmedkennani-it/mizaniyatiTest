@@ -56,6 +56,7 @@ export const ar: TranslationSchema = {
     addButton: 'إضافة عملية',
     breakdownTitle: 'التوزيع حسب الفئة',
     breakdownEmpty: 'لا توجد مصاريف مصنّفة هذا الشهر.',
+    breakdownOthers: 'أخرى',
     recentTitle: 'آخر العمليات',
     emptyState: 'لا توجد عمليات بعد. اضغط على "إضافة عملية" للبدء.',
     greeting: 'مرحباً',

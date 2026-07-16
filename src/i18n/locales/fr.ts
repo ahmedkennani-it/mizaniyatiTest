@@ -58,6 +58,7 @@ export const fr = {
     addButton: 'Ajouter une opération',
     breakdownTitle: 'Répartition par catégorie',
     breakdownEmpty: 'Aucune dépense catégorisée ce mois-ci.',
+    breakdownOthers: 'Autres',
     recentTitle: 'Dernières opérations',
     emptyState:
       'Aucune opération pour le moment. Appuyez sur « Ajouter une opération » pour commencer.',
