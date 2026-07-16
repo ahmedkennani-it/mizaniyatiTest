@@ -1,5 +1,5 @@
 import type { SupportedLanguage } from './i18n';
-import { resolveIntlLocale } from './numberFormat';
+import { resolveIntlLocale, resolveIntlLocaleTag } from './numberFormat';
 
 /** `YYYY-MM` → a first-of-month local `Date`, the shape month labels are formatted from. */
 export function monthKeyToDate(monthKey: string): Date {
@@ -40,4 +40,38 @@ export function formatLongDate(date: Date, language: SupportedLanguage): string 
 export function formatShortDate(date: Date, language: SupportedLanguage): string {
   const { locale, numberingSystem } = resolveIntlLocale(language);
   return new Intl.DateTimeFormat(locale, { dateStyle: 'short', numberingSystem }).format(date);
+}
+
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+/** Past this, "il y a 5 semaines" is harder to place than the date itself. */
+const RELATIVE_DAY_LIMIT = 7;
+
+/** Whole days between two instants, counted on calendar days rather than elapsed hours — 23:00
+ * yesterday to 01:00 today is "hier", not "il y a 0 jour". */
+function calendarDaysBetween(from: Date, to: Date): number {
+  const startOfFrom = new Date(from.getFullYear(), from.getMonth(), from.getDate()).getTime();
+  const startOfTo = new Date(to.getFullYear(), to.getMonth(), to.getDate()).getTime();
+  return Math.round((startOfTo - startOfFrom) / MILLISECONDS_PER_DAY);
+}
+
+/**
+ * "Aujourd'hui" / "hier" / "il y a 3 jours" in the active language (US-074b). Falls back to the
+ * short numeric date beyond a week old, and for any future date: a transaction dated next month
+ * reads better as its date than as "dans 4 semaines".
+ */
+export function formatRelativeDate(
+  date: Date,
+  language: SupportedLanguage,
+  now: Date = new Date(),
+): string {
+  const daysAgo = calendarDaysBetween(date, now);
+  if (daysAgo < 0 || daysAgo > RELATIVE_DAY_LIMIT) {
+    return formatShortDate(date, language);
+  }
+  // `RelativeTimeFormat` takes no `numberingSystem` option, so the numbering system has to ride
+  // in on the locale tag — otherwise Arabic comes out with latin digits.
+  return new Intl.RelativeTimeFormat(resolveIntlLocaleTag(language), { numeric: 'auto' }).format(
+    -daysAgo,
+    'day',
+  );
 }

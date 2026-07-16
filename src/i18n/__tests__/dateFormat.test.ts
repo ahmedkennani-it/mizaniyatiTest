@@ -1,4 +1,10 @@
-import { formatLongDate, formatMonthLabel, monthKeyOf, monthKeyToDate } from '../dateFormat';
+import {
+  formatLongDate,
+  formatMonthLabel,
+  formatRelativeDate,
+  monthKeyOf,
+  monthKeyToDate,
+} from '../dateFormat';
 
 describe('monthKeyOf / monthKeyToDate', () => {
   it('round-trips a YYYY-MM key through a first-of-month date', () => {
@@ -45,5 +51,48 @@ describe('formatLongDate', () => {
     expect(formatLongDate(date, 'fr')).toContain('juin');
     expect(formatLongDate(date, 'en')).toContain('June');
     expect(formatLongDate(date, 'ar')).toContain('يونيو');
+  });
+});
+
+/** US-074b: transaction rows show "aujourd'hui / hier / il y a 3 jours", not a raw date. */
+describe('formatRelativeDate', () => {
+  const now = new Date(2026, 6, 16, 10, 0);
+
+  it.each([
+    [0, 'aujourd’hui'],
+    [1, 'hier'],
+    [3, 'il y a 3 jours'],
+    [7, 'il y a 7 jours'],
+  ])('renders %s day(s) ago in French', (daysAgo, expected) => {
+    const date = new Date(2026, 6, 16 - daysAgo, 10, 0);
+    expect(formatRelativeDate(date, 'fr', now)).toBe(expected);
+  });
+
+  it('renders relative days in Arabic with Arabic-indic digits', () => {
+    const label = formatRelativeDate(new Date(2026, 6, 13, 10, 0), 'ar', now);
+    expect(label).toContain('٣');
+    expect(label).not.toMatch(/[0-9]/);
+  });
+
+  it('renders relative days in English', () => {
+    expect(formatRelativeDate(new Date(2026, 6, 15, 10, 0), 'en', now)).toBe('yesterday');
+  });
+
+  // Counted on calendar days, not elapsed hours: 23:00 yesterday is "hier", not "il y a 0 jour".
+  it('treats late yesterday as yesterday, not as today', () => {
+    expect(formatRelativeDate(new Date(2026, 6, 15, 23, 0), 'fr', now)).toBe('hier');
+  });
+
+  it('treats early today as today', () => {
+    expect(formatRelativeDate(new Date(2026, 6, 16, 0, 30), 'fr', now)).toBe('aujourd’hui');
+  });
+
+  // Past a week, "il y a 5 semaines" is harder to place than the date itself.
+  it('falls back to the short date beyond a week', () => {
+    expect(formatRelativeDate(new Date(2026, 5, 1, 10, 0), 'fr', now)).toBe('01/06/2026');
+  });
+
+  it('falls back to the short date for a future date rather than saying "dans 4 semaines"', () => {
+    expect(formatRelativeDate(new Date(2026, 7, 20, 10, 0), 'fr', now)).toBe('20/08/2026');
   });
 });

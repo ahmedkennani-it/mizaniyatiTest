@@ -39,7 +39,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | --- | --- | --- |
 | 2.1 | Design tokens et palette | ✅ done |
 | 2.2 | Composants de base : Header, Bouton, Tag, Card | ✅ done |
-| 2.3 | Composants financiers : Montant, Progression, Anneau, Ligne, Avatar | ⏳ |
+| 2.3 | Composants financiers : Montant, Progression, Anneau, Ligne, Avatar | ✅ done |
 | 2.4 | Contraste et mise à l'échelle des textes | ⏳ |
 | 2.5 | Libellés pour lecteurs d'écran | ⏳ |
 
@@ -268,6 +268,33 @@ qualité honnête.
   schéma sombre, cible tactile agrandie en mode senior, LTR/RTL du dégradé, 4 thèmes.
   Vérifié par mutation.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **823/823, 92 suites** ✅.
+
+### Itération 11 — Tâche 2.3 (Composants financiers) ✅
+Contrairement à la 2.2, il y avait **du vrai code à écrire** : 3 des 5 composants
+demandés n'existaient pas.
+- **`Amount`** (nouveau) : le composant « Montant » n'existait pas. Les écrans
+  calculaient le signe à la main puis choisissaient `valueColor` eux-mêmes. Il gère
+  signe, devise et locale via `formatMoney`, et les tons (`auto`/`neutral`/
+  `positive`/`negative`). Choix : en `auto`, **seuls les revenus sont colorés** — un
+  mur de rouge se lirait comme des erreurs, pas comme des dépenses normales.
+- **`ProgressRing`** (nouveau) : l'« anneau » à valeur unique n'existait pas
+  (`DonutBreakdown` est le frère multi-segments). Mirroité en RTL comme le donut.
+- **`TransactionRow`** (nouveau) : composé à la main dans `HomeScreen`, avec une
+  **date absolue** (`occurredAt.slice(0,10)`) alors que le critère exige une date
+  **relative**. `HomeScreen` est branché dessus.
+- **Seuil d'alerte** ajouté à `ProgressBar` et `ProgressRing` : l'appelant passait
+  jusqu'ici un booléen `over` *et* la couleur. Le composant se colore désormais seul.
+- **`formatRelativeDate`** (nouveau) : « aujourd'hui / hier / il y a 3 jours »,
+  puis repli sur la date courte au-delà d'une semaine et pour toute date future.
+  Compté en **jours calendaires** et non en heures écoulées — 23h hier est « hier ».
+- ⚠️ Piège trouvé : `Intl.RelativeTimeFormat` **n'accepte pas** d'option
+  `numberingSystem` ; sans l'extension de locale (`ar-MA-u-nu-arab`) l'arabe sort
+  avec des chiffres **latins**. D'où `resolveIntlLocaleTag`.
+- Piège de test : `react-native-svg` normalise `stroke` en objet couleur interne ;
+  les assertions de couleur lisent les props **JSX** de l'arbre, pas le nœud rendu.
+- Tests : `Amount` (14), `ProgressBar` (15), `ProgressRing` (13), `TransactionRow`
+  (12), `Avatar` (9), date relative (8).
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **902/902, 97 suites** ✅.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

@@ -10,10 +10,10 @@ import {
   Card,
   DonutBreakdown,
   GoalCard,
-  ListRow,
   MonthSelector,
   ScreenHeader,
   SectionHeader,
+  TransactionRow,
   TrustChip,
   Txt,
   VoicePromoCard,
@@ -226,17 +226,16 @@ export function HomeScreen() {
             const category = categoryById.get(transaction.categoryId);
             const member = memberById.get(transaction.memberId);
             const isIncome = transaction.type === 'income';
-            const signedMinor = isIncome ? transaction.amountMinor : -transaction.amountMinor;
-            const dateLabel = transaction.occurredAt.slice(0, 10);
             return (
-              <ListRow
+              <TransactionRow
                 key={transaction.id}
                 icon={categoryIconName(category?.icon ?? 'ellipsis')}
                 accent={categoryAccent(category?.color)}
-                title={transaction.note || category?.name || dateLabel}
-                subtitle={member ? `${dateLabel} · ${member.name}` : dateLabel}
-                value={formatMoney(signedMinor, transaction.currencyCode, language)}
-                valueColor={isIncome ? theme.colors.success : theme.colors.textPrimary}
+                title={transaction.note || category?.name || transaction.occurredAt.slice(0, 10)}
+                occurredAt={transaction.occurredAt}
+                memberName={member?.name}
+                amountMinor={isIncome ? transaction.amountMinor : -transaction.amountMinor}
+                currencyCode={transaction.currencyCode}
                 onPress={() => openEntry(transaction)}
               />
             );
