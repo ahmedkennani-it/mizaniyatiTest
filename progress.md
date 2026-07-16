@@ -5,6 +5,8 @@ Suivi des itérations. Portée : **uniquement la phase 1** de
 
 ## État des tâches Phase 1
 
+**6 / 7 tâches `done: true`.** La phase 1 n'est pas close : la 1.7 reste ouverte.
+
 | Tâche | Titre | Statut |
 | --- | --- | --- |
 | 1.1 | Scaffolder le projet Expo + TypeScript | ✅ done |
@@ -13,7 +15,25 @@ Suivi des itérations. Portée : **uniquement la phase 1** de
 | 1.4 | Infrastructure i18n et bascule LTR/RTL | ✅ done |
 | 1.5 | Miroir RTL des composants de base | ✅ done |
 | 1.6 | Formats locaux nombres/dates/devises | ✅ done |
-| 1.7 | Stockage local des données | ⚠️ 3/4 critères — bloqué sur le chiffrement |
+| 1.7 | Stockage local des données | ⚠️ `done: false` — 3/4 critères, bloqué sur le chiffrement |
+
+Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
+`npx jest` **703/712** (9 échecs préexistants de features des phases 5/14/16 —
+ZakatScreen, VaultDetail, LockScreen, RecurringRuleForm, HomeScreen ; hors
+périmètre phase 1, aucun régressé par ces itérations).
+
+### Ce qui bloque la clôture de la phase 1
+
+1. **Chiffrement de la base au repos (1.7)** — `expo-sqlite` n'expose aucune clé de
+   chiffrement. Les données financières sont aujourd'hui **en clair** dans
+   `mizaniyati.db`. Décision d'architecture en attente (chiffrement OS /
+   op-sqlite+SQLCipher / colonnes chiffrées). Détail : itération 7 ci-dessous.
+2. **Vérification navigateur LTR + RTL (1.4, 1.5, 1.6)** — exigée par les critères
+   d'acceptation, **jamais effectuée** : la skill `dev-browser` n'existe pas dans
+   l'environnement d'exécution de la boucle. À faire à la main via `npm run web`.
+   La couverture RTL repose entre-temps sur les tests de rendu dans les deux
+   directions.
+3. **Commits non poussés** — voir la section « Blocage `git push` » plus bas.
 
 ## Journal
 
