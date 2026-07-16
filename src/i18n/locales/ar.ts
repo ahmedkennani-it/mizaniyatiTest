@@ -495,6 +495,18 @@ export const ar: TranslationSchema = {
     tontineReminderTitle: 'تذكير الدارة',
     tontineReminderBody: 'دفعة جولتك لـ «{{group}}» ({{amount}}) مستحقة هذا الشهر.',
   },
+  welcome: {
+    appName: 'ميزانيتي',
+    pitch: 'ميزانية العائلة، واضحة وخاصة',
+    noBankBadge: 'لا اتصال بالبنك',
+    startButton: 'ابدأ',
+    signInLink: 'لدي حساب بالفعل',
+  },
+  signIn: {
+    title: 'تسجيل الدخول',
+    unavailableMessage: 'سيأتي تسجيل الدخول إلى حساب موجود مع النسخة الاحتياطية المشفّرة. لا يوجد ما يُستعاد بعد.',
+    localOnlyNote: 'بياناتك موجودة على هذا الجهاز فقط. ابدأ عائلة جديدة من الشاشة السابقة.',
+  },
   onboarding: {
     welcomeTitle: 'مرحبًا بك في ميزانيتي',
     welcomeSubtitle: 'اختر لغتك وبلدك لتكييف العملة والفئات والعرض.',

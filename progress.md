@@ -50,6 +50,17 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 3.1 | Navigation et shell applicatif | ⚠️ `done: false` — exige expo-router, absent du projet |
 | 3.2 | Barre de navigation principale | ✅ done |
 
+## État des tâches Phase 4 (Onboarding & configuration initiale)
+
+| Tâche | Titre | Statut |
+| --- | --- | --- |
+| 4.1 | Écran de bienvenue | ✅ done |
+| 4.2 | Choix de la langue | ⏳ |
+| 4.3 | Choix du pays / marché et devise | ⏳ |
+| 4.4 | Écran de confidentialité | ⏳ |
+| 4.5 | Création du foyer | ⏳ |
+| 4.6 | Connexion à un compte existant | ⏳ — dépend de la sauvegarde chiffrée (phase 17) |
+
 ## Journal
 
 ### Itération 1 — Tâche 1.1 (Scaffold Expo + TypeScript) ✅
@@ -403,6 +414,28 @@ de mes propres erreurs de la 2.1.
   sous la barre (header, sélecteur de mois). Les assertions sont cadrées sur la barre
   via `within(getByTestId('tab-bar'))`.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1189/1189, 103 suites** ✅.
+
+### Itération 15 — Tâche 4.1 (Écran de bienvenue) ✅
+- L'onboarding fusionnait bienvenue + langue + pays sur **un seul écran**, alors que la
+  phase 4 en décrit une séquence. Nouveau `WelcomeScreen` (marque, nom, pitch, badge
+  « Aucune connexion bancaire ») + `OnboardingFlow` qui séquence les étapes.
+- Le badge **ne peut pas** passer sous la ligne de flottaison : l'écran n'est
+  volontairement **pas** un `ScrollView`, et un test l'assère. C'est la promesse sur
+  laquelle l'utilisateur décide de confier le budget familial à l'app.
+- `OnboardingFlow` est un simple état local, pas un navigateur : la séquence est
+  linéaire, courte et hors du shell à onglets — une pile n'apporterait qu'un second
+  conteneur de navigation.
+- ⚠️ **`SignInScreen` est une coquille assumée** : le critère 4.1 exige d'être « dirigé
+  vers la connexion », mais se connecter n'a de sens qu'une fois qu'il existe une
+  sauvegarde à restaurer — c'est US-071a/b, **phase 17**. L'écran le dit franchement
+  plutôt que d'afficher des champs d'identifiants qui ne mèneraient nulle part. US-006
+  (4.6) le remplira.
+- 🐛 **Flake corrigé** : `VaultDetail › recalculates after deleting` échouait **seulement
+  en suite complète**. Cause : `fireEvent.press` attend la dispatch, pas la chaîne async
+  du handler (delete → reload → setState) ; le `waitFor` que j'avais écrit à
+  l'itération 8 courait après avec le défaut d'1 s — suffisant à vide, trop juste en
+  parallèle. Timeout explicite + commentaire. 3 runs complets verts d'affilée.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1214/1214, 105 suites** ✅.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

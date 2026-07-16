@@ -23,7 +23,7 @@ import { ensureAppReady, ensureMigrated, getDatabase, getUserSettings } from './
 import { EntitlementsProvider } from './src/entitlements';
 import { LanguageProvider, useLanguage } from './src/i18n';
 import { RootNavigator, toNavigationTheme } from './src/navigation';
-import { ExpenseEntryProvider, LockScreen, OnboardingLanguageCountryScreen } from './src/screens';
+import { ExpenseEntryProvider, LockScreen, OnboardingFlow } from './src/screens';
 import { AppLockProvider, useAppLock } from './src/security';
 import { SubscriptionProvider, useSubscription } from './src/subscriptions';
 import { ThemeProvider, useTheme } from './src/theme';
@@ -89,7 +89,7 @@ function AppNavigation() {
   }
 
   if (needsOnboarding) {
-    return <OnboardingLanguageCountryScreen onComplete={() => setNeedsOnboarding(false)} />;
+    return <OnboardingFlow onComplete={() => setNeedsOnboarding(false)} />;
   }
 
   if (locked) {

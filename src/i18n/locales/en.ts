@@ -500,6 +500,20 @@ export const en: TranslationSchema = {
     tontineReminderTitle: 'Tontine reminder',
     tontineReminderBody: 'Your round payment for "{{group}}" ({{amount}}) is due this month.',
   },
+  welcome: {
+    appName: 'Mizaniyati',
+    pitch: 'The family budget, clear and private',
+    noBankBadge: 'No bank connection',
+    startButton: 'Get started',
+    signInLink: 'I already have an account',
+  },
+  signIn: {
+    title: 'Sign in',
+    unavailableMessage:
+      'Signing in to an existing account arrives with encrypted backup. There is nothing to restore yet.',
+    localOnlyNote:
+      'Your data lives on this device only. Start a new household from the previous screen.',
+  },
   onboarding: {
     welcomeTitle: 'Welcome to Mizaniyati',
     welcomeSubtitle:

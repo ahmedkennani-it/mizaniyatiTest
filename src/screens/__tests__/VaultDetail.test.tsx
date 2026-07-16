@@ -89,8 +89,13 @@ describe('VaultDetail (US-023)', () => {
     await fireEvent.press(screen.getByText('Oui, supprimer'));
 
     expect(await listVaultContributions(mockFakeDb)).toHaveLength(0);
-    // The row disappears only once the screen has reloaded the list from the db.
-    await waitFor(() => expect(screen.queryByText('Premier versement')).toBeNull());
+    // `fireEvent.press` awaits the dispatch, not the handler's async chain (delete → reload → set
+    // state), so the row only goes once those settle. The explicit timeout is what makes this
+    // deterministic: the 1s default is enough on an idle machine but not when the whole suite runs
+    // in parallel, which showed up as a flake failing only in full runs.
+    await waitFor(() => expect(screen.queryByText('Premier versement')).toBeNull(), {
+      timeout: 5000,
+    });
   });
 
   it('marks the vault reached once contributions cover the target', async () => {

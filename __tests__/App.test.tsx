@@ -19,9 +19,10 @@ async function goToProfileTab() {
   await fireEvent.press(screen.getByText('Profil'));
 }
 
-// Every fresh install lands on the onboarding screen (US-023, no `user_settings` row yet) —
-// tests that only care about the running app go through it once with the French/Maroc defaults.
+// Every fresh install lands on the onboarding flow (US-023, no `user_settings` row yet) — tests
+// that only care about the running app walk through it once with the French/Maroc defaults.
 async function completeOnboarding() {
+  await fireEvent.press(await screen.findByText('Commencer'));
   await screen.findByText('Bienvenue sur Mizaniyati');
   await fireEvent.press(screen.getByText('Continuer'));
   // "Accueil" is ambiguous once the dashboard mounts (tab bar label + screen title) — wait on a
@@ -37,8 +38,14 @@ describe('App', () => {
     __resetDatabaseForTests();
   });
 
-  it('shows the language & country onboarding on first launch, then the dashboard once continued', async () => {
+  it('shows the welcome screen on first launch, then language & country, then the dashboard', async () => {
     await render(<App />);
+
+    // US-001: the welcome screen fronts the flow, with the no-bank badge above the fold.
+    expect(await screen.findByText('Le budget de la famille, clair et privé')).toBeTruthy();
+    expect(screen.getByText('Aucune connexion bancaire')).toBeTruthy();
+
+    await fireEvent.press(screen.getByText('Commencer'));
 
     expect(await screen.findByText('Bienvenue sur Mizaniyati')).toBeTruthy();
     expect(screen.getByText('Maroc')).toBeTruthy();

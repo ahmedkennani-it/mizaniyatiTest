@@ -504,6 +504,20 @@ export const fr = {
     tontineReminderTitle: 'Rappel tontine',
     tontineReminderBody: 'Ton paiement de tour pour « {{group}} » ({{amount}}) est dû ce mois-ci.',
   },
+  welcome: {
+    appName: 'Mizaniyati',
+    pitch: 'Le budget de la famille, clair et privé',
+    noBankBadge: 'Aucune connexion bancaire',
+    startButton: 'Commencer',
+    signInLink: "J'ai déjà un compte",
+  },
+  signIn: {
+    title: 'Connexion',
+    unavailableMessage:
+      "La connexion à un compte existant arrivera avec la sauvegarde chiffrée. Il n'y a rien à restaurer pour l'instant.",
+    localOnlyNote:
+      "Vos données vivent uniquement sur cet appareil. Commencez un nouveau foyer depuis l'écran précédent.",
+  },
   onboarding: {
     welcomeTitle: 'Bienvenue sur Mizaniyati',
     welcomeSubtitle:
