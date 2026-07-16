@@ -69,7 +69,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 5.2 | Sélecteur de mois | ✅ done |
 | 5.3 | Anneau de répartition par catégorie | ✅ done |
 | 5.4 | Dernières transactions | ✅ done |
-| 5.5 | État vide du dashboard | ⏳ |
+| 5.5 | État vide du dashboard | ✅ done |
 | 5.6 | Chip de confiance « saisie manuelle » | ⏳ |
 | 5.7 | Aperçu des objectifs | ⏳ |
 | 5.8 | Bandeau de découverte vocale | ⏳ |
@@ -654,6 +654,25 @@ interdiction éternelle du réseau.
   aussi ce qui fait que la distinction ne repose pas seulement sur la couleur — le
   garde-fou de la 2.4.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1387/1387, 118 suites** ✅
+  (2 runs).
+
+### Itération 25 — Tâche 5.5 (État vide du dashboard) ✅
+- **Tiret au lieu de zéro** : le hero affichait `0` sur un mois sans aucune opération.
+  Distinction qui compte — **un zéro est un fait sur le mois** (revenus et dépenses
+  s'annulent), **un tiret veut dire qu'il n'y a rien à additionner**. Les confondre
+  dirait à un foyer à l'équilibre qu'il n'a rien saisi. Testé dans les deux sens.
+- **Deux actions** (Dépense / Vocal) au lieu d'une, avec le nouveau message du critère.
+- **État vide lié au foyer, pas au mois** : l'invitation ne revient pas en consultant un
+  mois vide d'un foyer qui a de l'historique — « ajoute ta première opération » y serait
+  faux. Un `monthEmpty` neutre prend le relais.
+- ⚠️ **Lecture assumée de « disparaît définitivement »** : compris comme « elle s'en va
+  **parce qu'il y a des données** », pas comme un drapeau à sens unique. Un foyer qui
+  supprime tout se retrouve devant une app vide, et l'invitation y redevient utile ;
+  persister un bit « a déjà saisi » pour la lui refuser serait pire, pas plus fidèle.
+  Un test épingle cette lecture pour que le prochain lecteur sache que c'est une décision.
+- ⚠️ La saisie vocale n'existe pas encore (phase 6) : les deux routes ouvrent la même
+  feuille, plutôt qu'un bouton qui ferait semblant d'écouter.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1398/1398, 119 suites** ✅
   (2 runs).
 
 ## Notes / blocages connus (hors périmètre Phase 1)

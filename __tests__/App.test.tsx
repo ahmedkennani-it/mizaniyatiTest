@@ -37,7 +37,7 @@ async function completeOnboarding() {
   await fireEvent.press(screen.getByText('Créer mon foyer'));
   // "Accueil" is ambiguous once the dashboard mounts (tab bar label + screen title) — wait on a
   // dashboard-only string instead.
-  await screen.findByText('Ajouter une opération');
+  await screen.findByText('Dépense');
 }
 
 describe('App', () => {
@@ -78,7 +78,7 @@ describe('App', () => {
     await fireEvent.changeText(screen.getByLabelText('Nom du foyer'), 'Famille Benali');
     await fireEvent.press(screen.getByText('Créer mon foyer'));
 
-    expect(await screen.findByText('Ajouter une opération')).toBeTruthy();
+    expect(await screen.findByText('Dépense')).toBeTruthy();
     expect(await screen.findByText('Bonjour, Youssef')).toBeTruthy();
     expect(screen.getByText('Famille Benali')).toBeTruthy();
     expect(screen.getAllByText('Accueil').length).toBeGreaterThan(0);
@@ -90,8 +90,8 @@ describe('App', () => {
 
     // "Accueil" appears twice: the tab bar label and the dashboard's own title.
     expect(screen.getAllByText('Accueil').length).toBeGreaterThan(0);
-    expect(await screen.findByText('Ajouter une opération')).toBeTruthy();
-    expect(screen.getByText(/Aucune opération pour le moment/)).toBeTruthy();
+    expect(await screen.findByText('Dépense')).toBeTruthy();
+    expect(screen.getByText('Ajoute ta première opération pour démarrer')).toBeTruthy();
   });
 
   it('renders all four tab bar entries and navigates between screens', async () => {

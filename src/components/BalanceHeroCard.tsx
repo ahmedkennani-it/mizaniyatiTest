@@ -19,7 +19,11 @@ export interface HeroStat {
 
 export interface BalanceHeroCardProps {
   label: string;
-  amountMinor: number;
+  /**
+   * `null` renders an em dash instead of a figure — for a month with **no transactions at all**,
+   * which is not the same thing as a month whose income and expenses cancel out to zero (US-015).
+   */
+  amountMinor: number | null;
   currencyCode: string;
   /** 0–1 progress bar over the gradient (e.g. remaining vs. income). */
   progress?: number;
@@ -60,9 +64,12 @@ export function BalanceHeroCard({
   const font = useAppFont();
   const language = (i18n.language === 'ar' ? 'ar' : 'fr') as SupportedLanguage;
 
-  const major = toMajorUnits(Math.abs(amountMinor), currencyCode);
-  const sign = amountMinor < 0 ? '-' : '';
-  const amountText = forceLTR(`${sign}${toLocalizedDigits(major, language)}`);
+  const amountText =
+    amountMinor === null
+      ? EM_DASH
+      : forceLTR(
+          `${amountMinor < 0 ? '-' : ''}${toLocalizedDigits(toMajorUnits(Math.abs(amountMinor), currencyCode), language)}`,
+        );
   const colors = theme.gradients[gradient] as [string, string, ...string[]];
   const rtl = I18nManager.isRTL;
 
@@ -106,6 +113,7 @@ export function BalanceHeroCard({
         }}
       >
         <Txt
+          testID="balance-hero-amount"
           color={onAccent.text}
           size={42}
           style={{ fontFamily: font.extrabold, letterSpacing: -0.5 }}
@@ -176,3 +184,6 @@ export function BalanceHeroCard({
     </LinearGradient>
   );
 }
+
+/** Reads as "nothing here yet" rather than as the number zero. */
+const EM_DASH = '—';

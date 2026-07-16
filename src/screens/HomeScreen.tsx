@@ -174,6 +174,18 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
   const recent = monthTransactions.slice(0, RECENT_TRANSACTION_COUNT);
 
   /**
+   * The first-run invitation, gone once the household has recorded anything (US-015) — across
+   * **all** months, not just the selected one: "Ajoute ta première opération" would be plainly
+   * wrong on an empty month of a household with two years of history.
+   *
+   * US-015 says it disappears "définitivement". Read as: it goes because there *is* data, not as a
+   * one-way flag. A household that deletes everything is back to an empty app, and the invitation
+   * is useful again — persisting a "has ever recorded" bit to withhold it would be worse, not
+   * truer to the story.
+   */
+  const hasEverRecorded = transactions.length > 0;
+
+  /**
    * A goal is cumulative, not monthly, so "reflecting" a past month means showing what had been
    * saved **by the end of it** — not only that month's deposits, which would read as a goal that
    * lost its progress. Contributions after the selected month are simply not known yet from that
@@ -213,7 +225,7 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
 
       <BalanceHeroCard
         label={t('home.balanceLabel')}
-        amountMinor={balanceMinor}
+        amountMinor={monthTransactions.length === 0 ? null : balanceMinor}
         currencyCode={currencyCode}
         gradient={balanceMinor < 0 ? 'negative' : 'balance'}
         progress={incomeMinor > 0 ? Math.max(0, balanceMinor) / incomeMinor : undefined}
@@ -286,15 +298,35 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
         onActionPress={() => setView('history')}
       />
 
-      {recent.length === 0 ? (
+      {recent.length === 0 && !hasEverRecorded ? (
         <Card
           elevated
-          style={{ alignItems: 'center', gap: theme.spacing.md, paddingVertical: theme.spacing.xl }}
+          testID="first-run-empty-state"
+          style={{ alignItems: 'center', gap: theme.spacing.sm, paddingVertical: theme.spacing.xl }}
         >
-          <Txt size="sm" color={theme.colors.textSecondary} style={{ textAlign: 'center' }}>
+          <Txt weight="semibold" size="md" style={{ textAlign: 'center' }}>
             {t('home.emptyState')}
           </Txt>
-          <Button label={t('home.addButton')} onPress={() => openEntry()} />
+          <Txt size="sm" color={theme.colors.textSecondary} style={{ textAlign: 'center' }}>
+            {t('home.emptyStateHint')}
+          </Txt>
+          <View style={{ flexDirection: 'row', gap: theme.spacing.sm, marginTop: theme.spacing.sm }}>
+            <Button label={t('home.emptyStateExpense')} icon="plus" onPress={() => openEntry()} />
+            {/* Voice capture itself lands with the entry stories (phase 6); until then both routes
+                open the same sheet, rather than a button that pretends to listen. */}
+            <Button
+              label={t('home.emptyStateVoice')}
+              icon="mic"
+              variant="secondary"
+              onPress={() => openEntry()}
+            />
+          </View>
+        </Card>
+      ) : recent.length === 0 ? (
+        <Card elevated style={{ paddingVertical: theme.spacing.lg }}>
+          <Txt size="sm" color={theme.colors.textSecondary} style={{ textAlign: 'center' }}>
+            {t('home.monthEmpty')}
+          </Txt>
         </Card>
       ) : (
         <View style={{ gap: theme.spacing.sm }}>

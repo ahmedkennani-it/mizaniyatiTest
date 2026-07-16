@@ -60,8 +60,13 @@ export const fr = {
     breakdownEmpty: 'Aucune dépense catégorisée ce mois-ci.',
     breakdownOthers: 'Autres',
     recentTitle: 'Dernières opérations',
-    emptyState:
-      'Aucune opération pour le moment. Appuyez sur « Ajouter une opération » pour commencer.',
+    emptyState: 'Ajoute ta première opération pour démarrer',
+    emptyStateHint: 'Saisis au clavier, ou dicte-la à voix haute.',
+    emptyStateExpense: 'Dépense',
+    emptyStateVoice: 'Vocal',
+    // Shown on an empty month once the household has recorded something before — the first-run
+    // invitation above would be wrong there.
+    monthEmpty: 'Aucune opération ce mois-ci.',
     greeting: 'Bonjour',
     household: 'Ma famille',
     balanceIncome: 'Revenus',

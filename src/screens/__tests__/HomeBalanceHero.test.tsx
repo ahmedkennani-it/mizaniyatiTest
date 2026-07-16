@@ -173,7 +173,7 @@ describe('balance hero (US-007)', () => {
     await seed();
     await renderHome();
 
-    await fireEvent.press(await screen.findByText(fr.home.addButton));
+    await fireEvent.press(await screen.findByText(fr.home.emptyStateExpense));
     await fireEvent.press(await screen.findByText('Courses'));
     const memberChips = await screen.findAllByText('Youssef');
     await fireEvent.press(memberChips[memberChips.length - 1]);

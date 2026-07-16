@@ -64,22 +64,22 @@ describe('HomeScreen under RTL and LTR', () => {
     I18nManager.isRTL = false;
     await renderHome();
 
-    expect(await screen.findByText('Ajouter une opération')).toBeTruthy();
+    expect(await screen.findByText('Dépense')).toBeTruthy();
     expect(screen.getByText('Saisie manuelle · aucune connexion bancaire')).toBeTruthy();
     expect(screen.getByText('Solde du mois — restant')).toBeTruthy();
     // Revenus/Dépenses footer stats both read 0,00 MAD on an empty month.
     expect(screen.getAllByText(/0,00/).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Aucune opération pour le moment/)).toBeTruthy();
+    expect(screen.getByText('Ajoute ta première opération pour démarrer')).toBeTruthy();
   });
 
   it('renders the dashboard summary, disclaimer, balance card and empty state under the RTL layout flag', async () => {
     I18nManager.isRTL = true;
     await renderHome();
 
-    expect(await screen.findByText('Ajouter une opération')).toBeTruthy();
+    expect(await screen.findByText('Dépense')).toBeTruthy();
     expect(screen.getByText('Saisie manuelle · aucune connexion bancaire')).toBeTruthy();
     expect(screen.getByText('Solde du mois — restant')).toBeTruthy();
-    expect(screen.getByText(/Aucune opération pour le moment/)).toBeTruthy();
+    expect(screen.getByText('Ajoute ta première opération pour démarrer')).toBeTruthy();
   });
 
   it('scopes the whole dashboard to the selected month, list included (US-008)', async () => {
@@ -344,7 +344,7 @@ describe('HomeScreen under RTL and LTR', () => {
 
     // Back on the summary, the dashboard reflects the deletion: no residual balance, empty state
     // showing again — no silent data-loss surprise, the deletion required an explicit confirm.
-    expect(await screen.findByText(/Aucune opération pour le moment/)).toBeTruthy();
+    expect(await screen.findByText('Ajoute ta première opération pour démarrer')).toBeTruthy();
     expect(screen.getByText('Solde du mois — restant')).toBeTruthy();
     expect(screen.getAllByText(/0,00/).length).toBeGreaterThan(0);
   });
@@ -354,7 +354,7 @@ describe('HomeScreen under RTL and LTR', () => {
     await createMember(mockFakeDb, { name: 'Moi' });
     await renderHome();
 
-    await fireEvent.press(await screen.findByText('Ajouter une opération'));
+    await fireEvent.press(await screen.findByText('Dépense'));
     expect(await screen.findByText('Nouvelle dépense')).toBeTruthy();
 
     await fireEvent.press(screen.getByText('Courses'));
@@ -377,7 +377,7 @@ describe('HomeScreen under RTL and LTR', () => {
     await createMember(mockFakeDb, { name: 'Moi' });
     await renderHome();
 
-    await fireEvent.press(await screen.findByText('Ajouter une opération'));
+    await fireEvent.press(await screen.findByText('Dépense'));
     // `findBy*`: the form loads its category chips from the db, so they land a tick after it opens.
     await fireEvent.press(await screen.findByText('Courses'));
     await pressMemberChip('Moi');
