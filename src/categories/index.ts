@@ -8,5 +8,6 @@ export {
   CATEGORY_ICON_NAMES,
   CATEGORY_ACCENT_COLORS,
 } from './categoryVisual';
+export { rankCategoriesByFrequency, FREQUENCY_WINDOW_DAYS } from './categoryFrequency';
 export { computeCategoryBudgetStatus } from './categoryBudgetStatus';
 export type { CategoryBudgetStatus } from './categoryBudgetStatus';

@@ -94,6 +94,7 @@ export const en: TranslationSchema = {
     decimalKey: 'Decimal point',
     backspaceKey: 'Delete the last digit',
     categoryLabel: 'Category',
+    categoryMore: 'More',
     memberLabel: 'Member',
     dateLabel: 'Date',
     notePlaceholder: 'Note (optional)',

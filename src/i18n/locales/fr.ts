@@ -98,6 +98,7 @@ export const fr = {
     decimalKey: 'Virgule décimale',
     backspaceKey: 'Effacer le dernier chiffre',
     categoryLabel: 'Catégorie',
+    categoryMore: 'Plus',
     memberLabel: 'Membre',
     dateLabel: 'Date',
     notePlaceholder: 'Note (optionnel)',

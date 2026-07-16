@@ -24,6 +24,9 @@ export function CategoryChipV({ icon, label, selected, onPress }: CategoryChipVP
   return (
     <Pressable
       accessibilityRole="button"
+      // Named explicitly: the icon above the label is decorative, and without this the chip's
+      // accessible name is left to whatever the platform infers from the children.
+      accessibilityLabel={label}
       accessibilityState={{ selected }}
       onPress={onPress}
       style={{

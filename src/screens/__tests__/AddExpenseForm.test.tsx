@@ -141,6 +141,154 @@ describe('AddExpenseForm', () => {
   });
 });
 
+describe('AddExpenseForm — chips de catégories (US-017)', () => {
+  /** Creates `count` uses of `categoryId`, all inside the 30-day window. */
+  async function useCategory(categoryId: string, memberId: string, count: number) {
+    for (let index = 0; index < count; index += 1) {
+      await createTransaction(mockFakeDb, {
+        type: 'expense',
+        amountMinor: 1000,
+        currencyCode: 'MAD',
+        categoryId,
+        memberId,
+        occurredAt: new Date(Date.now() - (index + 1) * 24 * 60 * 60 * 1000).toISOString(),
+      });
+    }
+  }
+
+  /**
+   * `orderIndex` is set explicitly: left to its `0` default, `listCategories` falls back to
+   * `name ASC` and the default order becomes alphabetical, which is not what these tests mean by
+   * "the 7th category".
+   */
+  async function seedCategories(names: string[]) {
+    const created = [];
+    for (const [orderIndex, name] of names.entries()) {
+      created.push(
+        await createCategory(mockFakeDb, { name, icon: 'cart', color: '#111111', orderIndex }),
+      );
+    }
+    return created;
+  }
+
+  beforeEach(() => {
+    mockFakeDb = createFakeDatabase().db;
+  });
+
+  /** The category chips in the order they are actually rendered, read off the tree. */
+  function renderedCategoryOrder(names: string[]): string[] {
+    return screen
+      .getAllByRole('button')
+      .map((node) => node.props.accessibilityLabel)
+      .filter((label: string | undefined): label is string => names.includes(label ?? ''));
+  }
+
+  it('orders the chips by 30-day usage, most-used first', async () => {
+    const [courses, ecole, transport] = await seedCategories(['Courses', 'École', 'Transport']);
+    const member = await createMember(mockFakeDb, { name: 'Moi' });
+    // Least-used first in the DB, so passing can only come from the ranking, not from insertion
+    // order leaking through.
+    await useCategory(courses.id, member.id, 1);
+    await useCategory(ecole.id, member.id, 2);
+    await useCategory(transport.id, member.id, 3);
+
+    await renderForm();
+    await screen.findByText('Transport');
+
+    expect(renderedCategoryOrder(['Courses', 'École', 'Transport'])).toEqual([
+      'Transport',
+      'École',
+      'Courses',
+    ]);
+  });
+
+  it('leaves usage older than 30 days out of the ranking', async () => {
+    const [courses, ecole] = await seedCategories(['Courses', 'École']);
+    const member = await createMember(mockFakeDb, { name: 'Moi' });
+    await createTransaction(mockFakeDb, {
+      type: 'expense',
+      amountMinor: 1000,
+      currencyCode: 'MAD',
+      categoryId: ecole.id,
+      memberId: member.id,
+      occurredAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
+    });
+    await useCategory(courses.id, member.id, 1);
+
+    await renderForm();
+    await screen.findByText('Courses');
+
+    expect(renderedCategoryOrder(['Courses', 'École'])).toEqual(['Courses', 'École']);
+  });
+
+  it('selects a chip and replaces the previous selection', async () => {
+    await seedCategories(['Courses', 'École']);
+    await createMember(mockFakeDb, { name: 'Moi' });
+
+    await renderForm();
+    await screen.findByText('Courses');
+
+    // The first category is selected by default; picking another must not leave both selected.
+    await fireEvent.press(screen.getByText('École'));
+
+    expect(screen.getByLabelText('École').props.accessibilityState.selected).toBe(true);
+    expect(screen.getByLabelText('Courses').props.accessibilityState.selected).toBe(false);
+  });
+
+  it('hides "Plus" while the strip already shows every category', async () => {
+    await seedCategories(['Courses', 'École']);
+    await createMember(mockFakeDb, { name: 'Moi' });
+
+    await renderForm();
+    await screen.findByText('Courses');
+
+    expect(screen.queryByText('Plus')).toBeNull();
+  });
+
+  it('opens the complete list through "Plus" when categories overflow the strip', async () => {
+    await seedCategories([
+      'Courses',
+      'École',
+      'Transport',
+      'Santé',
+      'Factures',
+      'Logement',
+      'Loisirs',
+    ]);
+    await createMember(mockFakeDb, { name: 'Moi' });
+
+    await renderForm();
+    await screen.findByText('Courses');
+
+    // The 7th category is beyond the strip's 6 quick chips, so it is not offered yet.
+    expect(screen.queryByText('Loisirs')).toBeNull();
+
+    await fireEvent.press(screen.getByText('Plus'));
+
+    expect(await screen.findByText('Loisirs')).toBeTruthy();
+  });
+
+  it('keeps a category picked from the complete list visible on the strip', async () => {
+    await seedCategories([
+      'Courses',
+      'École',
+      'Transport',
+      'Santé',
+      'Factures',
+      'Logement',
+      'Loisirs',
+    ]);
+    await createMember(mockFakeDb, { name: 'Moi' });
+
+    await renderForm();
+    await screen.findByText('Courses');
+    await fireEvent.press(screen.getByText('Plus'));
+    await fireEvent.press(await screen.findByText('Loisirs'));
+
+    expect(screen.getByLabelText('Loisirs').props.accessibilityState.selected).toBe(true);
+  });
+});
+
 describe('AddExpenseForm — édition (US-016)', () => {
   let category: Awaited<ReturnType<typeof createCategory>>;
   let member: Awaited<ReturnType<typeof createMember>>;

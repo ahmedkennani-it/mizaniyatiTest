@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { computeCategoryBudgetStatus } from '../categories';
+import { categoryIconName, computeCategoryBudgetStatus, rankCategoriesByFrequency } from '../categories';
 import {
   AppScreen,
   Button,
   Card,
+  CategoryChipV,
   Chip,
   NumericKeypad,
   ScreenHeader,
@@ -40,6 +41,14 @@ import { useTheme } from '../theme';
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
+/**
+ * How many frequency-ranked chips the strip offers before "Plus" (US-017). Kept small on purpose:
+ * the strip exists so the common case is one tap without reading, which stops being true once it
+ * holds more names than can be recognised at a glance. Everything else is one tap away behind
+ * "Plus".
+ */
+const QUICK_CATEGORY_COUNT = 6;
+
 function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -64,8 +73,10 @@ export function AddExpenseForm({ transaction, onSaved, onCancel, onDeleted }: Ad
   const isEditing = transaction !== undefined;
 
   const [categories, setCategories] = useState<Category[]>([]);
+  const [history, setHistory] = useState<Transaction[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [households, setHouseholds] = useState<Household[]>([]);
+  const [showAllCategories, setShowAllCategories] = useState(false);
   const [type, setType] = useState<TransactionType>(transaction?.type ?? 'expense');
   const [amountInput, setAmountInput] = useState(
     transaction ? String(toMajorUnits(transaction.amountMinor, transaction.currencyCode)) : '',
@@ -102,11 +113,35 @@ export function AddExpenseForm({ transaction, onSaved, onCancel, onDeleted }: Ad
       setCategories(loaded);
       setCategoryId((current) => current ?? loaded[0]?.id ?? null);
     });
+    listTransactions(db).then(setHistory);
     listMembers(db).then((loaded) => {
       setMembers(loaded);
       setMemberId((current) => current ?? loaded[0]?.id ?? null);
     });
   }, []);
+
+  /**
+   * Ranked once per load rather than per render: the order must not shift under the user's thumb
+   * while the form is open, and nothing they do here changes the 30-day history until they save.
+   */
+  const rankedCategories = useMemo(
+    () => rankCategoriesByFrequency(categories, history, new Date()),
+    [categories, history],
+  );
+
+  /**
+   * The strip always shows the selected category, pinned first when frequency alone wouldn't have
+   * surfaced it — otherwise picking a rare category through "Plus" would collapse the strip back to
+   * chips that all look unselected, with the actual choice nowhere on screen.
+   */
+  const quickCategories = useMemo(() => {
+    const top = rankedCategories.slice(0, QUICK_CATEGORY_COUNT);
+    if (!categoryId || top.some((category) => category.id === categoryId)) {
+      return top;
+    }
+    const selected = rankedCategories.find((category) => category.id === categoryId);
+    return selected ? [selected, ...top.slice(0, QUICK_CATEGORY_COUNT - 1)] : top;
+  }, [rankedCategories, categoryId]);
 
   /**
    * "Notification (opt-in) quand le cumul atteint le seuil" (US-019) — checked after every saved
@@ -261,16 +296,53 @@ export function AddExpenseForm({ transaction, onSaved, onCancel, onDeleted }: Ad
         <Txt size="sm" color={theme.colors.textSecondary}>
           {t('expenseForm.categoryLabel')}
         </Txt>
-        <View style={[styles.chipRow, { gap: theme.spacing.xs }]}>
-          {categories.map((category) => (
-            <Chip
-              key={category.id}
-              label={category.name}
-              selected={category.id === categoryId}
-              onPress={() => setCategoryId(category.id)}
-            />
-          ))}
-        </View>
+        {showAllCategories ? (
+          <View style={[styles.chipRow, { gap: theme.spacing.xs }]}>
+            {rankedCategories.map((category) => (
+              <Chip
+                key={category.id}
+                label={category.name}
+                selected={category.id === categoryId}
+                onPress={() => {
+                  // Picking closes the list back onto the strip, where the choice shows up pinned:
+                  // "Plus" is a detour to reach a rare category, not a mode to be dismissed by
+                  // hand, and there is no other way back once it is open.
+                  setCategoryId(category.id);
+                  setShowAllCategories(false);
+                }}
+              />
+            ))}
+          </View>
+        ) : (
+          /* Horizontal, not wrapped: the strip is meant to be scanned in one line and scrolled
+             past, and `ScrollView` flips its own direction under RTL. */
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: theme.spacing.xs }}
+          >
+            {quickCategories.map((category) => (
+              <CategoryChipV
+                key={category.id}
+                icon={categoryIconName(category.icon)}
+                label={category.name}
+                selected={category.id === categoryId}
+                onPress={() => setCategoryId(category.id)}
+              />
+            ))}
+            {/* Offered only when it would actually reveal something: with few enough categories
+                the strip already is the complete list, and a "Plus" opening an identical one
+                would promise more than it has. */}
+            {rankedCategories.length > quickCategories.length ? (
+              <CategoryChipV
+                icon="layout-grid"
+                label={t('expenseForm.categoryMore')}
+                selected={false}
+                onPress={() => setShowAllCategories(true)}
+              />
+            ) : null}
+          </ScrollView>
+        )}
         {errors.category ? (
           <Txt size="xs" color={theme.colors.danger}>
             {errors.category}

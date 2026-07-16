@@ -94,6 +94,7 @@ export const ar: TranslationSchema = {
     decimalKey: 'الفاصلة العشرية',
     backspaceKey: 'حذف آخر رقم',
     categoryLabel: 'الفئة',
+    categoryMore: 'المزيد',
     memberLabel: 'العضو',
     dateLabel: 'التاريخ',
     notePlaceholder: 'ملاحظة (اختياري)',
