@@ -63,7 +63,15 @@ export function TransactionRow({
           {subtitle}
         </Txt>
       </View>
-      <Amount amountMinor={amountMinor} currencyCode={currencyCode} weight="semibold" size="sm" />
+      {/* US-012: an expense reads "-240,00", an income "+5 000,00" — the sign carries the
+          meaning, so a user who can't tell the colours apart still can. */}
+      <Amount
+        amountMinor={amountMinor}
+        currencyCode={currencyCode}
+        showPlusSign
+        weight="semibold"
+        size="sm"
+      />
     </Card>
   );
 

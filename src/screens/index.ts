@@ -3,6 +3,8 @@ export { CategoriesScreen } from './CategoriesScreen';
 export { TontineScreen } from './TontineScreen';
 export { ProfileScreen } from './ProfileScreen';
 export { PlaceholderScreen } from './PlaceholderScreen';
+export { TransactionHistoryScreen } from './TransactionHistoryScreen';
+export type { TransactionHistoryScreenProps } from './TransactionHistoryScreen';
 export { TransfersScreen } from './TransfersScreen';
 export { HouseholdSetupScreen } from './HouseholdSetupScreen';
 export type { HouseholdSetupScreenProps } from './HouseholdSetupScreen';

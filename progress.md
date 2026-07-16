@@ -68,7 +68,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 5.1 | Hero solde du mois restant | ✅ done |
 | 5.2 | Sélecteur de mois | ✅ done |
 | 5.3 | Anneau de répartition par catégorie | ✅ done |
-| 5.4 | Dernières transactions | ⏳ |
+| 5.4 | Dernières transactions | ✅ done |
 | 5.5 | État vide du dashboard | ⏳ |
 | 5.6 | Chip de confiance « saisie manuelle » | ⏳ |
 | 5.7 | Aperçu des objectifs | ⏳ |
@@ -639,6 +639,21 @@ interdiction éternelle du réseau.
   ligne de transaction, qui retombe sur le nom sans note) ; et mon jeu de données faisait
   collider le total « Autres » (300) avec celui de Santé (300).
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1363/1363, 116 suites** ✅
+  (2 runs).
+
+### Itération 24 — Tâche 5.4 (Dernières transactions) ✅
+- **Écran d'historique filtrable (nouveau)** : « Voir tout » ne menait nulle part.
+  `TransactionHistoryScreen` liste **tous les mois** — délibérément *non* scopé, à
+  l'inverse du dashboard : c'est précisément l'historique que le sélecteur de mois cache
+  (cf. le conflit tranché en 5.2), le scoper laisserait l'app sans aucun endroit où tout
+  voir. Filtres type / catégorie / membre, combinés en **ET** — « combien Youssef a-t-il
+  dépensé en courses » est une conjonction, pas une disjonction.
+- 🐛 **La liste affichait 5 lignes**, le critère en demande **4**. Un test figeait le 5.
+- 🐛 **Les revenus n'avaient aucun signe** : le critère exige « préfixé d'un plus ».
+  Un test existant assérait explicitement l'inverse (« income (no sign) »). Le `+` est
+  aussi ce qui fait que la distinction ne repose pas seulement sur la couleur — le
+  garde-fou de la 2.4.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1387/1387, 118 suites** ✅
   (2 runs).
 
 ## Notes / blocages connus (hors périmètre Phase 1)

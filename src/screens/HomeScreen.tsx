@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 
 import { useExpenseEntry } from './ExpenseEntryProvider';
+import { TransactionHistoryScreen } from './TransactionHistoryScreen';
 import {
   AppScreen,
   BalanceHeroCard,
@@ -50,6 +51,8 @@ import type { RootTabParamList } from '../navigation';
 
 const GOAL_ACCENTS: AccentName[] = ['teal', 'gold', 'purple', 'blue', 'coral'];
 
+const RECENT_TRANSACTION_COUNT = 4;
+
 /**
  * React Navigation hands every tab screen its `navigation`; it is optional here so the screen
  * still mounts on its own in tests, like every other screen in this codebase, which take plain
@@ -59,6 +62,7 @@ export type HomeScreenProps = Partial<Pick<BottomTabScreenProps<RootTabParamList
 
 export function HomeScreen({ navigation }: HomeScreenProps = {}) {
   const { t } = useTranslation();
+  const [view, setView] = useState<'dashboard' | 'history'>('dashboard');
   const { theme } = useTheme();
   const { language } = useLanguage();
   const { openEntry, dataVersion } = useExpenseEntry();
@@ -166,7 +170,8 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
     () => transactions.filter((transaction) => transaction.occurredAt.slice(0, 7) === monthKey),
     [transactions, monthKey],
   );
-  const recent = monthTransactions.slice(0, 5);
+  // US-012 asks for the last four; the full list is one tap away behind "Voir tout".
+  const recent = monthTransactions.slice(0, RECENT_TRANSACTION_COUNT);
 
   /**
    * A goal is cumulative, not monthly, so "reflecting" a past month means showing what had been
@@ -178,6 +183,10 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
     () => contributions.filter((contribution) => contribution.date.slice(0, 7) <= monthKey),
     [contributions, monthKey],
   );
+
+  if (view === 'history') {
+    return <TransactionHistoryScreen onBack={() => setView('dashboard')} />;
+  }
 
   return (
     <AppScreen scroll bottomInset={110} contentStyle={{ gap: theme.spacing.md }}>
@@ -274,6 +283,7 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
       <SectionHeader
         title={t('home.recentTitle')}
         actionLabel={recent.length > 0 ? t('home.seeAll') : undefined}
+        onActionPress={() => setView('history')}
       />
 
       {recent.length === 0 ? (

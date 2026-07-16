@@ -203,7 +203,7 @@ describe('HomeScreen under RTL and LTR', () => {
     expect(screen.getByText(/-50,00/)).toBeTruthy();
   });
 
-  it('limits Dernières opérations to the 5 most recent transactions (US-015)', async () => {
+  it('limits Dernières opérations to the 4 most recent transactions (US-012)', async () => {
     const category = await createCategory(mockFakeDb, {
       name: 'Courses',
       icon: 'cart',
@@ -227,13 +227,14 @@ describe('HomeScreen under RTL and LTR', () => {
     await renderHome();
 
     await screen.findByText('Dernières opérations');
-    // The 5 most recent (days 7 down to 3) are shown; the oldest two (days 1 and 2) are not —
-    // "listTransactions" orders by occurredAt DESC and HomeScreen takes `.slice(0, 5)`.
-    for (const day of [7, 6, 5, 4, 3]) {
+    // US-012 asks for the last four: days 7 down to 4. `listTransactions` orders by `occurredAt`
+    // DESC; the rest is one tap away behind "Voir tout".
+    for (const day of [7, 6, 5, 4]) {
       expect(screen.getByText(`Opération jour ${day}`)).toBeTruthy();
     }
-    expect(screen.queryByText('Opération jour 2')).toBeNull();
-    expect(screen.queryByText('Opération jour 1')).toBeNull();
+    for (const day of [3, 2, 1]) {
+      expect(screen.queryByText(`Opération jour ${day}`)).toBeNull();
+    }
   });
 
   it('distinguishes income (no sign) from expense (minus sign) in the recent list (US-015)', async () => {
