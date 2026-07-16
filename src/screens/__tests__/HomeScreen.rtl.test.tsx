@@ -15,6 +15,8 @@ import { createCategory, createMember, createTransaction } from '../../db/reposi
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { LanguageProvider } from '../../i18n';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
+import { fr } from '../../i18n/locales/fr';
+// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { ThemeProvider } from '../../theme';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { HomeScreen } from '../HomeScreen';
@@ -65,7 +67,7 @@ describe('HomeScreen under RTL and LTR', () => {
     await renderHome();
 
     expect(await screen.findByText('Dépense')).toBeTruthy();
-    expect(screen.getByText('Saisie manuelle · aucune connexion bancaire')).toBeTruthy();
+    expect(screen.getByText(fr.home.disclaimer)).toBeTruthy();
     expect(screen.getByText('Solde du mois — restant')).toBeTruthy();
     // Revenus/Dépenses footer stats both read 0,00 MAD on an empty month.
     expect(screen.getAllByText(/0,00/).length).toBeGreaterThan(0);
@@ -77,7 +79,7 @@ describe('HomeScreen under RTL and LTR', () => {
     await renderHome();
 
     expect(await screen.findByText('Dépense')).toBeTruthy();
-    expect(screen.getByText('Saisie manuelle · aucune connexion bancaire')).toBeTruthy();
+    expect(screen.getByText(fr.home.disclaimer)).toBeTruthy();
     expect(screen.getByText('Solde du mois — restant')).toBeTruthy();
     expect(screen.getByText('Ajoute ta première opération pour démarrer')).toBeTruthy();
   });

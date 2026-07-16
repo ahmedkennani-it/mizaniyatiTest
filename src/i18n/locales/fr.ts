@@ -53,7 +53,7 @@ export const fr = {
   },
   home: {
     title: 'Accueil',
-    disclaimer: 'Saisie manuelle · aucune connexion bancaire',
+    disclaimer: 'On ne se connecte pas à ta banque · saisie manuelle',
     balanceLabel: 'Solde du mois — restant',
     addButton: 'Ajouter une opération',
     breakdownTitle: 'Répartition par catégorie',

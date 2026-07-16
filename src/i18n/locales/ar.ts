@@ -51,7 +51,7 @@ export const ar: TranslationSchema = {
   },
   home: {
     title: 'الرئيسية',
-    disclaimer: 'إدخال يدوي · لا اتصال بالبنك',
+    disclaimer: 'لا نتصل ببنكك · إدخال يدوي',
     balanceLabel: 'رصيد الشهر — المتبقي',
     addButton: 'إضافة عملية',
     breakdownTitle: 'التوزيع حسب الفئة',

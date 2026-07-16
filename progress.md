@@ -70,7 +70,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 5.3 | Anneau de répartition par catégorie | ✅ done |
 | 5.4 | Dernières transactions | ✅ done |
 | 5.5 | État vide du dashboard | ✅ done |
-| 5.6 | Chip de confiance « saisie manuelle » | ⏳ |
+| 5.6 | Chip de confiance « saisie manuelle » | ✅ done |
 | 5.7 | Aperçu des objectifs | ⏳ |
 | 5.8 | Bandeau de découverte vocale | ⏳ |
 
@@ -674,6 +674,17 @@ interdiction éternelle du réseau.
   feuille, plutôt qu'un bouton qui ferait semblant d'écouter.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1398/1398, 119 suites** ✅
   (2 runs).
+
+### Itération 26 — Tâche 5.6 (Chip de confiance) ✅
+- Le composant existait ; le **texte ne correspondait pas** à celui que le critère cite.
+  Aligné dans les 3 catalogues (« On ne se connecte pas à ta banque · saisie manuelle »),
+  ce qui suit aussi le tutoiement déjà adopté par la copie de la 5.5.
+- **Lisibilité vérifiée sur les 4 thèmes**, Ramadan compris : le chip **peint son propre
+  fond opaque**, donc la page derrière ne décide jamais du contraste de son texte —
+  c'est ce qui le rend lisible sur la surface chaude du Ramadan. Vérifié par le calcul
+  (4.86 en clair, 6.41 en sombre) *et* par un test qui assère que le fond vient bien du
+  token et non de la page.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1410/1410, 120 suites** ✅.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

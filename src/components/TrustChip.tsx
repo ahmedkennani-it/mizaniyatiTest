@@ -16,6 +16,7 @@ export function TrustChip({ label }: TrustChipProps) {
   const { theme } = useTheme();
   return (
     <Pill
+      testID="trust-chip"
       icon="shield-check"
       label={label}
       background={theme.accents.teal.wash}

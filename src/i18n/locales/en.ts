@@ -51,7 +51,7 @@ export const en: TranslationSchema = {
   },
   home: {
     title: 'Home',
-    disclaimer: 'Manual entry · no bank connection',
+    disclaimer: 'We never connect to your bank · manual entry',
     balanceLabel: 'Month balance — remaining',
     addButton: 'Add a transaction',
     breakdownTitle: 'Breakdown by category',

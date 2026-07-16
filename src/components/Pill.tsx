@@ -14,6 +14,7 @@ export interface PillProps {
   /** Text + icon color. Defaults to the teal ink. */
   color?: string;
   style?: ViewStyle;
+  testID?: string;
 }
 
 /**
@@ -21,12 +22,13 @@ export interface PillProps {
  * paid/pending status, and percentage tags. Colors are passed in so callers pick the right semantic
  * (success/danger/accent); defaults to the teal wash.
  */
-export function Pill({ label, icon, background, color, style }: PillProps) {
+export function Pill({ label, icon, background, color, style, testID }: PillProps) {
   const { theme } = useTheme();
   const fg = color ?? theme.accents.teal.ink;
 
   return (
     <View
+      testID={testID}
       style={[
         {
           flexDirection: 'row',
