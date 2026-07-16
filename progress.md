@@ -38,7 +38,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | Tâche | Titre | Statut |
 | --- | --- | --- |
 | 2.1 | Design tokens et palette | ✅ done |
-| 2.2 | Composants de base : Header, Bouton, Tag, Card | ⏳ |
+| 2.2 | Composants de base : Header, Bouton, Tag, Card | ✅ done |
 | 2.3 | Composants financiers : Montant, Progression, Anneau, Ligne, Avatar | ⏳ |
 | 2.4 | Contraste et mise à l'échelle des textes | ⏳ |
 | 2.5 | Libellés pour lecteurs d'écran | ⏳ |
@@ -250,6 +250,24 @@ qualité honnête.
   le fait que chaque thème (clair/sombre/senior/Ramadan) est une **surcharge** de
   tokens et non un jeu de valeurs parallèle.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **778/778, 89 suites** ✅.
+
+### Itération 10 — Tâche 2.2 (Composants de base : Header, Bouton, Tag, Card) ✅
+- Les 4 composants existaient et tiraient déjà tout des tokens (garanti par la garde
+  de la 2.1). Le manque réel était la **couverture de tests** : `Card`, `Pill` (le
+  « Tag » du design system) et `ScreenHeader` n'avaient **aucun test**, et `Button`
+  ne testait que press/disabled — aucune variante, aucun thème.
+- `Card.test.tsx` : rayon 14 px asséré contre la valeur littérale du design *et*
+  contre le token (une seule source de vérité, changement délibéré) ; ombre douce
+  quand `elevated` ; **absence** d'ombre en sombre (elle y lit comme de la crasse,
+  la bordure sépare) ; 4 thèmes.
+- `Pill.test.tsx` : label, icône optionnelle, ink par défaut pris du **schéma actif**
+  et non figé, couleur sémantique passée par l'appelant, 4 thèmes.
+- `ScreenHeader.test.tsx` : variantes titre et salutation, absence du bouton retour
+  sans `onBack`, actions + texte court (pastille de langue), LTR/RTL, 4 thèmes.
+- `Button.test.tsx` étendu : chaque variante assérée contre son token, repli sur le
+  schéma sombre, cible tactile agrandie en mode senior, LTR/RTL du dégradé, 4 thèmes.
+  Vérifié par mutation.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **823/823, 92 suites** ✅.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 
