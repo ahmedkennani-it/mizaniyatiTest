@@ -12,7 +12,7 @@ Suivi des itérations. Portée : **uniquement la phase 1** de
 | 1.3 | Modèle de données et persistance locale | ✅ done |
 | 1.4 | Infrastructure i18n et bascule LTR/RTL | ✅ done |
 | 1.5 | Miroir RTL des composants de base | ✅ done |
-| 1.6 | Formats locaux nombres/dates/devises | ⏳ |
+| 1.6 | Formats locaux nombres/dates/devises | ✅ done |
 | 1.7 | Stockage local des données | ⏳ |
 
 ## Journal
@@ -95,6 +95,31 @@ Suivi des itérations. Portée : **uniquement la phase 1** de
   échouer le test).
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : 513/522 tests ✅
   (mêmes 9 échecs préexistants qu'avant l'itération, aucun régressé).
+
+### Itération 6 — Tâche 1.6 (Formats locaux nombres/dates/devises) ✅
+- ⚠️ **Décision à valider** : la locale française passe de `fr-MA` à **`fr-FR`**.
+  CLDR groupe les milliers du français marocain avec un **point** (`1.234,50`),
+  alors que le critère US-062 exige une **espace insécable** (`1 234,50`). Les deux
+  locales ne diffèrent *que* là-dessus (mêmes décimales, mêmes dates, mêmes noms
+  de mois — vérifié), donc `fr-FR` donne le format spécifié sans rien perdre.
+  Si le format marocain CLDR est en fait le bon, c'est ce choix qu'il faut revoir,
+  pas le reste de l'itération.
+- Le test existant `formatMoney` s'appelait « period thousands separator » et
+  passait par accident : `/1.234,50.*MAD/` — le `.` du regex matchait l'espace.
+  Nouveau `localeFormats.test.ts` qui assère les **codepoints réels** des
+  séparateurs (U+202F, U+066C, U+066B) et non des regex permissives.
+- Formats couverts par les tests : fr (espace insécable + virgule), en (virgule
+  milliers, point décimal, symbole en préfixe), ar (séparateurs arabes + indicateur
+  de devise localisé `د.م.` et non `MAD`, chiffres arabo-indiens).
+- Dates : le formatage des mois était **dupliqué en ligne** dans `HomeScreen` et
+  `CategoriesScreen` (violation de la règle « helper centralisé »). Centralisé dans
+  `src/i18n/dateFormat.ts` (`formatMonthLabel`, `formatLongDate`, `formatShortDate`,
+  `monthKeyOf`, `monthKeyToDate`) et branché sur les deux écrans.
+- Les caractères invisibles (espaces insécables, marques LTR) sont écrits en
+  échappements `\uXXXX` dans les tests : tapés au clavier ils sont indiscernables
+  d'une espace normale dans une diff et feraient assérer le contraire du but visé.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : 530/539 tests ✅
+  (mêmes 9 échecs préexistants).
 
 ## 🚨 Blocage — `git push` impossible
 

@@ -27,8 +27,9 @@ describe('toMajorUnits', () => {
 });
 
 describe('formatMoney', () => {
-  it('formats MAD amounts for French with a period thousands separator and comma decimal', () => {
-    expect(formatMoney(123450, 'MAD', 'fr')).toMatch(/1.234,50.*MAD/);
+  // Exact separators live in `localeFormats.test.ts`; this only pins amount + currency together.
+  it('formats MAD amounts for French with a comma decimal and the currency code', () => {
+    expect(formatMoney(123450, 'MAD', 'fr')).toMatch(/234,50.*MAD/);
   });
 
   it('formats MAD amounts for Arabic with Arabic-indic digits', () => {
@@ -45,7 +46,7 @@ describe('formatMoney', () => {
   });
 
   it('formats a non-default currency without any conversion (no silent MAD conversion)', () => {
-    expect(formatMoney(150000, 'EUR', 'fr')).toMatch(/1.500,00.*€/);
+    expect(formatMoney(150000, 'EUR', 'fr')).toMatch(/500,00.*€/);
   });
 });
 

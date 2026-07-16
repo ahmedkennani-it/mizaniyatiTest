@@ -19,7 +19,8 @@ import { listCategories, listCategoryBudgets, listTransactions } from '../db/rep
 import type { Category, CategoryBudget, Transaction } from '../db/repositories';
 import { useEntitlements } from '../entitlements';
 import { useLanguage } from '../i18n';
-import { forceLTR, resolveIntlLocale, toLocalizedDigits } from '../i18n/numberFormat';
+import { formatMonthLabel } from '../i18n/dateFormat';
+import { forceLTR, toLocalizedDigits } from '../i18n/numberFormat';
 import { DEFAULT_CURRENCY_CODE, formatMoney, toMajorUnits } from '../money';
 import { useTheme } from '../theme';
 
@@ -56,18 +57,7 @@ export function CategoriesScreen() {
     [language],
   );
 
-  const monthLabel = useMemo(() => {
-    const { locale, numberingSystem } = resolveIntlLocale(language);
-    try {
-      return new Intl.DateTimeFormat(locale, {
-        month: 'long',
-        year: 'numeric',
-        numberingSystem,
-      }).format(new Date());
-    } catch {
-      return currentMonthKey();
-    }
-  }, [language]);
+  const monthLabel = useMemo(() => formatMonthLabel(currentMonthKey(), language), [language]);
 
   if (view === 'form') {
     const otherCategories = editingCategory

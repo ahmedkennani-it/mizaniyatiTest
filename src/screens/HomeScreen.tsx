@@ -31,23 +31,14 @@ import {
 } from '../db/repositories';
 import type { Category, Member, Transaction, Vault, VaultContribution } from '../db/repositories';
 import { useLanguage } from '../i18n';
-import { forceLTR, resolveIntlLocale, toLocalizedDigits } from '../i18n/numberFormat';
+import { formatMonthLabel, monthKeyOf, monthKeyToDate } from '../i18n/dateFormat';
+import { forceLTR, toLocalizedDigits } from '../i18n/numberFormat';
 import { DEFAULT_CURRENCY_CODE, formatMoney, toMajorUnits } from '../money';
 import { useTheme } from '../theme';
 import { computeCategoryBreakdown } from '../transactions';
 import { computeVaultStatus } from '../vaults';
 
 const GOAL_ACCENTS: AccentName[] = ['teal', 'gold', 'purple', 'blue', 'coral'];
-
-function monthKeyOf(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-}
-
-/** `YYYY-MM` → a first-of-month `Date` (local), for stepping and label formatting. */
-function monthKeyToDate(key: string): Date {
-  const [year, month] = key.split('-').map(Number);
-  return new Date(year, month - 1, 1);
-}
 
 export function HomeScreen() {
   const { t } = useTranslation();
@@ -110,18 +101,7 @@ export function HomeScreen() {
     [language],
   );
 
-  const monthLabel = useMemo(() => {
-    const { locale, numberingSystem } = resolveIntlLocale(language);
-    try {
-      return new Intl.DateTimeFormat(locale, {
-        month: 'long',
-        year: 'numeric',
-        numberingSystem,
-      }).format(monthKeyToDate(monthKey));
-    } catch {
-      return monthKey;
-    }
-  }, [language, monthKey]);
+  const monthLabel = useMemo(() => formatMonthLabel(monthKey, language), [language, monthKey]);
 
   const householdName = members[0]?.name ?? t('home.household');
 
