@@ -129,13 +129,36 @@ export function HomeScreen() {
     accent: categoryAccent(categoryById.get(entry.categoryId)?.color),
   }));
 
+  // The current month is the ceiling: there is nothing to show past it, and letting the user walk
+  // into empty future months reads as a bug rather than a feature (US-008).
+  const currentMonthKey = monthKeyOf(new Date());
+  const isAtCurrentMonth = monthKey >= currentMonthKey;
+
   const stepMonth = (delta: number) => {
     const next = monthKeyToDate(monthKey);
     next.setMonth(next.getMonth() + delta);
-    setMonthKey(monthKeyOf(next));
+    const stepped = monthKeyOf(next);
+    setMonthKey(stepped > currentMonthKey ? currentMonthKey : stepped);
   };
 
-  const recent = transactions.slice(0, 5);
+  // Scoped to the selected month, like every other figure on this screen — the list used to show
+  // the 5 latest transactions overall, so browsing to June listed July's (US-008).
+  const monthTransactions = useMemo(
+    () => transactions.filter((transaction) => transaction.occurredAt.slice(0, 7) === monthKey),
+    [transactions, monthKey],
+  );
+  const recent = monthTransactions.slice(0, 5);
+
+  /**
+   * A goal is cumulative, not monthly, so "reflecting" a past month means showing what had been
+   * saved **by the end of it** — not only that month's deposits, which would read as a goal that
+   * lost its progress. Contributions after the selected month are simply not known yet from that
+   * month's vantage point (US-008).
+   */
+  const contributionsUpToMonth = useMemo(
+    () => contributions.filter((contribution) => contribution.date.slice(0, 7) <= monthKey),
+    [contributions, monthKey],
+  );
 
   return (
     <AppScreen scroll bottomInset={110} contentStyle={{ gap: theme.spacing.md }}>
@@ -153,7 +176,12 @@ export function HomeScreen() {
         ]}
       />
 
-      <MonthSelector label={monthLabel} onPrev={() => stepMonth(-1)} onNext={() => stepMonth(1)} />
+      <MonthSelector
+        label={monthLabel}
+        onPrev={() => stepMonth(-1)}
+        onNext={() => stepMonth(1)}
+        disableNext={isAtCurrentMonth}
+      />
 
       <BalanceHeroCard
         label={t('home.balanceLabel')}
@@ -207,7 +235,7 @@ export function HomeScreen() {
             contentContainerStyle={{ gap: theme.spacing.sm, paddingVertical: 2 }}
           >
             {vaults.map((vault, index) => {
-              const status = computeVaultStatus(vault, contributions);
+              const status = computeVaultStatus(vault, contributionsUpToMonth);
               return (
                 <GoalCard
                   key={vault.id}

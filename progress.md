@@ -66,7 +66,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | Tâche | Titre | Statut |
 | --- | --- | --- |
 | 5.1 | Hero solde du mois restant | ✅ done |
-| 5.2 | Sélecteur de mois | ⏳ |
+| 5.2 | Sélecteur de mois | ✅ done |
 | 5.3 | Anneau de répartition par catégorie | ⏳ |
 | 5.4 | Dernières transactions | ⏳ |
 | 5.5 | État vide du dashboard | ⏳ |
@@ -596,6 +596,27 @@ interdiction éternelle du réseau.
   cadrées sur la carte (`within(getByTestId('balance-hero'))`) et comparent des chaînes
   exactes.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1332/1332, 113 suites** ✅.
+
+### Itération 22 — Tâche 5.2 (Sélecteur de mois) ✅
+- 🐛 **La navigation future n'était pas bloquée** : `stepMonth` était sans borne, on
+  pouvait marcher indéfiniment dans des mois vides. Le mois courant est désormais le
+  plafond, et le chevron « suivant » y est **désactivé** — dimé *et* signalé comme tel
+  aux lecteurs d'écran, plutôt que pressable en apparence et silencieux à l'usage.
+- 🐛 **La liste des transactions n'était pas scopée au mois** : elle affichait les 5
+  dernières opérations *toutes périodes confondues*, donc consulter juin listait celles
+  de juillet.
+- ⚠️ **Conflit d'intention assumé** : un test existant assérait explicitement l'inverse
+  (« Historique conservé : le mois dernier est encore listé »). Lecture plausible, mais
+  le critère US-008 est explicite — « solde, catégories, **transactions** et objectifs
+  reflètent ce mois » — et un sélecteur de mois qui laisse la liste non scopée est
+  déroutant. L'historique complet vivra derrière « Voir tout » (US-012, tâche 5.4).
+- **Objectifs scopés au mois** : un objectif étant cumulatif, un mois passé montre ce
+  qui était épargné **à sa fin** — pas les seuls versements de ce mois-là, qui se
+  liraient comme un objectif ayant perdu sa progression.
+- Deux tests dataient leurs opérations en janvier 2026, un mois passé : ils devenaient
+  invisibles une fois la liste scopée. Recalés sur le mois courant, intention préservée.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1345/1345, 114 suites** ✅
+  (2 runs).
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

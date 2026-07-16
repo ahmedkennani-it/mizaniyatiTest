@@ -82,7 +82,7 @@ describe('HomeScreen under RTL and LTR', () => {
     expect(screen.getByText(/Aucune opération pour le moment/)).toBeTruthy();
   });
 
-  it('scopes the balance card to the current month while keeping history from other months (US-013)', async () => {
+  it('scopes the whole dashboard to the selected month, list included (US-008)', async () => {
     const category = await createCategory(mockFakeDb, {
       name: 'Courses',
       icon: 'cart',
@@ -114,13 +114,14 @@ describe('HomeScreen under RTL and LTR', () => {
 
     await renderHome();
 
-    // Balance only reflects this month's income; last month's expense doesn't drag it down —
-    // this is the "réinitialisation au changement de mois" behavior. The balance card and the
-    // "Salaire" list row both show 5.000,00 MAD (no netting against last month's expense).
+    // The balance reflects this month's income only; last month's expense doesn't drag it down.
     expect((await screen.findAllByText(/5.000,00/)).length).toBe(2);
-    // Historique conservé: last month's transaction is still listed in "Dernières opérations".
-    expect(screen.getByText('Loyer du mois dernier')).toBeTruthy();
     expect(screen.getByText('Salaire')).toBeTruthy();
+    // US-008: "solde, catégories, transactions et objectifs reflètent ce mois". This test used to
+    // assert the opposite for the list ("historique conservé") — a plausible reading, but the
+    // criterion is explicit, and a month selector that leaves the list unscoped is confusing.
+    // The full history lives behind "Voir tout" (US-012).
+    expect(screen.queryByText('Loyer du mois dernier')).toBeNull();
   });
 
   it('shows the category breakdown sorted by descending total, scoped to this month (US-014)', async () => {
@@ -209,6 +210,7 @@ describe('HomeScreen under RTL and LTR', () => {
       color: '#111111',
     });
     const member = await createMember(mockFakeDb, { name: 'Moi' });
+    const thisMonthKey = new Date().toISOString().slice(0, 7);
 
     for (let day = 1; day <= 7; day += 1) {
       await createTransaction(mockFakeDb, {
@@ -217,7 +219,7 @@ describe('HomeScreen under RTL and LTR', () => {
         currencyCode: 'MAD',
         categoryId: category.id,
         memberId: member.id,
-        occurredAt: `2026-01-${String(day).padStart(2, '0')}T10:00:00.000Z`,
+        occurredAt: `${thisMonthKey}-${String(day).padStart(2, '0')}T10:00:00.000Z`,
         note: `Opération jour ${day}`,
       });
     }
@@ -241,6 +243,7 @@ describe('HomeScreen under RTL and LTR', () => {
       color: '#111111',
     });
     const member = await createMember(mockFakeDb, { name: 'Moi' });
+    const thisMonthKey = new Date().toISOString().slice(0, 7);
 
     await createTransaction(mockFakeDb, {
       type: 'expense',
@@ -248,7 +251,7 @@ describe('HomeScreen under RTL and LTR', () => {
       currencyCode: 'MAD',
       categoryId: category.id,
       memberId: member.id,
-      occurredAt: '2026-01-01T10:00:00.000Z',
+      occurredAt: `${thisMonthKey}-01T10:00:00.000Z`,
       note: 'Courses',
     });
     await createTransaction(mockFakeDb, {
@@ -257,15 +260,17 @@ describe('HomeScreen under RTL and LTR', () => {
       currencyCode: 'MAD',
       categoryId: category.id,
       memberId: member.id,
-      occurredAt: '2026-01-02T10:00:00.000Z',
+      occurredAt: `${thisMonthKey}-02T10:00:00.000Z`,
       note: 'Salaire',
     });
 
     await renderHome();
 
     expect(await screen.findByText(/-20,00/)).toBeTruthy();
-    expect(screen.getByText(/3.000,00/)).toBeTruthy();
-    expect(screen.queryByText(/-3.000,00/)).toBeNull();
+    // Now that the list is month-scoped, the income also feeds the hero's Revenus total, so it
+    // renders twice — what matters is that neither carries a minus.
+    expect(screen.getAllByText(/3\.000,00/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/-3\.000,00/)).toBeNull();
   });
 
   it('editing a transaction from the recent list updates the aggregates in place (US-016)', async () => {
