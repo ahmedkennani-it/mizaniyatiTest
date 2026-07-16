@@ -161,7 +161,7 @@ describe('RamadanScreen (US-026)', () => {
     await renderScreen(onBack, jest.fn(), RAMADAN_PLAN);
 
     // The back link is now the header's chevron action (addressed by its a11y label).
-    await fireEvent.press(await screen.findByLabelText('back'));
+    await fireEvent.press(await screen.findByLabelText('Retour'));
 
     expect(onBack).toHaveBeenCalledTimes(1);
   });

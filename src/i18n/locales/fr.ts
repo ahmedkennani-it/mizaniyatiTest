@@ -32,6 +32,12 @@ export const fr = {
     profile: 'Profil',
     addTransaction: 'Ajouter une opération',
   },
+  // Labels read aloud by screen readers for icon-only controls, which carry no visible text.
+  a11y: {
+    back: 'Retour',
+    previousMonth: 'Mois précédent',
+    nextMonth: 'Mois suivant',
+  },
   placeholder: {
     comingSoon: 'Bientôt disponible',
   },

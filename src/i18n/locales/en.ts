@@ -34,6 +34,11 @@ export const en: TranslationSchema = {
     profile: 'Profile',
     addTransaction: 'Add a transaction',
   },
+  a11y: {
+    back: 'Back',
+    previousMonth: 'Previous month',
+    nextMonth: 'Next month',
+  },
   placeholder: {
     comingSoon: 'Coming soon',
   },

@@ -77,7 +77,7 @@ export function BalanceHeroCard({
         style={{
           position: 'absolute',
           top: -40,
-          right: -40,
+          end: -40,
           width: 160,
           height: 160,
           borderRadius: 80,
@@ -85,7 +85,7 @@ export function BalanceHeroCard({
         }}
       />
       {cornerIcon ? (
-        <View style={{ position: 'absolute', top: 16, right: 18 }}>
+        <View style={{ position: 'absolute', top: 16, end: 18 }}>
           <Icon name={cornerIcon} size={30} color={cornerColor ?? '#FCD34D'} />
         </View>
       ) : null}

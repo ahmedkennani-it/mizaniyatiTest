@@ -72,8 +72,7 @@ describe('MembersScreen (US-027)', () => {
     const onBack = jest.fn();
     await renderScreen(onBack);
 
-    // Back is now the ScreenHeader's chevron (labelled "back" for a11y), not a "Retour" text link.
-    await fireEvent.press(screen.getByLabelText('back'));
+    await fireEvent.press(screen.getByLabelText('Retour'));
 
     expect(onBack).toHaveBeenCalledTimes(1);
   });

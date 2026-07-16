@@ -11,7 +11,7 @@ Suivi des itérations. Portée : **uniquement la phase 1** de
 | 1.2 | Porte qualité (lint, typecheck, tests, CI) | ✅ done |
 | 1.3 | Modèle de données et persistance locale | ✅ done |
 | 1.4 | Infrastructure i18n et bascule LTR/RTL | ✅ done |
-| 1.5 | Miroir RTL des composants de base | ⏳ |
+| 1.5 | Miroir RTL des composants de base | ✅ done |
 | 1.6 | Formats locaux nombres/dates/devises | ⏳ |
 | 1.7 | Stockage local des données | ⏳ |
 
@@ -71,21 +71,44 @@ Suivi des itérations. Portée : **uniquement la phase 1** de
   leurs clés **feuilles** (dotted paths), pas seulement les clés de premier niveau.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : 490/499 tests ✅.
 
-## 🚨 Blocage — `git push` impossible (arrêt de la boucle)
+### Itération 5 — Tâche 1.5 (Miroir RTL des composants de base) ✅
+- Bords physiques → propriétés logiques : badge de `ScreenHeader` (`right` → `end`),
+  blob décoratif + icône de coin de `BalanceHeroCard`, overlay du donut et barre
+  d'onglets flottante (`left/right: 0` → `start/end: 0`).
+- `DonutBreakdown` : l'anneau balayait toujours dans le sens horaire depuis midi.
+  Il est désormais mirroité (`scaleX: -1`) en RTL pour balayer vers le côté de
+  lecture ; le label central, dans un overlay frère, n'est pas mirroité.
+- **Bug bidi corrigé** dans `AmountText` : `textAlign: 'left'` était codé en dur,
+  ce qui collait le montant au bord opposé en RTL. Il suit maintenant le début de
+  lecture, tandis que `writingDirection: 'ltr'` + les marques LTR gardent l'ordre
+  latin des chiffres et du signe moins dans du texte arabe.
+- Icônes : `Icon` mirroitait déjà les glyphes directionnels — couvert par un test
+  (`Icon.rtl.test.tsx`) qui vérifie aussi que les glyphes non directionnels
+  (maison, horloge…) ne le sont **pas**, et que rien ne l'est en LTR.
+- Chaînes en dur restantes des composants de base supprimées (garde-fou i18n) :
+  `back`, `previous-month`, `next-month` → section `a11y` des 3 catalogues. Les 8
+  suites d'écrans qui ciblaient ces labels ont été mises à jour.
+- `components.rtl.test.tsx` élargi : il rend tout le kit de base (header, month
+  selector, hero card, row, progress bar, donut, bouton, champ, chip) et interdit
+  **toute** clé de style directionnelle sur **tous** les nœuds de l'arbre — plus
+  seulement les boutons. Vérifié par mutation (réintroduire `right: -3` fait
+  échouer le test).
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : 513/522 tests ✅
+  (mêmes 9 échecs préexistants qu'avant l'itération, aucun régressé).
 
-Conformément à `CLAUDE.md` (« Si le push échoue pour une raison
-d'authentification : documenter dans `progress.md` et s'arrêter pour signaler le
-blocage »), la boucle s'arrête après la tâche 1.4.
+## 🚨 Blocage — `git push` impossible
 
-- Commit `d40508d` (feat(1.4)) est fait **en local** ; `main` est **ahead 1** sur
-  `origin/main`.
+Les commits sont faits **en local uniquement** — `main` est en avance sur
+`origin/main`. L'utilisateur a demandé de continuer sans pousser et poussera
+lui-même (la règle d'arrêt de `CLAUDE.md` est donc levée explicitement).
+
 - `git push` → « Please make sure you have the correct access rights and the
   repository exists ». `git ls-remote origin` sur
   `git@github.com:ahmedkennani-it/mizaniyatiTest.git` reste bloqué jusqu'au
   timeout : l'accès SSH à GitHub n'aboutit pas depuis cet environnement (clé SSH
   absente/non chargée, ou réseau sortant filtré).
 - **Action requise** : rétablir l'accès (charger la clé SSH, ou basculer le remote
-  sur HTTPS avec un token), puis `git push`. Les tâches 1.5 à 1.7 restent à faire.
+  sur HTTPS avec un token), puis `git push`.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

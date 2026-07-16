@@ -34,6 +34,11 @@ export const ar: TranslationSchema = {
     profile: 'الملف الشخصي',
     addTransaction: 'إضافة عملية',
   },
+  a11y: {
+    back: 'رجوع',
+    previousMonth: 'الشهر السابق',
+    nextMonth: 'الشهر التالي',
+  },
   placeholder: {
     comingSoon: 'قريباً',
   },

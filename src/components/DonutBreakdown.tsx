@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { I18nManager, View } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 
 import { Txt } from './Txt';
@@ -50,7 +50,15 @@ export function DonutBreakdown({
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md }}>
       <View style={{ width: size, height: size }}>
-        <Svg width={size} height={size}>
+        {/* Segments sweep clockwise from 12 o'clock, which reads as "forward" in LTR. Mirroring the
+            ring horizontally under RTL makes them sweep counter-clockwise instead, so the first
+            (largest) segment still starts on the reading side. The centered label sits in the
+            sibling overlay below, so it is not mirrored with it. */}
+        <Svg
+          width={size}
+          height={size}
+          style={I18nManager.isRTL ? { transform: [{ scaleX: -1 }] } : undefined}
+        >
           <G rotation={-90} originX={size / 2} originY={size / 2}>
             <Circle
               cx={size / 2}
@@ -87,9 +95,9 @@ export function DonutBreakdown({
           style={{
             position: 'absolute',
             top: 0,
-            left: 0,
-            right: 0,
             bottom: 0,
+            start: 0,
+            end: 0,
             alignItems: 'center',
             justifyContent: 'center',
           }}

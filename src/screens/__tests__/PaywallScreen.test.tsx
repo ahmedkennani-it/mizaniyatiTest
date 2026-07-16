@@ -82,8 +82,7 @@ describe('PaywallScreen (US-029)', () => {
     const onBack = jest.fn();
     await renderScreen(onBack);
 
-    // Back is now the screen header's chevron button (accessibilityLabel "back").
-    await fireEvent.press(screen.getByLabelText('back'));
+    await fireEvent.press(screen.getByLabelText('Retour'));
 
     expect(onBack).toHaveBeenCalledTimes(1);
   });

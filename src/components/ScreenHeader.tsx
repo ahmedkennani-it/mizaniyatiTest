@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { Avatar } from './Avatar';
 import { Icon } from './Icon';
@@ -57,7 +58,7 @@ function ActionButton({ action }: { action: HeaderAction }) {
             style={{
               position: 'absolute',
               top: -3,
-              right: -3,
+              end: -3,
               width: 7,
               height: 7,
               borderRadius: 4,
@@ -82,6 +83,7 @@ function ActionButton({ action }: { action: HeaderAction }) {
  * the back chevron auto-flips (shared `Icon`). Pass either `title` or `greeting`+`name`.
  */
 export function ScreenHeader({ title, greeting, name, onBack, actions }: ScreenHeaderProps) {
+  const { t } = useTranslation();
   const { theme } = useTheme();
 
   return (
@@ -97,7 +99,7 @@ export function ScreenHeader({ title, greeting, name, onBack, actions }: ScreenH
         {onBack ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="back"
+            accessibilityLabel={t('a11y.back')}
             onPress={onBack}
             style={{
               width: 34,

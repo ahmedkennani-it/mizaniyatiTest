@@ -109,8 +109,7 @@ describe('VaultDetail (US-023)', () => {
     const onBack = jest.fn();
     await renderDetail(onBack);
 
-    // The back affordance is now the ScreenHeader's chevron button (labelled "back" for a11y).
-    await fireEvent.press(await screen.findByLabelText('back'));
+    await fireEvent.press(await screen.findByLabelText('Retour'));
 
     expect(onBack).toHaveBeenCalledTimes(1);
   });
