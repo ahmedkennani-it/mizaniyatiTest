@@ -71,6 +71,22 @@ Suivi des itérations. Portée : **uniquement la phase 1** de
   leurs clés **feuilles** (dotted paths), pas seulement les clés de premier niveau.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : 490/499 tests ✅.
 
+## 🚨 Blocage — `git push` impossible (arrêt de la boucle)
+
+Conformément à `CLAUDE.md` (« Si le push échoue pour une raison
+d'authentification : documenter dans `progress.md` et s'arrêter pour signaler le
+blocage »), la boucle s'arrête après la tâche 1.4.
+
+- Commit `d40508d` (feat(1.4)) est fait **en local** ; `main` est **ahead 1** sur
+  `origin/main`.
+- `git push` → « Please make sure you have the correct access rights and the
+  repository exists ». `git ls-remote origin` sur
+  `git@github.com:ahmedkennani-it/mizaniyatiTest.git` reste bloqué jusqu'au
+  timeout : l'accès SSH à GitHub n'aboutit pas depuis cet environnement (clé SSH
+  absente/non chargée, ou réseau sortant filtré).
+- **Action requise** : rétablir l'accès (charger la clé SSH, ou basculer le remote
+  sur HTTPS avec un token), puis `git push`. Les tâches 1.5 à 1.7 restent à faire.
+
 ## Notes / blocages connus (hors périmètre Phase 1)
 
 - L'arbre de travail contient des changements accumulés multi-phases non
