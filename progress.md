@@ -13,7 +13,7 @@ Suivi des itérations. Portée : **uniquement la phase 1** de
 | 1.4 | Infrastructure i18n et bascule LTR/RTL | ✅ done |
 | 1.5 | Miroir RTL des composants de base | ✅ done |
 | 1.6 | Formats locaux nombres/dates/devises | ✅ done |
-| 1.7 | Stockage local des données | ⏳ |
+| 1.7 | Stockage local des données | ⚠️ 3/4 critères — bloqué sur le chiffrement |
 
 ## Journal
 
@@ -119,6 +119,41 @@ Suivi des itérations. Portée : **uniquement la phase 1** de
   échappements `\uXXXX` dans les tests : tapés au clavier ils sont indiscernables
   d'une espace normale dans une diff et feraient assérer le contraire du but visé.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : 530/539 tests ✅
+  (mêmes 9 échecs préexistants).
+
+### Itération 7 — Tâche 1.7 (Stockage local) ⚠️ laissée `done: false`
+
+**3 critères sur 4 livrés. Le 4e est bloqué par la stack, décision utilisateur de
+laisser la tâche ouverte.**
+
+- 🚨 **« Base chiffrée au repos » : infaisable avec `expo-sqlite`.** Vérifié dans
+  `node_modules/expo-sqlite/build/NativeDatabase.d.ts` : `SQLiteOpenOptions`
+  n'expose que `enableChangeListener`, `useNewConnection`,
+  `finalizeUnusedStatementsBeforeClosing` et `libSQLOptions` — **aucune clé de
+  chiffrement, pas de SQLCipher**. Le code le reconnaissait déjà implicitement :
+  `securityScreen.localOnlyNote` dit « il ne chiffre pas la base de données locale ».
+  Options présentées à l'utilisateur (chiffrement OS / op-sqlite+SQLCipher /
+  colonnes chiffrées) → **choix : laisser `done: false`** et trancher plus tard.
+  Ne pas marquer cette tâche done sans avoir tranché : les données financières
+  sont aujourd'hui en clair dans `mizaniyati.db`.
+- ✅ Persistance locale + consultation hors ligne : `offlineStorage.test.ts` exécute
+  saisie, édition et calcul d'agrégats avec `fetch`/`XMLHttpRequest`/`WebSocket`
+  remplacés par des fonctions qui lèvent — tout passe.
+- ✅ Disponibilité sans réseau : garde statique dans le même fichier, un cas de test
+  **par fichier source** (167 fichiers), qui échoue si un `fetch(`/`XMLHttpRequest(`
+  /`WebSocket(`/`EventSource(`/`sendBeacon(` apparaît dans `src/`. C'est aussi la
+  moitié mécanique du garde-fou « aucune connexion bancaire / aucun scraping ».
+  Vérifié par mutation.
+- ✅ Avertissement de perte définitive : la mise en garde n'existait qu'en fin de
+  `forgotPinNote` (note sur le PIN oublié) — là où personne ne la lit avant de
+  désinstaller. Nouvelle section `storage` (ar/fr/en) + bannière d'alerte dédiée
+  sur l'écran Sécurité, testée dans les 3 langues.
+- `AlertBanner` gagne une prop optionnelle `title` (additive, testée).
+- ⚠️ **`@types/node` ajouté** + `"types": ["jest", "node"]` dans `tsconfig.json`,
+  nécessaire pour le scan de fichiers de la garde statique. Effet de bord à
+  connaître : le code applicatif pourrait désormais importer `fs`/`path` sans que
+  le typecheck s'en plaigne, alors que ça planterait sur l'appareil.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : 703/712 tests ✅
   (mêmes 9 échecs préexistants).
 
 ## 🚨 Blocage — `git push` impossible

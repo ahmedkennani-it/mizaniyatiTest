@@ -435,6 +435,14 @@ export const en: TranslationSchema = {
       'Forgotten PIN: no recovery is possible for now. Uninstalling the app will erase your local data (no cloud backup exists yet).',
     cancel: 'Cancel',
   },
+  storage: {
+    title: 'Your data stays on this device',
+    description:
+      'Everything is stored locally: no data is sent to a server, and everything stays available offline.',
+    uninstallWarningTitle: 'Uninstalling erases everything, permanently',
+    uninstallWarning:
+      'There is no cloud backup. If you uninstall the app, switch devices or clear its data, your transactions, categories and goals will be lost with no way to recover them.',
+  },
   lockScreen: {
     title: 'App locked',
     biometricPrompt: 'Unlock Mizaniyati',

@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { AppScreen, Button, Card, IconTile, ScreenHeader, TextField, Txt } from '../components';
+import {
+  AlertBanner,
+  AppScreen,
+  Button,
+  Card,
+  IconTile,
+  ScreenHeader,
+  TextField,
+  Txt,
+} from '../components';
 import {
   biometricClient,
   disableAppLock,
@@ -180,6 +189,23 @@ export function SecurityScreen({ onBack }: SecurityScreenProps) {
           </>
         )}
       </Card>
+
+      <Card elevated style={{ gap: theme.spacing.sm }}>
+        <IconTile icon="shield-check" accent="teal" />
+        <Txt weight="semibold" size="md">
+          {t('storage.title')}
+        </Txt>
+        <Txt size="sm" color={theme.colors.textSecondary}>
+          {t('storage.description')}
+        </Txt>
+      </Card>
+
+      <AlertBanner
+        tone="warning"
+        icon="alert-triangle"
+        title={t('storage.uninstallWarningTitle')}
+        message={t('storage.uninstallWarning')}
+      />
 
       <Card elevated style={{ gap: theme.spacing.xs }}>
         <Txt size="xs" color={theme.colors.textSecondary}>

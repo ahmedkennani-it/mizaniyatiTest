@@ -8,6 +8,8 @@ import { useTheme } from '../theme';
 
 export interface AlertBannerProps {
   message: string;
+  /** Optional bold lead-in above the message, for a banner that must be scannable at a glance. */
+  title?: string;
   icon?: IconName;
   /** `warning` uses the rose/coral tone (over-budget); `info` uses the teal wash. */
   tone?: 'warning' | 'info';
@@ -20,6 +22,7 @@ export interface AlertBannerProps {
  */
 export function AlertBanner({
   message,
+  title,
   icon = 'alert-triangle',
   tone = 'warning',
 }: AlertBannerProps) {
@@ -54,13 +57,16 @@ export function AlertBanner({
       }}
     >
       <Icon name={icon} size={20} color={palette.icon} />
-      <Txt
-        size="xs"
-        color={palette.text}
-        style={{ flex: 1, lineHeight: theme.typography.sizes.xs * 1.45 }}
-      >
-        {message}
-      </Txt>
+      <View style={{ flex: 1, gap: 2 }}>
+        {title ? (
+          <Txt size="xs" weight="bold" color={palette.text}>
+            {title}
+          </Txt>
+        ) : null}
+        <Txt size="xs" color={palette.text} style={{ lineHeight: theme.typography.sizes.xs * 1.45 }}>
+          {message}
+        </Txt>
+      </View>
     </View>
   );
 }

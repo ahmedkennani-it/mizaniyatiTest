@@ -437,6 +437,16 @@ export const fr = {
       "Code PIN oublié : aucune récupération n'est possible pour le moment. Désinstaller l'app effacera vos données locales (aucune sauvegarde cloud n'existe encore).",
     cancel: 'Annuler',
   },
+  // US-070 : l'utilisateur doit savoir que ses données ne vivent que sur cet appareil, avant de
+  // désinstaller — il n'existe aucune sauvegarde cloud d'où les restaurer.
+  storage: {
+    title: 'Vos données restent sur cet appareil',
+    description:
+      'Tout est enregistré localement : aucune donnée ne part vers un serveur, et tout reste consultable hors ligne.',
+    uninstallWarningTitle: 'Désinstaller effacera tout, définitivement',
+    uninstallWarning:
+      "Aucune sauvegarde cloud n'existe. Si vous désinstallez l'app, changez d'appareil ou effacez ses données, vos opérations, catégories et objectifs seront perdus sans aucun moyen de les récupérer.",
+  },
   lockScreen: {
     title: 'Application verrouillée',
     biometricPrompt: 'Déverrouiller Mizaniyati',
