@@ -32,6 +32,7 @@ export const ar: TranslationSchema = {
     categories: 'الفئات',
     tontine: 'الدارة',
     profile: 'الملف الشخصي',
+    addTransaction: 'إضافة عملية',
   },
   placeholder: {
     comingSoon: 'قريباً',

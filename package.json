@@ -15,7 +15,8 @@
   "jest": {
     "preset": "jest-expo",
     "setupFilesAfterEnv": [
-      "@testing-library/react-native"
+      "@testing-library/react-native",
+      "<rootDir>/jest/setupTests.js"
     ],
     "moduleNameMapper": {
       "^lucide-react-native$": "<rootDir>/jest/lucideMock.jsx",

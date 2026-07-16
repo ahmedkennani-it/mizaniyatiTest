@@ -139,9 +139,7 @@ describe('AppLockProvider / useAppLock', () => {
   it('throws when useAppLock is called outside an AppLockProvider', async () => {
     const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-    await expect(render(<Probe />)).rejects.toThrow(
-      'useAppLock must be used within an AppLockProvider',
-    );
+    expect(() => render(<Probe />)).toThrow('useAppLock must be used within an AppLockProvider');
 
     consoleErrorSpy.mockRestore();
   });

@@ -92,7 +92,7 @@ describe('SubscriptionProvider / useSubscription', () => {
   it('throws when useSubscription is called outside a SubscriptionProvider', async () => {
     const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-    await expect(render(<Probe />)).rejects.toThrow(
+    expect(() => render(<Probe />)).toThrow(
       'useSubscription must be used within a SubscriptionProvider',
     );
 

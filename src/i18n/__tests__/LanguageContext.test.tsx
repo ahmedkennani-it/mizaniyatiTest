@@ -50,9 +50,7 @@ describe('LanguageProvider / useLanguage', () => {
   it('throws when useLanguage is called outside a LanguageProvider', async () => {
     const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-    await expect(render(<Probe />)).rejects.toThrow(
-      'useLanguage must be used within a LanguageProvider',
-    );
+    expect(() => render(<Probe />)).toThrow('useLanguage must be used within a LanguageProvider');
 
     consoleErrorSpy.mockRestore();
   });

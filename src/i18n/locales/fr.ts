@@ -30,6 +30,7 @@ export const fr = {
     categories: 'Catégories',
     tontine: 'Tontine',
     profile: 'Profil',
+    addTransaction: 'Ajouter une opération',
   },
   placeholder: {
     comingSoon: 'Bientôt disponible',

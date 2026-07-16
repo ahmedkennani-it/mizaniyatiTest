@@ -63,7 +63,7 @@ describe('EntitlementsProvider / useEntitlements', () => {
   it('throws when useEntitlements is called outside an EntitlementsProvider', async () => {
     const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-    await expect(render(<Probe />)).rejects.toThrow(
+    expect(() => render(<Probe />)).toThrow(
       'useEntitlements must be used within an EntitlementsProvider',
     );
 

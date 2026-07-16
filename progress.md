@@ -10,7 +10,7 @@ Suivi des itérations. Portée : **uniquement la phase 1** de
 | 1.1 | Scaffolder le projet Expo + TypeScript | ✅ done |
 | 1.2 | Porte qualité (lint, typecheck, tests, CI) | ✅ done |
 | 1.3 | Modèle de données et persistance locale | ✅ done |
-| 1.4 | Infrastructure i18n et bascule LTR/RTL | ⏳ |
+| 1.4 | Infrastructure i18n et bascule LTR/RTL | ✅ done |
 | 1.5 | Miroir RTL des composants de base | ⏳ |
 | 1.6 | Formats locaux nombres/dates/devises | ⏳ |
 | 1.7 | Stockage local des données | ⏳ |
@@ -50,6 +50,27 @@ Suivi des itérations. Portée : **uniquement la phase 1** de
     test `createFakeDatabase`.
 - `npm run typecheck` ✅, `eslint src/db` ✅, suite `src/db` : 136 tests ✅.
 
+### Itération 4 — Tâche 1.4 (Infrastructure i18n et bascule LTR/RTL) ✅
+- **Régression corrigée** : le commit `1a6dabf` (« fix ») a ajouté le catalogue
+  `en` à `SUPPORTED_LANGUAGES`. La détection de langue device (`i18n.ts`)
+  résolvait donc vers `en` sous jest (machine en-US) et **28 suites / 140 tests**
+  échouaient parce qu'ils affirment des libellés français. Ajout de
+  `jest/setupTests.js` qui épingle `expo-localization` sur `fr-MA` : les tests ne
+  dépendent plus de la locale de la machine. → 140 échecs ramenés à 14.
+- Tests de contexte réparés (`useLanguage`/`useEntitlements`/`useSubscription`/
+  `useAppLock` hors provider) : `render()` lève de façon **synchrone** avec RNTL
+  v13, le pattern `await expect(render(...)).rejects.toThrow()` n'attrapait rien.
+- Chaîne en dur supprimée du shell : le FAB de `FloatingTabBar` portait
+  `accessibilityLabel="add-transaction"` → clé `nav.addTransaction` (ar/fr/en).
+- Nouveau test `src/navigation/__tests__/shellStrings.test.tsx` : rend le shell en
+  fr puis en ar et vérifie qu'aucun libellé littéral/français ne subsiste en ar
+  (vérifié par mutation : réintroduire le littéral fait bien échouer le test).
+- Nouveau test `src/theme/__tests__/useAppFont.test.tsx` : IBM Plex Sans Arabic en
+  `ar`, Outfit en `fr`/`en`.
+- Test `i18n.test.ts` mis à jour : les 3 catalogues (ar/fr/en) sont comparés sur
+  leurs clés **feuilles** (dotted paths), pas seulement les clés de premier niveau.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : 490/499 tests ✅.
+
 ## Notes / blocages connus (hors périmètre Phase 1)
 
 - L'arbre de travail contient des changements accumulés multi-phases non
@@ -57,4 +78,13 @@ Suivi des itérations. Portée : **uniquement la phase 1** de
   phases respectives.
 - Échecs de tests pré-existants dans des features de phases ultérieures
   (US-021 RecurringRuleForm, US-023 VaultDetail, US-025 ZakatScreen,
-  US-028 LockScreen). Hors périmètre Phase 1.
+  US-028 LockScreen, plus « retour au dashboard depuis l'écran de confirmation »
+  dans HomeScreen.rtl / US-012). 5 suites, 9 tests. Ce sont de vrais échecs
+  fonctionnels de ces features, pas des problèmes d'i18n — hors périmètre Phase 1,
+  à traiter dans leurs phases respectives.
+- **Vérification navigateur (LTR/RTL) non effectuée** : la skill `dev-browser`
+  demandée par les critères d'acceptation n'est pas disponible dans cet
+  environnement et aucun outil de pilotage de navigateur n'y est exposé. La
+  couverture RTL repose donc sur les tests de rendu sous les deux directions
+  (`components.rtl.test.tsx`, `RootNavigator.rtl.test.tsx`, `shellStrings`,
+  `HomeScreen.rtl`). À refaire manuellement via `npm run web`.

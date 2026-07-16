@@ -32,6 +32,7 @@ export const en: TranslationSchema = {
     categories: 'Categories',
     tontine: 'Tontine',
     profile: 'Profile',
+    addTransaction: 'Add a transaction',
   },
   placeholder: {
     comingSoon: 'Coming soon',

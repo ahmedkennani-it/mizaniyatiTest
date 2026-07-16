@@ -2,6 +2,7 @@ import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { I18nManager, Pressable, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '../components/Icon';
@@ -24,6 +25,7 @@ const TAB_ICONS: Record<string, IconName> = {
  * the tabs for RTL from `I18nManager.isRTL`; the FAB stays centered either way.
  */
 export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const { openEntry } = useExpenseEntry();
@@ -80,7 +82,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
     <Pressable
       key="fab"
       accessibilityRole="button"
-      accessibilityLabel="add-transaction"
+      accessibilityLabel={t('nav.addTransaction')}
       onPress={() => openEntry()}
       style={{ width: 64, alignItems: 'center' }}
     >
