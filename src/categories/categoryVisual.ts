@@ -72,6 +72,10 @@ export const CATEGORY_ACCENT_COLORS: string[] = [
   '#2563EB',
 ];
 
-export function categoryAccent(color: string): AccentName {
+/** Maps a category's stored hex to an accent family; unknown or missing colors fall back to teal. */
+export function categoryAccent(color?: string): AccentName {
+  if (!color) {
+    return 'teal';
+  }
   return COLOR_TO_ACCENT[color.toUpperCase()] ?? COLOR_TO_ACCENT[color] ?? 'teal';
 }

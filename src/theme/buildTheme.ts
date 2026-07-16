@@ -1,22 +1,26 @@
 import {
   baseTypography,
   darkAccents,
+  darkBanner,
   darkColors,
   defaultMinTouchTarget,
   fontFamilies,
   gradients,
   lightAccents,
+  lightBanner,
   lightColors,
+  onAccent,
   radius,
   seniorFontScale,
   seniorMinTouchTarget,
+  shadowColors,
   spacing,
 } from './tokens';
 import type { ColorScheme, Theme } from './types';
 
 /**
- * Senior mode forces the secondary (lower-contrast) text color up to the
- * primary text color, since it exists purely for AA contrast in normal mode.
+ * Senior mode collapses the two dimmer text tones onto the primary one: they exist to establish
+ * visual hierarchy at normal sizes, and that hierarchy is worth less than raw legibility here.
  */
 export function buildTheme(colorScheme: ColorScheme, seniorMode: boolean): Theme {
   const baseColors = colorScheme === 'dark' ? darkColors : lightColors;
@@ -25,9 +29,14 @@ export function buildTheme(colorScheme: ColorScheme, seniorMode: boolean): Theme
   return {
     colorScheme,
     seniorMode,
-    colors: seniorMode ? { ...baseColors, textSecondary: baseColors.textPrimary } : baseColors,
+    colors: seniorMode
+      ? { ...baseColors, textSecondary: baseColors.textPrimary, textTertiary: baseColors.textPrimary }
+      : baseColors,
     accents: colorScheme === 'dark' ? darkAccents : lightAccents,
     gradients,
+    onAccent,
+    shadows: shadowColors,
+    banner: colorScheme === 'dark' ? darkBanner : lightBanner,
     fonts: fontFamilies,
     spacing,
     radius,

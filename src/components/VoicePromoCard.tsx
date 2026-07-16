@@ -48,11 +48,11 @@ export function VoicePromoCard({ title, subtitle, badge, onPress }: VoicePromoCa
             justifyContent: 'center',
           }}
         >
-          <Icon name="mic" size={24} color="#04312C" />
+          <Icon name="mic" size={24} color={theme.onAccent.ink} />
         </View>
         <View style={{ flex: 1, gap: 3 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-            <Txt weight="bold" size="sm" color="#FFFFFF">
+            <Txt weight="bold" size="sm" color={theme.onAccent.text}>
               {title}
             </Txt>
             {badge ? (
@@ -64,17 +64,17 @@ export function VoicePromoCard({ title, subtitle, badge, onPress }: VoicePromoCa
                   paddingVertical: 2,
                 }}
               >
-                <Txt weight="extrabold" size={9} color="#04312C">
+                <Txt weight="extrabold" size={9} color={theme.onAccent.ink}>
                   {badge}
                 </Txt>
               </View>
             ) : null}
           </View>
-          <Txt size="xs" color="rgba(255,255,255,0.75)">
+          <Txt size="xs" color={theme.onAccent.textFaint}>
             {subtitle}
           </Txt>
         </View>
-        <Icon name="chevron-right" size={19} color="rgba(255,255,255,0.6)" />
+        <Icon name="chevron-right" size={19} color={theme.onAccent.icon} />
       </LinearGradient>
     </Pressable>
   );

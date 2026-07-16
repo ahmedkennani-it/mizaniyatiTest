@@ -1,7 +1,7 @@
-# Progress — Boucle Ralph (Phase 1 : Fondations techniques)
+# Progress — Boucle Ralph
 
-Suivi des itérations. Portée : **uniquement la phase 1** de
-`mizaniyati-frontend-prd.json`.
+Suivi des itérations sur `mizaniyati-frontend-prd.json`. Portée initiale : phase 1
+seule ; étendue au développement des US (phases 2+) à partir de l'itération 8.
 
 ## État des tâches Phase 1
 
@@ -32,6 +32,16 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
    La couverture RTL repose entre-temps sur les tests de rendu dans les deux
    directions.
 3. **Commits non poussés** — voir la section « Blocage `git push` » plus bas.
+
+## État des tâches Phase 2 (Design system & accessibilité)
+
+| Tâche | Titre | Statut |
+| --- | --- | --- |
+| 2.1 | Design tokens et palette | ✅ done |
+| 2.2 | Composants de base : Header, Bouton, Tag, Card | ⏳ |
+| 2.3 | Composants financiers : Montant, Progression, Anneau, Ligne, Avatar | ⏳ |
+| 2.4 | Contraste et mise à l'échelle des textes | ⏳ |
+| 2.5 | Libellés pour lecteurs d'écran | ⏳ |
 
 ## Journal
 
@@ -210,6 +220,36 @@ tombaient avant que les champs existent.
 **Suite entièrement verte : 712/712, 87 suites.** Plus aucun échec préexistant à
 traîner — chaque tâche suivante peut désormais être marquée `done` sur une porte
 qualité honnête.
+
+### Itération 9 — Tâche 2.1 (Design tokens et palette) ✅
+- **Couleurs de texte alignées sur la maquette** : `textSecondary` passe de `#475569`
+  (valeur hors maquette) à `#334155`, ce qui *augmente* le contraste (7.58 → 10.35
+  sur blanc). Ajout du 3e ton `textTertiary` `#64748B`, jusqu'ici absent.
+- ⚠️ **`textTertiary` a une contrainte à connaître** : `#64748B` passe AA sur
+  `surface` (4.76) et `background` (4.55) mais **échoue sur `surfaceAlt` (4.23)`**.
+  Documenté dans le token. Son pendant sombre `#8595AC` a été choisi pour reproduire
+  exactement la même contrainte (AA sur surface/background, pas sur surfaceAlt) —
+  ma première valeur inventée (`#7C8CA5`) échouait AA sur `surface`, calcul à l'appui.
+- **Critère « aucune couleur hors tokens » : il était violé partout.** Sorties vers
+  des tokens : ombres (`shadowColors.neutral`/`.primary` — Card, Button, FAB),
+  bannière d'alerte (`lightBanner`/`darkBanner` — 6 hex en dur dans `AlertBanner`),
+  et surtout la famille **`onAccent`** (texte/décor posés sur un aplat ou dégradé de
+  marque : `BalanceHeroCard`, `VoicePromoCard`, onboarding — une douzaine de
+  `rgba(255,255,255,…)` en dur).
+- Nommage : famille d'abord appelée `onGradient`, renommée **`onAccent`** — elle sert
+  aussi sur des aplats (tuile d'onboarding), le premier nom aurait menti.
+- Simplification : `categoryAccent(color?)` accepte désormais `undefined` et retombe
+  sur `teal`. Les appelants faisaient `categoryAccent(c?.color ?? '#0D9488')`, un
+  repli redondant puisque la fonction retombait déjà sur teal.
+- Nouveau garde-fou `noHardcodedColors.test.ts` : un cas de test **par fichier** de
+  `components/`, `screens/` et `navigation/` (54 fichiers), qui échoue sur tout hex
+  ou `rgba(` hors commentaire. `src/theme` (les tokens eux-mêmes) et les modules qui
+  stockent des couleurs comme **donnée** (palette de catégories, seeds) sont exclus.
+  Vérifié par mutation.
+- Nouveau `palette.test.ts` : les hex exacts de la maquette, la typo par script, et
+  le fait que chaque thème (clair/sombre/senior/Ramadan) est une **surcharge** de
+  tokens et non un jeu de valeurs parallèle.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **778/778, 89 suites** ✅.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

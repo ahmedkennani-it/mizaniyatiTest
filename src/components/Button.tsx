@@ -15,6 +15,7 @@ import { Txt } from './Txt';
 import type { IconName } from './Icon';
 import { useTheme } from '../theme';
 import type { Theme } from '../theme';
+import { shadowColors } from '../theme/tokens';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'gradient';
 export type ButtonSize = 'md' | 'lg';
@@ -121,7 +122,11 @@ function variantPalette(theme: Theme, variant: ButtonVariant) {
         text: theme.colors.textPrimary,
       };
     case 'danger':
-      return { background: theme.colors.danger, border: theme.colors.danger, text: '#FFFFFF' };
+      return {
+        background: theme.colors.danger,
+        border: theme.colors.danger,
+        text: theme.onAccent.text,
+      };
     case 'gradient':
       return { background: 'transparent', border: 'transparent', text: theme.colors.primaryText };
     case 'primary':
@@ -147,7 +152,7 @@ const styles = StyleSheet.create({
   },
   // Teal drop shadow for primary/gradient CTAs (reads best in light mode; harmless on dark).
   shadow: {
-    shadowColor: '#0D9488',
+    shadowColor: shadowColors.primary,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 14,

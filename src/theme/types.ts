@@ -1,4 +1,4 @@
-import { gradients, radius, spacing } from './tokens';
+import { gradients, onAccent, radius, shadowColors, spacing } from './tokens';
 
 export type ColorScheme = 'light' | 'dark';
 
@@ -30,12 +30,22 @@ export interface ColorTokens {
   border: string;
   textPrimary: string;
   textSecondary: string;
+  textTertiary: string;
   primary: string;
   primaryText: string;
   success: string;
   warning: string;
   danger: string;
 }
+
+export interface BannerTokens {
+  warningBg: string;
+  warningBorder: string;
+  warningText: string;
+}
+
+export type OnAccentTokens = typeof onAccent;
+export type ShadowTokens = typeof shadowColors;
 
 export interface TypographySizes {
   xs: number;
@@ -60,6 +70,9 @@ export interface Theme {
   colors: ColorTokens;
   accents: AccentTokens;
   gradients: GradientTokens;
+  onAccent: OnAccentTokens;
+  shadows: ShadowTokens;
+  banner: BannerTokens;
   fonts: FontTokens;
   spacing: typeof spacing;
   radius: typeof radius;

@@ -109,7 +109,7 @@ export function HomeScreen() {
     label: entry.categoryName,
     value: entry.totalMinor,
     valueLabel: num(entry.totalMinor),
-    accent: categoryAccent(categoryById.get(entry.categoryId)?.color ?? '#0D9488'),
+    accent: categoryAccent(categoryById.get(entry.categoryId)?.color),
   }));
 
   const stepMonth = (delta: number) => {
@@ -232,7 +232,7 @@ export function HomeScreen() {
               <ListRow
                 key={transaction.id}
                 icon={categoryIconName(category?.icon ?? 'ellipsis')}
-                accent={categoryAccent(category?.color ?? '#0D9488')}
+                accent={categoryAccent(category?.color)}
                 title={transaction.note || category?.name || dateLabel}
                 subtitle={member ? `${dateLabel} · ${member.name}` : dateLabel}
                 value={formatMoney(signedMinor, transaction.currencyCode, language)}

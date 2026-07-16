@@ -25,7 +25,11 @@ export const lightColors = {
   surfaceAlt: '#EEF2F6',
   border: '#E2E8F0',
   textPrimary: '#0F172A',
-  textSecondary: '#475569',
+  textSecondary: '#334155',
+  // The design's third text tone. AA-safe on `surface`/`background` (4.76:1 / 4.55:1) but **not**
+  // on `surfaceAlt` (4.23:1) — reserve it for text on white/background grounds. `textSecondary`
+  // is the safe choice everywhere else.
+  textTertiary: '#64748B',
   primary: '#0F766E',
   primaryText: '#FFFFFF',
   success: '#1E7B34',
@@ -40,6 +44,9 @@ export const darkColors = {
   border: '#334155',
   textPrimary: '#F1F5F9',
   textSecondary: '#94A3B8',
+  // Dark counterpart of light's `textTertiary`, carrying the same constraint: AA on `surface`
+  // (4.80:1) and `background` (6.18:1), but not on `surfaceAlt` (4.24:1).
+  textTertiary: '#8595AC',
   primary: '#5EEAD4',
   primaryText: '#04312C',
   success: '#79D98C',
@@ -106,6 +113,50 @@ export const darkAccents = {
   coral: { solid: '#FB7185', wash: '#4C1D24', ink: '#FB7185' },
   purple: { solid: '#C4B5FD', wash: '#2E1065', ink: '#C4B5FD' },
   blue: { solid: '#93C5FD', wash: '#1E3A8A', ink: '#93C5FD' },
+} as const;
+
+// ── On-accent ────────────────────────────────────────────────────────────────
+// Text/decoration sitting on a saturated brand ground — a gradient hero card, the FAB, a solid
+// accent tile. The ground there is the accent itself, not `surface`, so these stay fixed across
+// light and dark, unlike the `colors` tokens. White-on-teal/purple clears AA at every alpha below.
+export const onAccent = {
+  text: '#FFFFFF',
+  textStrong: 'rgba(255,255,255,0.9)',
+  textMuted: 'rgba(255,255,255,0.85)',
+  textSubtle: 'rgba(255,255,255,0.8)',
+  textFaint: 'rgba(255,255,255,0.75)',
+  icon: 'rgba(255,255,255,0.6)',
+  /** Chip/divider fill on an accent ground. */
+  fill: 'rgba(255,255,255,0.22)',
+  /** Barely-there decorative blob. */
+  veil: 'rgba(255,255,255,0.08)',
+  /** Dark ink for a light badge sitting on a dark accent ground (e.g. the voice card's "NOUVEAU"). */
+  ink: '#04312C',
+  /** Gold used for the corner glyph of the Ramadan/tontine hero cards. */
+  accentGold: '#FCD34D',
+} as const;
+
+// ── Shadows ──────────────────────────────────────────────────────────────────
+// iOS shadow colors. `neutral` is the mockup's soft card elevation; `primary` tints the shadow
+// under teal-filled controls (primary Button, FAB) so it reads as a glow rather than dirt.
+export const shadowColors = {
+  neutral: '#0F172A',
+  primary: '#0D9488',
+} as const;
+
+// ── Banner tones ─────────────────────────────────────────────────────────────
+// `AlertBanner`'s rose warning card from the mockup. Kept as its own token family rather than
+// derived from `accents.coral`, whose `wash` is too saturated to carry body text at AA.
+export const lightBanner = {
+  warningBg: '#FFF1F2',
+  warningBorder: '#FECDD3',
+  warningText: '#9F1239',
+} as const;
+
+export const darkBanner = {
+  warningBg: '#4C1D24',
+  warningBorder: '#7F1D2E',
+  warningText: '#FDA4AF',
 } as const;
 
 // ── Gradients ────────────────────────────────────────────────────────────────

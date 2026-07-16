@@ -30,10 +30,10 @@ export function AlertBanner({
   const isWarning = tone === 'warning';
   const palette = isWarning
     ? {
-        bg: theme.colorScheme === 'dark' ? '#4C1D24' : '#FFF1F2',
-        border: theme.colorScheme === 'dark' ? '#7F1D2E' : '#FECDD3',
+        bg: theme.banner.warningBg,
+        border: theme.banner.warningBorder,
         icon: theme.accents.coral.solid,
-        text: theme.colorScheme === 'dark' ? '#FDA4AF' : '#9F1239',
+        text: theme.banner.warningText,
       }
     : {
         bg: theme.accents.teal.wash,

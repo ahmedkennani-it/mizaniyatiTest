@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, View, ViewProps } from 'react-native';
 
 import { useTheme } from '../theme';
+import { shadowColors } from '../theme/tokens';
 
 export interface CardProps extends ViewProps {
   /** Adds the design's soft drop shadow (used for raised cards like list/summary cards). */
@@ -43,7 +44,7 @@ export function Card({
 // light mode — shadows read as muddy on the dark surface, where the border carries separation.
 const styles = StyleSheet.create({
   shadow: {
-    shadowColor: '#0F172A',
+    shadowColor: shadowColors.neutral,
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.12,
     shadowRadius: 18,

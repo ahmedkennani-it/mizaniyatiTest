@@ -34,8 +34,6 @@ export interface BalanceHeroCardProps {
   cornerColor?: string;
 }
 
-const ON_GRADIENT = '#FFFFFF';
-
 /**
  * The gradient balance hero: label, a large LTR amount (localized digits) + currency code, an
  * optional progress bar, and two footer stats. The amount is formatted from integer minor units via
@@ -51,12 +49,14 @@ export function BalanceHeroCard({
   footerStart,
   footerEnd,
   gradient = 'balance',
-  barColor = ON_GRADIENT,
+  barColor,
   cornerIcon,
   cornerColor,
 }: BalanceHeroCardProps) {
   const { theme } = useTheme();
   const { i18n } = useTranslation();
+  const onAccent = theme.onAccent;
+  const barFill = barColor ?? onAccent.text;
   const font = useAppFont();
   const language = (i18n.language === 'ar' ? 'ar' : 'fr') as SupportedLanguage;
 
@@ -81,16 +81,16 @@ export function BalanceHeroCard({
           width: 160,
           height: 160,
           borderRadius: 80,
-          backgroundColor: 'rgba(255,255,255,0.08)',
+          backgroundColor: onAccent.veil,
         }}
       />
       {cornerIcon ? (
         <View style={{ position: 'absolute', top: 16, end: 18 }}>
-          <Icon name={cornerIcon} size={30} color={cornerColor ?? '#FCD34D'} />
+          <Icon name={cornerIcon} size={30} color={cornerColor ?? onAccent.accentGold} />
         </View>
       ) : null}
 
-      <Txt size="sm" color="rgba(255,255,255,0.85)">
+      <Txt size="sm" color={onAccent.textMuted}>
         {label}
       </Txt>
 
@@ -103,13 +103,13 @@ export function BalanceHeroCard({
         }}
       >
         <Txt
-          color={ON_GRADIENT}
+          color={onAccent.text}
           size={42}
           style={{ fontFamily: font.extrabold, letterSpacing: -0.5 }}
         >
           {amountText}
         </Txt>
-        <Txt color="rgba(255,255,255,0.9)" weight="semibold" size="md">
+        <Txt color={onAccent.textStrong} weight="semibold" size="md">
           {currencyCode}
         </Txt>
       </View>
@@ -119,7 +119,7 @@ export function BalanceHeroCard({
           style={{
             height: 7,
             borderRadius: theme.radius.full,
-            backgroundColor: 'rgba(255,255,255,0.22)',
+            backgroundColor: onAccent.fill,
             marginTop: theme.spacing.md,
             overflow: 'hidden',
           }}
@@ -129,7 +129,7 @@ export function BalanceHeroCard({
               width: `${Math.max(0, Math.min(1, progress)) * 100}%`,
               height: '100%',
               borderRadius: theme.radius.full,
-              backgroundColor: barColor,
+              backgroundColor: barFill,
               alignSelf: 'flex-start',
             }}
           />
@@ -146,10 +146,10 @@ export function BalanceHeroCard({
         >
           {footerStart ? (
             <View>
-              <Txt size="xs" color="rgba(255,255,255,0.8)">
+              <Txt size="xs" color={onAccent.textSubtle}>
                 {footerStart.label}
               </Txt>
-              <Txt weight="semibold" size="sm" color={ON_GRADIENT}>
+              <Txt weight="semibold" size="sm" color={onAccent.text}>
                 {footerStart.value}
               </Txt>
             </View>
@@ -158,10 +158,10 @@ export function BalanceHeroCard({
           )}
           {footerEnd ? (
             <View style={{ alignItems: 'flex-end' }}>
-              <Txt size="xs" color="rgba(255,255,255,0.8)">
+              <Txt size="xs" color={onAccent.textSubtle}>
                 {footerEnd.label}
               </Txt>
-              <Txt weight="semibold" size="sm" color={ON_GRADIENT}>
+              <Txt weight="semibold" size="sm" color={onAccent.text}>
                 {footerEnd.value}
               </Txt>
             </View>

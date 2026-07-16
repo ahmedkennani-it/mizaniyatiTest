@@ -97,7 +97,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
           alignItems: 'center',
           justifyContent: 'center',
           marginTop: -26,
-          shadowColor: '#0D9488',
+          shadowColor: theme.shadows.primary,
           shadowOffset: { width: 0, height: 12 },
           shadowOpacity: 0.5,
           shadowRadius: 16,

@@ -73,7 +73,7 @@ export function OnboardingLanguageCountryScreen({
             justifyContent: 'center',
           }}
         >
-          <Txt weight="bold" size={30} color="#FFFFFF">
+          <Txt weight="bold" size={30} color={theme.onAccent.text}>
             م
           </Txt>
         </View>
