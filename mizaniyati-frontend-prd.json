@@ -187,7 +187,7 @@
       "title": "Formats locaux des nombres, dates et devises",
       "description": "En tant que utilisateur d'un marche donne, je veux voir les montants et dates comme chez moi, afin de les lire sans effort.",
       "acceptanceCriteria": [
-        "Etant donne la locale fr-MA, alors les milliers sont separes par une espace insecable et la decimale par une virgule",
+        "Etant donne la locale fr-MA, alors les milliers sont separes par un point et la decimale par une virgule (convention CLDR du francais marocain ; le francais metropolitain fr-FR groupe par une espace insecable, ce n'est pas le format retenu)",
         "Etant donne la locale en-FR/en-US, alors le format anglo-saxon est applique (virgule milliers, point decimal, symbole en prefixe)",
         "Etant donne la locale ar, alors le separateur de milliers arabe est utilise et le nom de devise localise",
         "Etant donne les dates, alors les mois sont affiches dans la langue active (Juin / يونيو / June)",

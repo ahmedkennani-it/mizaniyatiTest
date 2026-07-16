@@ -102,11 +102,10 @@ Suivi des itérations. Portée : **uniquement la phase 1** de
   marocain — le marché de lancement. J'avais d'abord basculé sur `fr-FR` pour
   respecter la lettre du critère US-062 (« espace insécable ») ; décision inverse
   prise le 2026-07-16, retour à `fr-MA`.
-- 🚩 **Le texte du critère US-062 contredit désormais l'implémentation** : il exige
-  « les milliers sont séparés par une espace insécable ». Le comportement voulu est
-  le point. **Le critère du PRD est à corriger** — sans quoi la tâche 1.6 est
-  marquée `done: true` alors qu'elle échoue à son propre critère écrit. Les deux
-  locales ne diffèrent que sur ce séparateur (dates et noms de mois identiques).
+- ✅ Le critère US-062 du PRD a été corrigé en conséquence : il demandait une espace
+  insécable et contredisait le comportement retenu. Il spécifie désormais le point,
+  en notant explicitement que le format `fr-FR` n'est pas celui retenu — 1.6 est
+  donc `done: true` en accord avec son critère écrit.
 - Le test existant `formatMoney` s'appelait « period thousands separator » et
   passait par accident : `/1.234,50.*MAD/` — le `.` du regex matchait l'espace.
   Nouveau `localeFormats.test.ts` qui assère les **codepoints réels** des
