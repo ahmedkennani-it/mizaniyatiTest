@@ -3,6 +3,7 @@ export { CategoriesScreen } from './CategoriesScreen';
 export { TontineScreen } from './TontineScreen';
 export { ProfileScreen } from './ProfileScreen';
 export { PlaceholderScreen } from './PlaceholderScreen';
+export { TransfersScreen } from './TransfersScreen';
 export type { PlaceholderScreenProps } from './PlaceholderScreen';
 export { AddExpenseForm } from './AddExpenseForm';
 export type { AddExpenseFormProps } from './AddExpenseForm';

@@ -31,6 +31,7 @@ export const en: TranslationSchema = {
     home: 'Home',
     categories: 'Categories',
     tontine: 'Tontine',
+    transfers: 'Transfers',
     profile: 'Profile',
     addTransaction: 'Add a transaction',
   },

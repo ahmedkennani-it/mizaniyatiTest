@@ -43,6 +43,13 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 2.4 | Contraste et mise à l'échelle des textes | ✅ done |
 | 2.5 | Libellés pour lecteurs d'écran | ✅ done |
 
+## État des tâches Phase 3 (Shell de navigation)
+
+| Tâche | Titre | Statut |
+| --- | --- | --- |
+| 3.1 | Navigation et shell applicatif | ⚠️ `done: false` — exige expo-router, absent du projet |
+| 3.2 | Barre de navigation principale | ✅ done |
+
 ## Journal
 
 ### Itération 1 — Tâche 1.1 (Scaffold Expo + TypeScript) ✅
@@ -363,6 +370,39 @@ de mes propres erreurs de la 2.1.
   d'assertion dans `screenReaderLabels.test.tsx` — « absent d'une requête normale mais
   présent avec le drapeau » **est** la preuve du masquage, pas un proxy.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1158/1158, 101 suites** ✅.
+
+### Itération 14 — Tâche 3.2 (Barre de navigation principale) ✅ / 3.1 ⚠️ ouverte
+
+- 🚨 **3.1 laissée `done: false`** : son critère exige « expo-router configuré avec un
+  layout à onglets », or **expo-router n'est pas installé et ne l'a jamais été** —
+  l'app utilise `@react-navigation/bottom-tabs` directement. `CLAUDE.md` annonce
+  pourtant expo-router comme stack. Options présentées (garder React Navigation et
+  corriger le critère / migrer / reporter) → **choix : reporter**, rien n'est tranché
+  à la place de l'utilisateur. À noter : expo-router est une couche de routage **par
+  fichiers construite au-dessus de React Navigation** ; pour l'utilisateur final le
+  shell à onglets est identique. La migration toucherait le point d'entrée,
+  l'assemblage des providers et toutes les suites montant `NavigationContainer`.
+- ✅ **3.2 : du vrai code manquait.** Les 4 onglets étaient codés en dur dans
+  `RootNavigator`.
+  - **Onglet selon le marché** (nouveau) : `src/market/marketTabs.ts` décide de la
+    composition de la barre. Les marchés à tontine (MA, DZ, TN, EG, SN, CI, CM, ML)
+    gardent Tontine ; les marchés diaspora (FR, ES, BE…) reçoivent **Transferts** à la
+    même place. Listé **par pays** et non déduit de la langue ou de la devise : le
+    français est parlé des deux côtés de ce partage, et l'euro couvre les deux cas.
+  - **Mode senior** (nouveau) : la barre tombe à Accueil + Profil. Rien n'est caché —
+    le bouton d'ajout central et tous les écrans restent joignables depuis le
+    dashboard ; quatre petites cibles alignées sont précisément ce que le mode senior
+    existe pour éviter.
+  - **Cibles tactiles** : les onglets n'avaient **aucune hauteur minimale**. Elles
+    suivent maintenant `theme.minTouchTarget` — 44 pt, 56 en senior, comme l'exige la
+    règle métier du critère.
+  - `TransfersScreen` : placeholder tenant le créneau jusqu'à la phase 11.
+  - `App.tsx` conserve désormais le `countryCode` des réglages (il les chargeait déjà
+    sans les garder) et le passe au navigateur.
+- Piège de test : `getAllByRole('button')` ramasse aussi les boutons de l'écran affiché
+  sous la barre (header, sélecteur de mois). Les assertions sont cadrées sur la barre
+  via `within(getByTestId('tab-bar'))`.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1189/1189, 103 suites** ✅.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

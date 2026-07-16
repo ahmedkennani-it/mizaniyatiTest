@@ -42,6 +42,8 @@ function AppNavigation() {
   const { loading: lockLoading, locked } = useAppLock();
   const [ready, setReady] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  // Drives the Tontine/Transferts tab slot (US-013); `undefined` until settings load.
+  const [countryCode, setCountryCode] = useState<string | undefined>(undefined);
   // Bundled Outfit (latin) + IBM Plex Sans Arabic (arabic) faces — the family names here must match
   // `fontFamilies` in `src/theme/tokens.ts`, which `Txt`/`useAppFont` reference. `useFonts` returns
   // `true` immediately under jest-expo (mocked), so tests don't stall on the font gate below.
@@ -69,6 +71,7 @@ function AppNavigation() {
           setReady(true);
           return;
         }
+        setCountryCode(settings.countryCode);
         // A previously completed onboarding's language choice takes precedence over the
         // device-detected one `LanguageProvider` initializes with, so it persists across restarts.
         if (settings.languageCode !== language) {
@@ -98,7 +101,7 @@ function AppNavigation() {
       <EntitlementsGate>
         <ExpenseEntryProvider>
           <NavigationContainer theme={toNavigationTheme(theme)}>
-            <RootNavigator />
+            <RootNavigator countryCode={countryCode} />
             <StatusBar style={theme.colorScheme === 'dark' ? 'light' : 'dark'} />
           </NavigationContainer>
         </ExpenseEntryProvider>

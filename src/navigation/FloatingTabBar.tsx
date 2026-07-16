@@ -15,6 +15,7 @@ const TAB_ICONS: Record<string, IconName> = {
   home: 'house',
   categories: 'layout-grid',
   tontine: 'handshake',
+  transfers: 'plane',
   profile: 'user',
 };
 
@@ -55,7 +56,15 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
         accessibilityState={focused ? { selected: true } : {}}
         accessibilityLabel={label}
         onPress={onPress}
-        style={{ flex: 1, alignItems: 'center', gap: 4, paddingVertical: 6 }}
+        // 44pt minimum, 56 in senior mode — the bar's own targets, not just the header's.
+        style={{
+          flex: 1,
+          minHeight: theme.minTouchTarget,
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 4,
+          paddingVertical: 6,
+        }}
       >
         <Icon
           name={TAB_ICONS[route.name] ?? 'house'}
@@ -84,7 +93,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
       accessibilityRole="button"
       accessibilityLabel={t('nav.addTransaction')}
       onPress={() => openEntry()}
-      style={{ width: 64, alignItems: 'center' }}
+      style={{ width: 64, minHeight: theme.minTouchTarget, alignItems: 'center' }}
     >
       <LinearGradient
         colors={theme.gradients.fab as [string, string, ...string[]]}
@@ -111,6 +120,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
 
   return (
     <View
+      testID="tab-bar"
       style={{
         position: 'absolute',
         start: 0,

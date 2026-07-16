@@ -2,27 +2,53 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useTranslation } from 'react-i18next';
 
 import { FloatingTabBar } from './FloatingTabBar';
-import { CategoriesScreen, HomeScreen, ProfileScreen, TontineScreen } from '../screens';
+import { DEFAULT_COUNTRY_CODE } from '../onboarding';
+import { resolveTabs } from '../market';
+import type { TabName } from '../market';
+import {
+  CategoriesScreen,
+  HomeScreen,
+  ProfileScreen,
+  TontineScreen,
+  TransfersScreen,
+} from '../screens';
 import { useTheme } from '../theme';
 
 export type RootTabParamList = {
   home: undefined;
   categories: undefined;
   tontine: undefined;
+  transfers: undefined;
   profile: undefined;
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
+const TAB_SCREENS: Record<TabName, React.ComponentType> = {
+  home: HomeScreen,
+  categories: CategoriesScreen,
+  tontine: TontineScreen,
+  transfers: TransfersScreen,
+  profile: ProfileScreen,
+};
+
+export interface RootNavigatorProps {
+  /** Market the household picked at onboarding; drives the Tontine/Transferts slot (US-013). */
+  countryCode?: string;
+}
+
 /**
- * Bottom-tab shell (Accueil/Catégories/Tontine/Profil) rendered through the custom
- * `FloatingTabBar` (floating surface bar + center gradient FAB). React Navigation still reorders the
- * tabs for RTL from `I18nManager.isRTL`; the FAB opens the global expense-entry sheet. The bar is
- * absolutely positioned, so tab screens add bottom padding (`AppScreen bottomInset`) to clear it.
+ * Bottom-tab shell rendered through the custom `FloatingTabBar` (floating surface bar + center
+ * gradient FAB). Which tabs exist is a market and accessibility decision, not a layout one, so it
+ * comes from `resolveTabs`: diaspora markets get Transferts where tontine markets get Tontine, and
+ * senior mode drops to two large targets. React Navigation reorders the tabs for RTL from
+ * `I18nManager.isRTL`; the FAB opens the global expense-entry sheet and stays centered either way.
+ * The bar is absolutely positioned, so tab screens add bottom padding (`AppScreen bottomInset`).
  */
-export function RootNavigator() {
+export function RootNavigator({ countryCode = DEFAULT_COUNTRY_CODE }: RootNavigatorProps) {
   const { t } = useTranslation();
-  const { theme } = useTheme();
+  const { theme, seniorMode } = useTheme();
+  const tabs = resolveTabs(countryCode, seniorMode);
 
   return (
     <Tab.Navigator
@@ -32,22 +58,14 @@ export function RootNavigator() {
         sceneStyle: { backgroundColor: theme.colors.background },
       }}
     >
-      <Tab.Screen name="home" component={HomeScreen} options={{ tabBarLabel: t('nav.home') }} />
-      <Tab.Screen
-        name="categories"
-        component={CategoriesScreen}
-        options={{ tabBarLabel: t('nav.categories') }}
-      />
-      <Tab.Screen
-        name="tontine"
-        component={TontineScreen}
-        options={{ tabBarLabel: t('nav.tontine') }}
-      />
-      <Tab.Screen
-        name="profile"
-        component={ProfileScreen}
-        options={{ tabBarLabel: t('nav.profile') }}
-      />
+      {tabs.map((tab) => (
+        <Tab.Screen
+          key={tab}
+          name={tab}
+          component={TAB_SCREENS[tab]}
+          options={{ tabBarLabel: t(`nav.${tab}`) }}
+        />
+      ))}
     </Tab.Navigator>
   );
 }

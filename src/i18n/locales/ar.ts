@@ -31,6 +31,7 @@ export const ar: TranslationSchema = {
     home: 'الرئيسية',
     categories: 'الفئات',
     tontine: 'الدارة',
+    transfers: 'التحويلات',
     profile: 'الملف الشخصي',
     addTransaction: 'إضافة عملية',
   },

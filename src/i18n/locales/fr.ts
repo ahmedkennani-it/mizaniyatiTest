@@ -29,6 +29,7 @@ export const fr = {
     home: 'Accueil',
     categories: 'Catégories',
     tontine: 'Tontine',
+    transfers: 'Transferts',
     profile: 'Profil',
     addTransaction: 'Ajouter une opération',
   },
