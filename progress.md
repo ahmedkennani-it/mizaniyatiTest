@@ -55,7 +55,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | Tâche | Titre | Statut |
 | --- | --- | --- |
 | 4.1 | Écran de bienvenue | ✅ done |
-| 4.2 | Choix de la langue | ⏳ |
+| 4.2 | Choix de la langue | ✅ done |
 | 4.3 | Choix du pays / marché et devise | ⏳ |
 | 4.4 | Écran de confidentialité | ⏳ |
 | 4.5 | Création du foyer | ⏳ |
@@ -436,6 +436,35 @@ de mes propres erreurs de la 2.1.
   l'itération 8 courait après avec le défaut d'1 s — suffisant à vide, trop juste en
   parallèle. Timeout explicite + commentaire. 3 runs complets verts d'affilée.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1214/1214, 105 suites** ✅.
+
+### Itération 16 — Tâche 4.2 (Choix de la langue à l'onboarding) ✅
+- 🐛 **L'anglais était absent du sélecteur** : `OnboardingLanguageCountryScreen`
+  listait `fr` et `ar` en dur, alors que le catalogue `en` est complet et que
+  l'anglais est une langue v1. Un utilisateur sur téléphone anglophone voyait
+  l'app en anglais sans pouvoir le choisir.
+- 🐛 **Bien pire dans `ProfileScreen`** : la bascule faisait
+  `language === 'fr' ? 'ar' : 'fr'`. Depuis l'anglais elle envoyait vers le
+  français, et **l'anglais devenait définitivement inatteignable**. Combiné à la
+  détection de locale, un anglophone qui touchait la ligne une fois perdait sa langue
+  pour de bon. La ligne **cycle** désormais sur les trois (`nextLanguage`, qui boucle).
+- 🐛 `ProfileScreen` affichait aussi « العربية » comme nom de langue à un anglophone
+  (le repli du ternaire). Corrigé via `languageOption`.
+- Les deux écrans dupliquaient la liste des langues, tous deux en oubliant l'anglais →
+  `src/i18n/languageOptions.ts`, **dérivé de `SUPPORTED_LANGUAGES`** : ajouter une
+  langue est maintenant une seule édition.
+- Noms **natifs et traduits** : le natif (« العربية ») est ce qu'un locuteur cherche
+  dans une liste ; le traduit (« Arabe ») la rend lisible à qui ne déchiffre pas le
+  script. Les noms natifs sont identiques dans les 3 catalogues — c'est leur définition,
+  et un test le fige.
+- Mention des packs à venir (Darija, Tamazight, Türkçe), non sélectionnable.
+- ⚠️ **Test corrigé, pas le code** : mon test exigeait « Darija » en toutes lettres
+  latines dans le catalogue **arabe**. Un lecteur arabe attend « الدارجة » — c'était
+  le test qui figeait de la mauvaise i18n. Chaque catalogue est vérifié dans son script.
+- 🐛 **Pollution d'état entre tests** exposée par le cycle : `i18n` est un singleton
+  global ; le test RTL d'`App` le laissait désormais en anglais et décidait de la copie
+  vue par le test suivant. `afterEach` remet le français.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1234/1234, 107 suites** ✅
+  (2 runs complets).
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

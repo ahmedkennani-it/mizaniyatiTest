@@ -24,7 +24,7 @@ import {
 import { getDatabase } from '../db/client';
 import { getNotificationSettings, listMembers, setBudgetAlertsEnabled } from '../db/repositories';
 import type { Member } from '../db/repositories';
-import { useLanguage } from '../i18n';
+import { languageOption, nextLanguage, useLanguage } from '../i18n';
 import { DEFAULT_CURRENCY_CODE } from '../money';
 import { useTheme } from '../theme';
 
@@ -113,7 +113,7 @@ export function ProfileScreen() {
   }
 
   const householdName = members[0]?.name ?? t('home.household');
-  const languageName = language === 'fr' ? t('language.french') : t('language.arabic');
+  const languageName = t(languageOption(language).translatedNameKey);
 
   return (
     <AppScreen scroll bottomInset={110} contentStyle={{ gap: theme.spacing.md }}>
@@ -145,7 +145,7 @@ export function ProfileScreen() {
           accent="teal"
           title={t('language.label')}
           value={languageName}
-          onPress={() => setLanguage(language === 'fr' ? 'ar' : 'fr')}
+          onPress={() => setLanguage(nextLanguage(language))}
           chevron
         />
         <ListRow

@@ -14,6 +14,8 @@ jest.mock('expo-sqlite', () => ({
 import App from '../App';
 // eslint-disable-next-line import/first -- must come after jest.mock('expo-sqlite', ...) above
 import { __resetDatabaseForTests } from '../src/db/client';
+// eslint-disable-next-line import/first -- must come after the jest.mock(...) calls above
+import i18n from '../src/i18n/i18n';
 
 async function goToProfileTab() {
   await fireEvent.press(screen.getByText('Profil'));
@@ -31,6 +33,12 @@ async function completeOnboarding() {
 }
 
 describe('App', () => {
+  // `i18n` is a global singleton: a test that leaves it in another language would otherwise decide
+  // what the next test's onboarding copy says.
+  afterEach(async () => {
+    await i18n.changeLanguage('fr');
+  });
+
   beforeEach(() => {
     // The mocked `expo-sqlite` returns a fresh fake DB per `openDatabaseSync` call, but
     // `client.ts` memoizes that call — reset the memo so each test starts from a clean DB
@@ -104,7 +112,7 @@ describe('App', () => {
     expect(screen.getByText(/Thème : sombre · senior/)).toBeTruthy();
   });
 
-  it('switches to Arabic and back to French, flipping RTL along the way (tab labels included)', async () => {
+  it('cycles through the three languages, flipping RTL along the way (tab labels included)', async () => {
     const allowRTLSpy = jest.spyOn(I18nManager, 'allowRTL');
     const forceRTLSpy = jest.spyOn(I18nManager, 'forceRTL');
 
@@ -112,7 +120,8 @@ describe('App', () => {
     await completeOnboarding();
     await goToProfileTab();
 
-    // Language is a toggle row showing the current language name; pressing it flips fr<->ar.
+    // The language row shows the current language and cycles fr → ar → en → fr on press. It has
+    // to wrap: a two-way toggle left English unreachable (US-002).
     await fireEvent.press(screen.getByText('Français'));
     expect(await screen.findByText('العربية')).toBeTruthy();
     expect(screen.getAllByText('الرئيسية').length).toBeGreaterThan(0); // Arabic home tab label
@@ -120,10 +129,14 @@ describe('App', () => {
     expect(forceRTLSpy).toHaveBeenLastCalledWith(true);
 
     await fireEvent.press(screen.getByText('العربية'));
-    expect(await screen.findByText('Français')).toBeTruthy();
-    expect(screen.getAllByText('Accueil').length).toBeGreaterThan(0);
+    expect(await screen.findByText('English')).toBeTruthy();
+    expect(screen.getAllByText('Home').length).toBeGreaterThan(0);
     expect(allowRTLSpy).toHaveBeenLastCalledWith(false);
     expect(forceRTLSpy).toHaveBeenLastCalledWith(false);
+
+    await fireEvent.press(screen.getByText('English'));
+    expect(await screen.findByText('Français')).toBeTruthy();
+    expect(screen.getAllByText('Accueil').length).toBeGreaterThan(0);
 
     allowRTLSpy.mockRestore();
     forceRTLSpy.mockRestore();

@@ -16,9 +16,13 @@ export const en: TranslationSchema = {
   },
   language: {
     label: 'Language',
-    french: 'Français',
-    arabic: 'العربية',
+    nativeFrench: 'Français',
+    nativeArabic: 'العربية',
+    nativeEnglish: 'English',
+    french: 'French',
+    arabic: 'Arabic',
     english: 'English',
+    additionalPacks: 'Additional packs coming: Darija, Tamazight, Türkçe',
   },
   expense: {
     label: 'Expense label',

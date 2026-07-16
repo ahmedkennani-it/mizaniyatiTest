@@ -14,9 +14,16 @@ export const fr = {
   },
   language: {
     label: 'Langue',
+    // Native names: what a speaker looks for in a list. Identical in every catalog by definition.
+    nativeFrench: 'Français',
+    nativeArabic: 'العربية',
+    nativeEnglish: 'English',
+    // The same languages named in the *active* language, so the list also reads to someone who
+    // can't yet decipher the native script.
     french: 'Français',
-    arabic: 'العربية',
-    english: 'English',
+    arabic: 'Arabe',
+    english: 'Anglais',
+    additionalPacks: 'Packs additionnels à venir : Darija, Tamazight, Türkçe',
   },
   expense: {
     label: 'Libellé de la dépense',

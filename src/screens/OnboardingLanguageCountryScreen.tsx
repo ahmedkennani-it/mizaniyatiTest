@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { AppScreen, Avatar, Button, Icon, ListRow, TrustChip, Txt } from '../components';
 import { ensureAppReady, getDatabase, saveLanguageCountry } from '../db';
-import { useLanguage } from '../i18n';
+import { LANGUAGE_OPTIONS, useLanguage } from '../i18n';
 import { DEFAULT_COUNTRY_CODE, SUPPORTED_COUNTRIES } from '../onboarding';
 import { useTheme } from '../theme';
 
@@ -50,11 +50,6 @@ export function OnboardingLanguageCountryScreen({
     onComplete();
   }
 
-  const languages: { code: 'fr' | 'ar'; label: string }[] = [
-    { code: 'fr', label: t('language.french') },
-    { code: 'ar', label: t('language.arabic') },
-  ];
-
   function selectedBorder(active: boolean) {
     return active ? { borderWidth: 2, borderColor: theme.colors.primary } : undefined;
   }
@@ -90,23 +85,30 @@ export function OnboardingLanguageCountryScreen({
       <Txt weight="semibold" size="md">
         {t('onboarding.languageLabel')}
       </Txt>
-      {languages.map((lang) => {
-        const active = language === lang.code;
+      {LANGUAGE_OPTIONS.map((option) => {
+        const active = language === option.code;
+        const nativeName = t(option.nativeNameKey);
         return (
           <ListRow
-            key={lang.code}
-            leading={<Avatar name={lang.label} size={38} accent={active ? 'teal' : 'purple'} />}
-            title={lang.label}
+            key={option.code}
+            leading={<Avatar name={nativeName} size={38} accent={active ? 'teal' : 'purple'} />}
+            title={nativeName}
+            subtitle={t(option.translatedNameKey)}
             trailing={
               active ? (
                 <Icon name="check-circle" size={22} color={theme.colors.primary} />
               ) : undefined
             }
-            onPress={() => setLanguage(lang.code)}
+            onPress={() => setLanguage(option.code)}
             style={selectedBorder(active)}
           />
         );
       })}
+
+      {/* Named but not selectable: US-002 wants the roadmap visible without implying it ships. */}
+      <Txt size="xs" color={theme.colors.textSecondary}>
+        {t('language.additionalPacks')}
+      </Txt>
 
       {/* Country / market */}
       <Txt weight="semibold" size="md">

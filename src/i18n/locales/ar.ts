@@ -16,9 +16,13 @@ export const ar: TranslationSchema = {
   },
   language: {
     label: 'اللغة',
-    french: 'Français',
+    nativeFrench: 'Français',
+    nativeArabic: 'العربية',
+    nativeEnglish: 'English',
+    french: 'الفرنسية',
     arabic: 'العربية',
-    english: 'English',
+    english: 'الإنجليزية',
+    additionalPacks: 'حزم إضافية قادمة: الدارجة، الأمازيغية، التركية',
   },
   expense: {
     label: 'بيان المصروف',
