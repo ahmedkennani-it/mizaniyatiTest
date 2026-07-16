@@ -61,6 +61,19 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 4.5 | Création du foyer | ✅ done |
 | 4.6 | Connexion à un compte existant | 🚨 `done: false` — bloquée par des dépendances de phase 17 |
 
+## État des tâches Phase 5 (Dashboard — Solde du mois)
+
+| Tâche | Titre | Statut |
+| --- | --- | --- |
+| 5.1 | Hero solde du mois restant | ✅ done |
+| 5.2 | Sélecteur de mois | ⏳ |
+| 5.3 | Anneau de répartition par catégorie | ⏳ |
+| 5.4 | Dernières transactions | ⏳ |
+| 5.5 | État vide du dashboard | ⏳ |
+| 5.6 | Chip de confiance « saisie manuelle » | ⏳ |
+| 5.7 | Aperçu des objectifs | ⏳ |
+| 5.8 | Bandeau de découverte vocale | ⏳ |
+
 ## Journal
 
 ### Itération 1 — Tâche 1.1 (Scaffold Expo + TypeScript) ✅
@@ -567,6 +580,22 @@ d'ordonnancement du PRD**, pas un manque de travail.
 **assouplir la garde réseau** (`src/db/__tests__/offlineStorage.test.ts`) pour le seul
 module de sauvegarde — elle protège le garde-fou « aucune connexion bancaire », pas une
 interdiction éternelle du réseau.
+
+### Itération 21 — Tâche 5.1 (Hero solde du mois) ✅
+- 🐛 **La devise du foyer était ignorée** : le dashboard interpolait
+  `DEFAULT_CURRENCY_CODE` (MAD) partout. Un foyer en France aurait vu son budget en
+  dirhams. Il lit désormais `households[0].currencyCode`.
+- ⚠️ **Le critère « solde négatif → couleur d'alerte (coral) » ne peut pas être pris au
+  pied de la lettre** : du texte coral sur le dégradé teal donne **1.49:1** — invisible.
+  Même la rose la plus pâle n'atteint que 3.88. C'est donc **la carte** qui passe en
+  alerte : nouveau dégradé `negative` (`#BE123C → #E11D48`) sur lequel le blanc reste
+  lisible (6.29 / 4.70). Le test de contraste de la 2.4 a validé le nouveau dégradé
+  **tout seul** — il itère sur l'ensemble des dégradés.
+- Piège de test évité : `/5.000/` matchait **à la fois** le solde et le total des
+  revenus — le `.` de regex, exactement le piège trouvé en 1.6. Les assertions sont
+  cadrées sur la carte (`within(getByTestId('balance-hero'))`) et comparent des chaînes
+  exactes.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1332/1332, 113 suites** ✅.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

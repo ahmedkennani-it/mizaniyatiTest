@@ -172,6 +172,10 @@ export const gradients = {
   ramadan: ['#1E293B', '#0F766E'],
   voice: ['#0F172A', '#134E4A'],
   fab: ['#0F8377', '#0F766E'],
+  // The balance hero when the month is in the red (US-007). Coral *text* on the teal gradient
+  // would read at 1.49:1 — invisible — so the card itself carries the alert, and white stays
+  // legible on it (6.29:1 / 4.70:1).
+  negative: ['#BE123C', '#E11D48'],
 } as const;
 
 // Warm seasonal surface used by the Ramadan screen (applied locally there, not app-wide).

@@ -68,6 +68,7 @@ export function BalanceHeroCard({
 
   return (
     <LinearGradient
+      testID="balance-hero"
       colors={colors}
       start={{ x: rtl ? 1 : 0, y: 0 }}
       end={{ x: rtl ? 0 : 1, y: 1 }}

@@ -104,11 +104,15 @@ export function HomeScreen() {
     return map;
   }, [members]);
 
+  // The household's own currency, not the launch market's — a France household budgets in EUR.
+  // Falls back to the launch default only until the household row has loaded.
+  const currencyCode = households[0]?.currencyCode ?? DEFAULT_CURRENCY_CODE;
+
   // Number-only, LTR, localized digits (currency shown separately in the design).
   const num = useCallback(
     (minor: number) =>
-      forceLTR(toLocalizedDigits(toMajorUnits(minor, DEFAULT_CURRENCY_CODE), language)),
-    [language],
+      forceLTR(toLocalizedDigits(toMajorUnits(minor, currencyCode), language)),
+    [currencyCode, language],
   );
 
   const monthLabel = useMemo(() => formatMonthLabel(monthKey, language), [language, monthKey]);
@@ -154,15 +158,16 @@ export function HomeScreen() {
       <BalanceHeroCard
         label={t('home.balanceLabel')}
         amountMinor={balanceMinor}
-        currencyCode={DEFAULT_CURRENCY_CODE}
+        currencyCode={currencyCode}
+        gradient={balanceMinor < 0 ? 'negative' : 'balance'}
         progress={incomeMinor > 0 ? Math.max(0, balanceMinor) / incomeMinor : undefined}
         footerStart={{
           label: t('home.balanceIncome'),
-          value: formatMoney(incomeMinor, DEFAULT_CURRENCY_CODE, language),
+          value: formatMoney(incomeMinor, currencyCode, language),
         }}
         footerEnd={{
           label: t('home.balanceExpense'),
-          value: formatMoney(expenseMinor, DEFAULT_CURRENCY_CODE, language),
+          value: formatMoney(expenseMinor, currencyCode, language),
         }}
       />
 
@@ -188,7 +193,7 @@ export function HomeScreen() {
             segments={segments}
             centerLabel={t('home.spentLabel')}
             centerValue={num(expenseMinor)}
-            centerSubLabel={DEFAULT_CURRENCY_CODE}
+            centerSubLabel={currencyCode}
           />
         )}
       </Card>
