@@ -60,7 +60,7 @@ describe('TransactionRow (US-074b)', () => {
 
   it('renders the category glyph', async () => {
     await renderRow();
-    expect(screen.getByTestId('icon-shopping-cart')).toBeTruthy();
+    expect(screen.getByTestId('icon-shopping-cart', { includeHiddenElements: true })).toBeTruthy();
   });
 
   it('is not pressable without onPress', async () => {

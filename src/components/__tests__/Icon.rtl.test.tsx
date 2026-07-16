@@ -12,7 +12,8 @@ async function renderIcon(name: IconName) {
       <Icon name={name} />
     </ThemeProvider>,
   );
-  return screen.getByTestId(`icon-${name}`);
+  // Decorative icons are hidden from the a11y tree (US-075b); this asserts the *rendering*.
+  return screen.getByTestId(`icon-${name}`, { includeHiddenElements: true });
 }
 
 function isMirrored(element: ReturnType<typeof screen.getByTestId>): boolean {

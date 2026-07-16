@@ -57,6 +57,10 @@ export function DonutBreakdown({
         <Svg
           width={size}
           height={size}
+          // The arcs restate what the legend already lists in text; the centered figure below is
+          // *not* covered by this, since it lives in a sibling overlay.
+          importantForAccessibility="no-hide-descendants"
+          accessibilityElementsHidden
           style={I18nManager.isRTL ? { transform: [{ scaleX: -1 }] } : undefined}
         >
           <G rotation={-90} originX={size / 2} originY={size / 2}>

@@ -23,6 +23,8 @@ export interface AmountProps extends Omit<TxtProps, 'children' | 'color'> {
   showPlusSign?: boolean;
   /** Overrides the color entirely (e.g. white on a gradient hero). */
   color?: string;
+  /** Overrides the spoken label — e.g. to add context a bare amount lacks ("reste du mois : …"). */
+  accessibilityLabel?: string;
 }
 
 /**
@@ -40,6 +42,7 @@ export function Amount({
   showPlusSign = false,
   color,
   style,
+  accessibilityLabel,
   ...rest
 }: AmountProps) {
   const { theme } = useTheme();
@@ -52,12 +55,22 @@ export function Amount({
   return (
     <Txt
       {...rest}
+      // The visible string is padded with invisible LTR marks so the digits keep their order inside
+      // Arabic text (see `forceLTR`). Those marks are for the *bidi algorithm*, not for a screen
+      // reader, so the spoken label is the same amount with them stripped (US-075b).
+      accessibilityLabel={accessibilityLabel ?? stripBidiMarks(withSign)}
       color={color ?? toneColor(theme, tone, amountMinor)}
       style={[styles.start, I18nManager.isRTL ? styles.startRTL : styles.startLTR, style]}
     >
       {withSign}
     </Txt>
   );
+}
+
+const LEFT_TO_RIGHT_MARK = /\u200E/g;
+
+function stripBidiMarks(text: string): string {
+  return text.replace(LEFT_TO_RIGHT_MARK, '');
 }
 
 function toneColor(

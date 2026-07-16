@@ -127,18 +127,29 @@ export interface IconProps {
   size?: number;
   color?: string;
   strokeWidth?: number;
+  /**
+   * Set **only** when the glyph carries meaning no adjacent text repeats — the over-budget alert,
+   * say. Must be a translated string. Leaving it out is the common case: an icon next to its own
+   * label is decoration, and announcing it twice is noise.
+   */
+  accessibilityLabel?: string;
 }
 
 /**
  * Single icon primitive wrapping `lucide-react-native`, so the rest of the app references stable
  * kebab-case names (decoupled from lucide's export names, which shift between versions) and Jest
  * can mock one module. Directional icons auto-mirror in RTL. `color` defaults to the primary text
- * color. `testID`/`accessibilityLabel` are set to the icon name so tests can assert its presence.
+ * color. `testID` is set to the icon name so tests can assert its presence.
+ *
+ * Hidden from screen readers unless given an `accessibilityLabel` (US-075b). It used to expose its
+ * kebab-case `name`, which read out as "shopping-cart" — untranslated, and on top of the label of
+ * the button already wrapping it.
  */
-export function Icon({ name, size = 20, color, strokeWidth = 2 }: IconProps) {
+export function Icon({ name, size = 20, color, strokeWidth = 2, accessibilityLabel }: IconProps) {
   const { theme } = useTheme();
   const LucideIcon = ICONS[name];
   const flip = I18nManager.isRTL && RTL_FLIP.has(name);
+  const meaningful = accessibilityLabel !== undefined;
 
   return (
     <LucideIcon
@@ -146,7 +157,10 @@ export function Icon({ name, size = 20, color, strokeWidth = 2 }: IconProps) {
       color={color ?? theme.colors.textPrimary}
       strokeWidth={strokeWidth}
       testID={`icon-${name}`}
-      accessibilityLabel={name}
+      accessible={meaningful}
+      accessibilityRole={meaningful ? 'image' : undefined}
+      accessibilityLabel={accessibilityLabel}
+      importantForAccessibility={meaningful ? 'yes' : 'no-hide-descendants'}
       style={flip ? { transform: [{ scaleX: -1 }] } : undefined}
     />
   );

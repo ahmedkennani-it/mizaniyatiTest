@@ -24,12 +24,12 @@ describe('Pill', () => {
 
   it('renders an optional leading icon', async () => {
     await renderPill(<Pill label="Payé" icon="check-circle" />);
-    expect(screen.getByTestId('icon-check-circle')).toBeTruthy();
+    expect(screen.getByTestId('icon-check-circle', { includeHiddenElements: true })).toBeTruthy();
   });
 
   it('omits the icon when none is given', async () => {
     await renderPill(<Pill label="Payé" />);
-    expect(screen.queryByTestId('icon-check-circle')).toBeNull();
+    expect(screen.queryByTestId('icon-check-circle', { includeHiddenElements: true })).toBeNull();
   });
 
   it('defaults to the teal ink from the tokens', async () => {

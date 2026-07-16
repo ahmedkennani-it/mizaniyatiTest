@@ -38,6 +38,8 @@ export const ar: TranslationSchema = {
     back: 'رجوع',
     previousMonth: 'الشهر السابق',
     nextMonth: 'الشهر التالي',
+    overBudget: 'تجاوز الحد',
+    unreadNotifications: 'إشعارات غير مقروءة',
   },
   placeholder: {
     comingSoon: 'قريباً',

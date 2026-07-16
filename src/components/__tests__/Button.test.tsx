@@ -96,7 +96,7 @@ describe('Button variants (US-074a)', () => {
 
   it('renders an optional leading icon', async () => {
     await renderButton(<Button label="Ajouter" icon="plus" onPress={() => {}} />);
-    expect(screen.getByTestId('icon-plus')).toBeTruthy();
+    expect(screen.getByTestId('icon-plus', { includeHiddenElements: true })).toBeTruthy();
   });
 
   it.each([

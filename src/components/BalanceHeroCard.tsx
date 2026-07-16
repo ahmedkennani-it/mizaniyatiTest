@@ -74,6 +74,8 @@ export function BalanceHeroCard({
       style={{ borderRadius: theme.radius.lg + 10, padding: theme.spacing.lg, overflow: 'hidden' }}
     >
       <View
+        importantForAccessibility="no-hide-descendants"
+        accessibilityElementsHidden
         style={{
           position: 'absolute',
           top: -40,

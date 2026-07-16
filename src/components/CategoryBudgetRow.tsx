@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { Card } from './Card';
 import { Icon } from './Icon';
@@ -39,6 +40,7 @@ export function CategoryBudgetRow({
   percentLabel,
   onPress,
 }: CategoryBudgetRowProps) {
+  const { t } = useTranslation();
   const { theme } = useTheme();
 
   const body = (
@@ -58,7 +60,12 @@ export function CategoryBudgetRow({
           </Txt>
         </View>
         {over ? (
-          <Icon name="alert-circle" size={18} color={theme.accents.coral.solid} />
+          <Icon
+            name="alert-circle"
+            size={18}
+            color={theme.accents.coral.solid}
+            accessibilityLabel={t('a11y.overBudget')}
+          />
         ) : percentLabel ? (
           <Txt weight="bold" size="xs" color={theme.colors.textSecondary}>
             {percentLabel}

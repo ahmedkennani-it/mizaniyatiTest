@@ -49,6 +49,8 @@ export function ProgressBar({
   return (
     <View
       testID={testID}
+      importantForAccessibility="no-hide-descendants"
+      accessibilityElementsHidden
       style={[
         {
           height,

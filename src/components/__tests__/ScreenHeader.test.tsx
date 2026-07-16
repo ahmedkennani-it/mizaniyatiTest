@@ -60,7 +60,7 @@ describe('ScreenHeader (US-074a)', () => {
 
     await fireEvent.press(screen.getByLabelText('Alertes'));
     expect(onPress).toHaveBeenCalledTimes(1);
-    expect(screen.getByTestId('icon-bell')).toBeTruthy();
+    expect(screen.getByTestId('icon-bell', { includeHiddenElements: true })).toBeTruthy();
   });
 
   it('renders an action with its optional short text (the language pill)', async () => {
@@ -87,7 +87,7 @@ describe('ScreenHeader (US-074a)', () => {
       />,
     );
     expect(screen.getByText('Catégories')).toBeTruthy();
-    expect(screen.getByTestId('icon-chevron-left')).toBeTruthy();
+    expect(screen.getByTestId('icon-chevron-left', { includeHiddenElements: true })).toBeTruthy();
   });
 
   const THEMES: [string, ColorScheme, boolean][] = [

@@ -37,6 +37,8 @@ export const fr = {
     back: 'Retour',
     previousMonth: 'Mois précédent',
     nextMonth: 'Mois suivant',
+    overBudget: 'Plafond dépassé',
+    unreadNotifications: 'Notifications non lues',
   },
   placeholder: {
     comingSoon: 'Bientôt disponible',

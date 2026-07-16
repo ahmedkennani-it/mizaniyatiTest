@@ -40,6 +40,8 @@ export function MonthSelector({ label, onPrev, onNext }: MonthSelectorProps) {
           accessibilityRole="button"
           accessibilityLabel={t('a11y.previousMonth')}
           onPress={onPrev}
+          // A bare 17px chevron is well under the 44px minimum touch target.
+          hitSlop={14}
         >
           <Icon name="chevron-left" size={17} color={theme.colors.textSecondary} />
         </Pressable>
@@ -50,6 +52,7 @@ export function MonthSelector({ label, onPrev, onNext }: MonthSelectorProps) {
           accessibilityRole="button"
           accessibilityLabel={t('a11y.nextMonth')}
           onPress={onNext}
+          hitSlop={14}
         >
           <Icon name="chevron-right" size={17} color={theme.colors.textSecondary} />
         </Pressable>

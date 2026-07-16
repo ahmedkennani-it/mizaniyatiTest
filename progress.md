@@ -33,7 +33,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
    directions.
 3. **Commits non poussés** — voir la section « Blocage `git push` » plus bas.
 
-## État des tâches Phase 2 (Design system & accessibilité)
+## État des tâches Phase 2 (Design system & accessibilité) — ✅ 5/5
 
 | Tâche | Titre | Statut |
 | --- | --- | --- |
@@ -41,7 +41,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 2.2 | Composants de base : Header, Bouton, Tag, Card | ✅ done |
 | 2.3 | Composants financiers : Montant, Progression, Anneau, Ligne, Avatar | ✅ done |
 | 2.4 | Contraste et mise à l'échelle des textes | ✅ done |
-| 2.5 | Libellés pour lecteurs d'écran | ⏳ |
+| 2.5 | Libellés pour lecteurs d'écran | ✅ done |
 
 ## Journal
 
@@ -337,6 +337,32 @@ de mes propres erreurs de la 2.1.
   sous le `minTouchTarget` de 44 px que le thème définit lui-même. Correction propre :
   `hitSlop` (garde le visuel de la maquette, agrandit la zone tactile).
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1141/1141, 100 suites** ✅.
+
+### Itération 13 — Tâche 2.5 (Libellés pour lecteurs d'écran) ✅ — phase 2 terminée
+- 🐛 **`Icon` annonçait son nom brut** : `accessibilityLabel={name}` faisait lire
+  « shopping-cart », **en anglais, dans les trois langues**, et par-dessus le libellé
+  du bouton qui l'enveloppe déjà. L'icône est désormais **masquée par défaut**, avec
+  un `accessibilityLabel` optionnel pour les glyphes qui portent du sens seuls.
+- Glyphes porteurs de sens étiquetés : l'alerte de `CategoryBudgetRow` (elle
+  **remplace** le texte du pourcentage, donc elle est le seul porteur de « dépassé »).
+- Le point de notification est décoratif pour un lecteur d'écran : son sens est replié
+  dans le libellé du bouton (« Notifications, notifications non lues »).
+- `Amount` expose un libellé parlé **débarrassé des marques bidi** : la chaîne visible
+  contient des U+200E invisibles pour l'ordre des chiffres — utiles à l'algorithme
+  bidi, pas à une synthèse vocale.
+- Décorations masquées : blob de la hero card, barre de progression nue, anneau du
+  donut. ⚠️ J'ai d'abord masqué **tout le conteneur** de l'anneau — ce qui masquait
+  aussi son chiffre central. Corrigé : seul le `<Svg>` est masqué.
+- **`hitSlop` (approuvé par l'utilisateur, trouvé en 2.4)** : les boutons 34 px du
+  header et les chevrons 17 px du `MonthSelector` étaient sous la cible tactile de
+  44 px que le thème définit. `hitSlop` élargit la zone sans toucher au visuel.
+- Effet de bord assumé : masquer les icônes de l'arbre d'accessibilité a cassé 40
+  tests dans 8 suites, car **RNTL modélise cet arbre** et exclut les éléments masqués
+  de ses requêtes. Les assertions concernées portent sur le **rendu** du glyphe : elles
+  passent `{ includeHiddenElements: true }` explicitement. Cette même distinction sert
+  d'assertion dans `screenReaderLabels.test.tsx` — « absent d'une requête normale mais
+  présent avec le drapeau » **est** la preuve du masquage, pas un proxy.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1158/1158, 101 suites** ✅.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

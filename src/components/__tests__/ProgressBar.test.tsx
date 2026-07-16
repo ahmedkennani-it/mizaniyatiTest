@@ -11,9 +11,10 @@ async function renderBar(element: React.ReactElement, scheme: ColorScheme = 'lig
   await render(<ThemeProvider initialColorScheme={scheme}>{element}</ThemeProvider>);
 }
 
-/** The fill is the track's only child. */
+/** The fill is the track's only child. The bar is hidden from the a11y tree (US-075b), so these
+ *  style assertions opt into hidden elements. */
 function fillStyle() {
-  const track = screen.getByTestId('bar');
+  const track = screen.getByTestId('bar', { includeHiddenElements: true });
   return StyleSheet.flatten(track.props.children.props.style) as Record<string, unknown>;
 }
 
@@ -104,10 +105,9 @@ describe('ProgressBar (US-074b)', () => {
 
   it('takes its track from the active scheme', async () => {
     await renderBar(<ProgressBar testID="bar" progress={0.4} />, 'dark');
-    const track = StyleSheet.flatten(screen.getByTestId('bar').props.style) as Record<
-      string,
-      unknown
-    >;
+    const track = StyleSheet.flatten(
+      screen.getByTestId('bar', { includeHiddenElements: true }).props.style,
+    ) as Record<string, unknown>;
     expect(track.backgroundColor).toBe(buildTheme('dark', false).colors.surfaceAlt);
   });
 });

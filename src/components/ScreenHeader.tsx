@@ -31,12 +31,21 @@ export interface ScreenHeaderProps {
 }
 
 function ActionButton({ action }: { action: HeaderAction }) {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={action.accessibilityLabel}
+      // The badge dot is decorative to a screen reader, so what it *means* rides on the label.
+      accessibilityLabel={
+        action.badge
+          ? `${action.accessibilityLabel}, ${t('a11y.unreadNotifications')}`
+          : action.accessibilityLabel
+      }
       onPress={action.onPress}
+      // The mockup's 34px button is below the 44px minimum touch target, so the tap area is
+      // widened without touching the visual size.
+      hitSlop={8}
       style={{
         minHeight: 34,
         paddingHorizontal: action.text ? 12 : 0,
@@ -101,6 +110,7 @@ export function ScreenHeader({ title, greeting, name, onBack, actions }: ScreenH
             accessibilityRole="button"
             accessibilityLabel={t('a11y.back')}
             onPress={onBack}
+            hitSlop={8}
             style={{
               width: 34,
               height: 34,

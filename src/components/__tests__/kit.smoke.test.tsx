@@ -26,7 +26,7 @@ describe('component kit smoke', () => {
         <ProgressBar progress={0.6} accent="teal" />
       </>,
     );
-    expect(screen.getByTestId('icon-shopping-cart')).toBeTruthy();
+    expect(screen.getByTestId('icon-shopping-cart', { includeHiddenElements: true })).toBeTruthy();
   });
 
   it('renders a gradient BalanceHeroCard with a formatted amount', async () => {

@@ -38,6 +38,8 @@ export const en: TranslationSchema = {
     back: 'Back',
     previousMonth: 'Previous month',
     nextMonth: 'Next month',
+    overBudget: 'Over budget',
+    unreadNotifications: 'Unread notifications',
   },
   placeholder: {
     comingSoon: 'Coming soon',

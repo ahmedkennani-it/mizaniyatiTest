@@ -44,7 +44,7 @@ describe('no state is signalled by color alone', () => {
       await renderIt(
         <CategoryBudgetRow icon="shopping-cart" name="Courses" amountLabel="3 200 / 2 950" progress={1} over />,
       );
-      expect(screen.getByTestId('icon-alert-circle')).toBeTruthy();
+      expect(screen.getByTestId('icon-alert-circle', { includeHiddenElements: true })).toBeTruthy();
     });
 
     it('shows the percentage tag when within budget, so the two states differ in text too', async () => {
@@ -58,20 +58,20 @@ describe('no state is signalled by color alone', () => {
         />,
       );
       expect(screen.getByText('95%')).toBeTruthy();
-      expect(screen.queryByTestId('icon-alert-circle')).toBeNull();
+      expect(screen.queryByTestId('icon-alert-circle', { includeHiddenElements: true })).toBeNull();
     });
   });
 
   describe('AlertBanner', () => {
     it('carries an icon alongside the tone', async () => {
       await renderIt(<AlertBanner tone="warning" message="Plafond dépassé" />);
-      expect(screen.getByTestId('icon-alert-triangle')).toBeTruthy();
+      expect(screen.getByTestId('icon-alert-triangle', { includeHiddenElements: true })).toBeTruthy();
       expect(screen.getByText('Plafond dépassé')).toBeTruthy();
     });
 
     it('distinguishes info from warning by its icon, not only its wash', async () => {
       await renderIt(<AlertBanner tone="info" icon="shield-check" message="Saisie manuelle" />);
-      expect(screen.getByTestId('icon-shield-check')).toBeTruthy();
+      expect(screen.getByTestId('icon-shield-check', { includeHiddenElements: true })).toBeTruthy();
     });
   });
 
