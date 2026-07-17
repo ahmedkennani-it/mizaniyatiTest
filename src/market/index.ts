@@ -6,6 +6,7 @@ export {
   MARKETS,
   SELECTABLE_MARKETS,
   findMarket,
+  isMenaGulfMarket,
   marketHasModule,
   marketModules,
 } from './markets';

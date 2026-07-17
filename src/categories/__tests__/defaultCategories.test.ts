@@ -1,8 +1,8 @@
 import { getDefaultCategories } from '../defaultCategories';
 
 describe('getDefaultCategories', () => {
-  it('returns the Morocco default category set in French', () => {
-    const categories = getDefaultCategories('fr');
+  it('returns the Morocco default category set in French, including Zakat & dons (US-044)', () => {
+    const categories = getDefaultCategories('fr', 'MA');
     expect(categories.map((c) => c.name)).toEqual([
       'Courses',
       'École',
@@ -13,7 +13,28 @@ describe('getDefaultCategories', () => {
       'Restaurants',
       'Loisirs',
       'Autres',
+      'Zakat & dons',
     ]);
+  });
+
+  it('defaults to the launch market (Morocco) when no country is given', () => {
+    expect(getDefaultCategories('fr').map((c) => c.name)).toEqual(
+      getDefaultCategories('fr', 'MA').map((c) => c.name),
+    );
+  });
+
+  it('does not include Zakat & dons for a non-MENA/Gulf market, but the rest of the set is unchanged', () => {
+    const morocco = getDefaultCategories('fr', 'MA');
+    const france = getDefaultCategories('fr', 'FR');
+
+    expect(france.map((c) => c.name)).toEqual(morocco.slice(0, -1).map((c) => c.name));
+    expect(france.some((c) => c.name === 'Zakat & dons')).toBe(false);
+  });
+
+  it('includes Zakat & dons for the other MENA/Gulf markets too (Gulf, not just Morocco)', () => {
+    expect(getDefaultCategories('fr', 'AE').some((c) => c.name === 'Zakat & dons')).toBe(true);
+    expect(getDefaultCategories('fr', 'SA').some((c) => c.name === 'Zakat & dons')).toBe(true);
+    expect(getDefaultCategories('fr', 'DZ').some((c) => c.name === 'Zakat & dons')).toBe(true);
   });
 
   it('returns the same set translated in Arabic', () => {

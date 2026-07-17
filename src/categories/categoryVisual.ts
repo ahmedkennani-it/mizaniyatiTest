@@ -54,6 +54,7 @@ export function categoryIconName(icon: string): IconName {
 const COLOR_TO_ACCENT: Record<string, AccentName> = {
   '#D97706': 'gold',
   '#EA580C': 'gold',
+  '#B45309': 'gold',
   '#7C3AED': 'purple',
   '#4F46E5': 'purple',
   '#DC2626': 'coral',

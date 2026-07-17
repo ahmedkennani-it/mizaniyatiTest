@@ -11,10 +11,13 @@ import { ensureMigrated, getDatabase } from './client';
  * des échéances dues" — US-021/US-022), then tontine payment reminders (US-024). All of these are
  * idempotent/safe to re-run, so calling this more than once (e.g. across remounts) is harmless.
  */
-export async function ensureAppReady(language: SupportedLanguage): Promise<void> {
+export async function ensureAppReady(
+  language: SupportedLanguage,
+  countryCode?: string,
+): Promise<void> {
   await ensureMigrated();
   const db = getDatabase();
-  await seedDefaultCategories(db, language);
+  await seedDefaultCategories(db, language, countryCode);
   await seedDefaultMember(db, language);
   await processRecurringRules(db);
   await processTontineReminders(db);

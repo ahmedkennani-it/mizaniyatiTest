@@ -69,3 +69,14 @@ export function marketModules(countryCode: string): MarketModule[] {
 export function marketHasModule(countryCode: string, module: MarketModule): boolean {
   return marketModules(countryCode).includes(module);
 }
+
+/**
+ * MENA/Gulf markets get culturally-relevant defaults (the "Zakat & dons" category, US-044) that a
+ * diaspora market doesn't get seeded automatically — still creatable there, just not proposed.
+ * Reuses the `tontine` module signal rather than a second, separately-maintained country list:
+ * in this registry the two already describe the same MENA+Gulf/diaspora split (`marketModules`'s
+ * own comment — "the Maghreb runs tontines... the Gulf runs both").
+ */
+export function isMenaGulfMarket(countryCode: string): boolean {
+  return marketHasModule(countryCode, 'tontine');
+}

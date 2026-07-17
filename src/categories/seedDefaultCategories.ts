@@ -12,6 +12,7 @@ import { getDefaultCategories } from './defaultCategories';
 export async function seedDefaultCategories(
   db: SqlDatabase,
   language: SupportedLanguage,
+  countryCode?: string,
 ): Promise<Category[]> {
   const existing = await listCategories(db);
   if (existing.some((category) => category.isDefault)) {
@@ -19,7 +20,7 @@ export async function seedDefaultCategories(
   }
 
   const seeded: Category[] = [];
-  const defaults = getDefaultCategories(language);
+  const defaults = getDefaultCategories(language, countryCode);
   for (const [orderIndex, definition] of defaults.entries()) {
     seeded.push(
       await createCategory(db, {

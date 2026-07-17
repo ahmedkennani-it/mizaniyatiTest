@@ -43,4 +43,34 @@ describe('seedDefaultCategories', () => {
     const all = await listCategories(db);
     expect(all).toHaveLength(getDefaultCategories('fr').length + 1);
   });
+
+  /** US-044: a MENA/Gulf household gets "Zakat & dons" seeded as a default; others don't — but it
+   * behaves exactly like any other category once it exists, since it flows through the same
+   * `createCategory` call with `isDefault: true` (budget/alert/detail are keyed by category id,
+   * never by name, so nothing needs to special-case it there). */
+  it('seeds Zakat & dons for a MENA/Gulf country, behaving like any other default category', async () => {
+    const { db } = createFakeDatabase();
+
+    const seeded = await seedDefaultCategories(db, 'fr', 'MA');
+
+    const zakat = seeded.find((c) => c.name === 'Zakat & dons');
+    expect(zakat).toBeDefined();
+    expect(zakat?.isDefault).toBe(true);
+    expect(zakat?.orderIndex).toBe(seeded.length - 1);
+  });
+
+  it('does not seed Zakat & dons for a market outside MENA/Gulf, though it stays creatable by hand', async () => {
+    const { db } = createFakeDatabase();
+
+    const seeded = await seedDefaultCategories(db, 'fr', 'FR');
+    expect(seeded.some((c) => c.name === 'Zakat & dons')).toBe(false);
+
+    const handCreated = await createCategory(db, {
+      name: 'Zakat & dons',
+      icon: 'hand-heart',
+      color: '#B45309',
+    });
+    expect(handCreated.isDefault).toBe(false);
+    expect((await listCategories(db)).some((c) => c.name === 'Zakat & dons')).toBe(true);
+  });
 });

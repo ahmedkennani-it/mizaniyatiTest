@@ -5,6 +5,7 @@ import {
   MARKETS,
   SELECTABLE_MARKETS,
   findMarket,
+  isMenaGulfMarket,
   marketHasModule,
   marketModules,
 } from '../markets';
@@ -93,5 +94,20 @@ describe('market modules (US-003)', () => {
     for (const market of MARKETS) {
       expect(market.modules.length).toBeGreaterThan(0);
     }
+  });
+});
+
+/** US-044: the "Zakat & dons" default category is proposed for MENA/Gulf, not the diaspora. */
+describe('isMenaGulfMarket (US-044)', () => {
+  it.each(['MA', 'DZ', 'TN', 'EG', 'AE', 'SA'])('%s is MENA/Gulf', (code) => {
+    expect(isMenaGulfMarket(code)).toBe(true);
+  });
+
+  it('France (diaspora) is not', () => {
+    expect(isMenaGulfMarket('FR')).toBe(false);
+  });
+
+  it('treats an unprofiled market as diaspora, not MENA/Gulf', () => {
+    expect(isMenaGulfMarket('ZZ')).toBe(false);
   });
 });

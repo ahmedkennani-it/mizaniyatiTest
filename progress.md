@@ -127,7 +127,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | --- | --- | --- |
 | 10.1 | Mode Ramadan (thème saisonnier) | ✅ done |
 | 10.2 | Calculateur de Zakat | ✅ done |
-| 10.3 | Catégorie Zakat & dons avec plafond | ⬜ à faire |
+| 10.3 | Catégorie Zakat & dons avec plafond | ✅ done |
 | 10.4 | Enregistrement et planification du don de Zakat | ⬜ à faire |
 
 ## Journal
@@ -1414,6 +1414,45 @@ tâche réelle était de brancher `HomeScreen` sur cet état déjà persistant, 
   n'a pas de symbole étroit en CLDR fr et retombe sur les lettres). Les 7 tests existants
   passent inchangés (le format « Base zakatable : {montant} » de la carte est resté identique).
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1734/1734, 140 suites** ✅.
+- ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé).
+
+### Itération 50 — Tâche 10.3 (Catégorie Zakat & dons avec plafond) ✅
+
+- **Écart réel** : ce que l'itération 41 (phase 7) avait volontairement laissé de côté — le
+  seeding des catégories par défaut (`getDefaultCategories`/`seedDefaultCategories`) était
+  **entièrement piloté par la langue**, jamais par le marché. Aucune notion de « MENA/Golfe »
+  n'existait avant cette tâche.
+- **`isMenaGulfMarket(countryCode)` (nouveau, `src/market`)** : réutilise volontairement le signal
+  déjà présent `marketHasModule(countryCode, 'tontine')` plutôt qu'une seconde liste de pays à
+  maintenir en parallèle — dans le registre actuel, tontine et MENA/Golfe décrivent déjà exactement
+  le même découpage (Maghreb + Golfe vs diaspora), documenté comme tel dans le commentaire de la
+  fonction pour que ce ne soit pas lu comme une coïncidence.
+- **`getDefaultCategories(language, countryCode = DEFAULT_COUNTRY_CODE)`** : `countryCode` devient
+  un second paramètre **optionnel** (repli sur le marché de lancement, Maroc) plutôt qu'obligatoire
+  — évite de casser les nombreux appelants existants qui n'avaient jamais eu besoin du marché
+  (`ensureAppReady`, les tests de bootstrap) alors que Maroc, précisément, est un marché MENA : le
+  comportement par défaut change donc correctement pour le marché réellement lancé, sans réécrire
+  tous les appels. Catégorie ajoutée **en fin de liste** (jamais insérée au milieu), pour ne jamais
+  décaler l'`orderIndex` des 9 catégories existantes déjà en base chez des foyers existants.
+- **`OnboardingLanguageCountryScreen`** : seul appelant à devoir passer un vrai `countryCode` non
+  défaut, puisque c'est le seul endroit où le marché choisi par l'utilisateur est réellement connu
+  au moment du seeding.
+- 🐛 **Test existant devenu incomplet, pas faux** : `defaultCategories.test.ts` figeait la liste
+  Maroc à 9 noms sans jamais passer de `countryCode` — avec le nouveau critère, Maroc (marché
+  MENA par excellence) doit désormais en avoir 10. Mis à jour pour refléter le comportement voulu
+  plutôt que contourné.
+- **Couleur/icône dédiées** : `hand-heart` / `#B45309` (un ambre plus profond que celui déjà pris
+  par « Courses », `#D97706`) — ajouté à `categoryAccent`'s `COLOR_TO_ACCENT` pour résoudre vers
+  `gold`, sinon la tuile serait retombée sur le teal par défaut (repli silencieux déjà documenté
+  dans la 9.1 pour toute couleur non reconnue).
+- **Critère 2 (« se comporte comme les autres : plafond, alerte, détail ») satisfait sans code
+  supplémentaire** : la catégorie passe par le même `createCategory(..., isDefault: true, ...)`
+  que les 9 autres — plafond/alerte/détail sont tous indexés par `category.id`, jamais par nom,
+  donc rien à spécialiser.
+- **Critère 3 (marché non concerné → créable à la main)** : déjà vrai nativement (`createCategory`
+  n'a jamais restreint les noms) ; testé explicitement pour le documenter comme un critère vérifié,
+  pas seulement supposé.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1747/1747, 140 suites** ✅.
 - ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé).
 
 ## Notes / blocages connus (hors périmètre Phase 1)

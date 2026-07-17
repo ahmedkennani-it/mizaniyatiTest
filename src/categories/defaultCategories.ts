@@ -1,4 +1,5 @@
 import type { SupportedLanguage } from '../i18n/i18n';
+import { DEFAULT_COUNTRY_CODE, isMenaGulfMarket } from '../market';
 
 export interface DefaultCategoryDefinition {
   name: string;
@@ -52,15 +53,43 @@ const NAMES_BY_LANGUAGE: Record<SupportedLanguage, string[]> = {
   ],
 };
 
+/** Name only changes by language, like the base set above — icon and color are fixed (US-044). */
+const ZAKAT_CATEGORY_NAMES: Record<SupportedLanguage, string> = {
+  fr: 'Zakat & dons',
+  ar: 'الزكاة والتبرعات',
+  en: 'Zakat & donations',
+};
+
+const ZAKAT_ICON_AND_COLOR = { icon: 'hand-heart', color: '#B45309' };
+
 /**
- * The Morocco launch default category set (US-009), editable by the user afterwards like any
- * other category (name/icon/color are plain seed values, not live-translated i18n keys — renaming
- * a default category works exactly like renaming a custom one).
+ * The launch default category set (US-009), editable by the user afterwards like any other
+ * category (name/icon/color are plain seed values, not live-translated i18n keys — renaming a
+ * default category works exactly like renaming a custom one).
+ *
+ * A MENA/Gulf market (US-044) gets an extra "Zakat & dons" default, appended rather than inserted
+ * mid-list so its `orderIndex` never shifts the base set's existing positions. A market outside
+ * that group simply doesn't get it seeded — the category stays fully creatable by hand, like any
+ * other, it just isn't proposed automatically.
  */
-export function getDefaultCategories(language: SupportedLanguage): DefaultCategoryDefinition[] {
-  return NAMES_BY_LANGUAGE[language].map((name, index) => ({
+export function getDefaultCategories(
+  language: SupportedLanguage,
+  countryCode: string = DEFAULT_COUNTRY_CODE,
+): DefaultCategoryDefinition[] {
+  const base = NAMES_BY_LANGUAGE[language].map((name, index) => ({
     name,
     icon: ICONS_AND_COLORS[index].icon,
     color: ICONS_AND_COLORS[index].color,
   }));
+  if (!isMenaGulfMarket(countryCode)) {
+    return base;
+  }
+  return [
+    ...base,
+    {
+      name: ZAKAT_CATEGORY_NAMES[language],
+      icon: ZAKAT_ICON_AND_COLOR.icon,
+      color: ZAKAT_ICON_AND_COLOR.color,
+    },
+  ];
 }

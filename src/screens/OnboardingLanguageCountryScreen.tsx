@@ -54,7 +54,9 @@ export function OnboardingLanguageCountryScreen({
     });
     // Default categories/member are seeded here (in the just-chosen language), not earlier at
     // app mount — seeding before the user picks a language would lock in the device-detected one.
-    await ensureAppReady(language);
+    // The country decides whether the MENA/Gulf "Zakat & dons" default is part of that set
+    // (US-044).
+    await ensureAppReady(language, selectedCountry.code);
     onComplete(selectedCountry);
   }
 
