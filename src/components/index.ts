@@ -54,3 +54,5 @@ export { Txt } from './Txt';
 export type { TxtProps } from './Txt';
 export { VoicePromoCard } from './VoicePromoCard';
 export type { VoicePromoCardProps } from './VoicePromoCard';
+export { VoiceWaveform } from './VoiceWaveform';
+export type { VoiceWaveformProps } from './VoiceWaveform';

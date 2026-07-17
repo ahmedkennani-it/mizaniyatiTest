@@ -80,7 +80,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | --- | --- | --- |
 | 6.1 | Saisie rapide au pavé numérique | ✅ done |
 | 6.2 | Sélection de catégorie par chips | ✅ done |
-| 6.3 | Capture audio et état d'écoute (Pro) | ⏳ |
+| 6.3 | Capture audio et état d'écoute (Pro) | ✅ done |
 | 6.4 | Transcription vocale multilingue (Pro) | ⏳ |
 | 6.5 | Extraction du montant depuis la dictée (Pro) | ⏳ |
 | 6.6 | Déduction catégorie/libellé et confirmation (Pro) | ⏳ |
@@ -786,6 +786,46 @@ interdiction éternelle du réseau.
   par erreur dans `src/components/` — supprimé, et `*.swp`/`*.swo`/`*.swn` ajoutés au
   `.gitignore` pour empêcher la récidive.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1502/1502, 126 suites** ✅.
+
+### Itération 32 — Tâche 6.3 (Capture audio et état d'écoute) ✅
+- **Aucune infrastructure micro/voix n'existait** avant cette tâche : la bannière de découverte
+  (5.8) et le bouton « Vocal » du dashboard n'ouvraient que le clavier en attendant. Ajoute
+  `expo-speech-recognition` (reconnaissance **sur l'appareil**, aucune clé API cloud, donc rien à
+  mettre en variable d'environnement ni de garde-fou à contourner) avec son plugin de config
+  (`app.json`) et les libellés `NSMicrophoneUsageDescription` / `NSSpeechRecognitionUsageDescription`.
+- **`src/voice/speechRecognitionClient.ts`** : interface étroite sur le module natif, même schéma
+  que `notificationClient`/`biometricClient` — jamais appelé directement par un écran ni par un
+  test, pour que le module natif (absent sous Jest et dans ce bac à sable) ne soit jamais requis
+  réellement en dehors d'un build. Mock global (`jest/speechRecognitionMock.js`, même principe que
+  `intlPolyfillsMock.js`) en filet de sécurité si un import transite par erreur.
+- **`markMicPermissionExplainerSeen`** (migration 0018) : l'explication contextuelle du micro
+  (critère US-020a) est marquée vue **dès qu'elle s'affiche**, pas seulement si l'utilisateur
+  appuie sur Continuer — sinon « Pas maintenant » la ferait revenir à chaque tap, ce qui n'est plus
+  « au premier usage ».
+- **`createSilenceWatcher`** : minuteur ré-armable pur, testé isolément (fenêtre glissante de 5s,
+  pas 5s depuis le début de l'écoute) puis vérifié à nouveau *câblé* dans `VoiceEntrySheet` sans
+  dépendre de faux timers React (le mock intercepte directement le callback passé au watcher).
+- **`VoiceWaveform`** : hauteur des barres dérivée uniquement du prop `level`, sans bibliothèque
+  d'animation ni état interne — testable par assertion directe plutôt qu'en course contre une
+  animation.
+- 🐛 **`voice` était déjà un flag d'entitlement (5.8) mais réglé à `true` sur les deux plans** :
+  la tâche est marquée `"plan": "pro"`, donc `FREE_PLAN.voice` passe à `false`. La bannière et le
+  bouton du dashboard restent visibles pour tous (ce sont des incitations à la découverte) ; c'est
+  `VoiceEntrySheet` qui tranche à l'ouverture — upsell Pro pour un foyer gratuit, capture réelle
+  sinon. Casse deux tests existants qui supposaient un tap ouvrant directement le clavier ;
+  corrigés pour refléter le nouveau comportement (upsell sur le plan gratuit, capture sur Pro).
+- **Langue de dictée** : réutilise `resolveIntlLocale` (déjà utilisé pour `Intl.NumberFormat`)
+  plutôt qu'une seconde table `ar`/`fr`/`en` → BCP-47, pour ne pas pouvoir diverger de celle des
+  montants/dates.
+- ⚠️ **Vérification navigateur/appareil non effectuée** (limitation connue de cet environnement) —
+  mais `npx expo export --platform web` a été lancé pour vérifier que le nouveau module natif se
+  bundle réellement sans casser Metro (2589 modules, aucune erreur), ce qu'aucun test Jest ne peut
+  prouver puisque le module natif y est justement mocké.
+- **Portée délibérément limitée** : ce que dit la dictée (transcription affichée, montant extrait)
+  est hors périmètre de 6.3 — le flux s'arrête proprement (ferme la feuille) dès que le
+  reconnaisseur rend un résultat final ; 6.4/6.5 brancheront le traitement du contenu.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1544/1544, 130 suites** ✅. Bundle web
+  vérifié via `npx expo export --platform web`.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

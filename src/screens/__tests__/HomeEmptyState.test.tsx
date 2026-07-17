@@ -12,9 +12,19 @@ jest.mock('../../db/client', () => ({
 }));
 
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
-import { createCategory, createHousehold, createMember, createTransaction } from '../../db/repositories';
+import {
+  createCategory,
+  createHousehold,
+  createMember,
+  createTransaction,
+  saveLanguageCountry,
+} from '../../db/repositories';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import type { Category, Member } from '../../db/repositories';
+// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
+import { EntitlementsProvider, PRO_PLAN } from '../../entitlements';
+// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
+import type { Plan } from '../../entitlements';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import i18n from '../../i18n/i18n';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
@@ -55,14 +65,16 @@ async function add(type: 'expense' | 'income', amountMinor: number, monthKey = T
   });
 }
 
-async function renderHome() {
+async function renderHome(plan?: Plan) {
   await render(
     <SafeAreaProvider>
       <LanguageProvider>
         <ThemeProvider initialColorScheme="light">
-          <ExpenseEntryProvider>
-            <HomeScreen />
-          </ExpenseEntryProvider>
+          <EntitlementsProvider plan={plan}>
+            <ExpenseEntryProvider>
+              <HomeScreen />
+            </ExpenseEntryProvider>
+          </EntitlementsProvider>
         </ThemeProvider>
       </LanguageProvider>
     </SafeAreaProvider>,
@@ -108,16 +120,35 @@ describe('dashboard empty state (US-015)', () => {
       expect(card.getByText(fr.home.emptyStateVoice)).toBeTruthy();
     });
 
-    it.each([
-      ['expense', fr.home.emptyStateExpense],
-      ['voice', fr.home.emptyStateVoice],
-    ])('opens the entry sheet from the %s action', async (_name, label) => {
+    it('opens the entry sheet from the expense action', async () => {
       await seed();
       await renderHome();
 
-      await fireEvent.press(await screen.findByText(label));
+      await fireEvent.press(await screen.findByText(fr.home.emptyStateExpense));
 
       expect(await screen.findByText(fr.expenseForm.titleExpense)).toBeTruthy();
+    });
+
+    /** Voice entry is Pro-gated (US-020a) — a free household sees the upsell, not a live mic. */
+    it('shows the Pro upsell from the voice action on the free plan', async () => {
+      await seed();
+      await renderHome();
+
+      await fireEvent.press(await screen.findByText(fr.home.emptyStateVoice));
+
+      expect(await screen.findByText(fr.voiceCapture.upsellMessage)).toBeTruthy();
+    });
+
+    it('opens the voice-capture sheet from the voice action on the Pro plan', async () => {
+      await seed();
+      // The mic explainer (US-020a) is read from `user_settings`, which onboarding always
+      // creates before the dashboard is reachable — `seed()` above skips onboarding entirely.
+      await saveLanguageCountry(mockFakeDb, { languageCode: 'fr', countryCode: 'MA', currencyCode: 'MAD' });
+      await renderHome(PRO_PLAN);
+
+      await fireEvent.press(await screen.findByText(fr.home.emptyStateVoice));
+
+      expect(await screen.findByText(fr.voiceCapture.explainerTitle)).toBeTruthy();
     });
   });
 

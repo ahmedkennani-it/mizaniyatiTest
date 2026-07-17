@@ -13,7 +13,7 @@ export const FREE_PLAN: Plan = {
   entitlements: [
     { key: 'categories.max', type: 'limit', numericValue: 10 },
     { key: 'members.max', type: 'limit', numericValue: 2 },
-    { key: 'voice', type: 'feature', booleanValue: true },
+    { key: 'voice', type: 'feature', booleanValue: false },
     { key: 'tontine', type: 'feature', booleanValue: false },
     { key: 'zakat', type: 'feature', booleanValue: false },
     { key: 'ramadan', type: 'feature', booleanValue: false },

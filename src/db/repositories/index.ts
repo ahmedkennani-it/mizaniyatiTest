@@ -76,6 +76,7 @@ export {
   acceptPrivacy,
   dismissVoicePromo,
   getUserSettings,
+  markMicPermissionExplainerSeen,
   recordVoiceEntry,
   saveLanguageCountry,
 } from './userSettingsRepository';

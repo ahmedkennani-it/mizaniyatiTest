@@ -4,6 +4,7 @@ import {
   acceptPrivacy,
   dismissVoicePromo,
   getUserSettings,
+  markMicPermissionExplainerSeen,
   recordVoiceEntry,
   saveLanguageCountry,
 } from '../userSettingsRepository';
@@ -171,5 +172,43 @@ describe('voice promo state', () => {
     const { db } = createFakeDatabase();
     await expect(recordVoiceEntry(db)).rejects.toThrow(NotFoundError);
     await expect(dismissVoicePromo(db)).rejects.toThrow(NotFoundError);
+  });
+});
+
+/** US-020a: the contextual mic explainer is shown once, ever — this flag is what remembers that. */
+describe('mic permission explainer state', () => {
+  async function seed(db: ReturnType<typeof createFakeDatabase>['db']) {
+    await saveLanguageCountry(db, { languageCode: 'fr', countryCode: 'MA', currencyCode: 'MAD' });
+  }
+
+  it('starts unseen', async () => {
+    const { db } = createFakeDatabase();
+    await seed(db);
+
+    expect((await getUserSettings(db))?.micPermissionExplainerSeen).toBe(false);
+  });
+
+  it('records that it has been seen', async () => {
+    const { db } = createFakeDatabase();
+    await seed(db);
+
+    await markMicPermissionExplainerSeen(db);
+
+    expect((await getUserSettings(db))?.micPermissionExplainerSeen).toBe(true);
+  });
+
+  it('never clears the voice state when the language & country step is re-run', async () => {
+    const { db } = createFakeDatabase();
+    await seed(db);
+    await markMicPermissionExplainerSeen(db);
+
+    await saveLanguageCountry(db, { languageCode: 'ar', countryCode: 'MA', currencyCode: 'MAD' });
+
+    expect((await getUserSettings(db))?.micPermissionExplainerSeen).toBe(true);
+  });
+
+  it('refuses to record it with no settings row', async () => {
+    const { db } = createFakeDatabase();
+    await expect(markMicPermissionExplainerSeen(db)).rejects.toThrow(NotFoundError);
   });
 });

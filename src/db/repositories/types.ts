@@ -488,6 +488,8 @@ export interface UserSettings {
   voiceEntryCount: number;
   /** The household closed the voice discovery banner (US-014). */
   voicePromoDismissed: boolean;
+  /** The contextual mic-permission explainer (US-020a) has been shown at least once. */
+  micPermissionExplainerSeen: boolean;
   createdAt: string;
   updatedAt: string;
 }

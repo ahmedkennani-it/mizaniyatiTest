@@ -53,3 +53,5 @@ export type { PaywallScreenProps } from './PaywallScreen';
 export { OnboardingLanguageCountryScreen } from './OnboardingLanguageCountryScreen';
 export type { OnboardingLanguageCountryScreenProps } from './OnboardingLanguageCountryScreen';
 export { ExpenseEntryProvider, useExpenseEntry } from './ExpenseEntryProvider';
+export { VoiceEntrySheet } from './VoiceEntrySheet';
+export type { VoiceEntrySheetProps } from './VoiceEntrySheet';

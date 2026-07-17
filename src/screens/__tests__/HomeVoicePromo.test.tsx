@@ -20,6 +20,10 @@ import {
   saveLanguageCountry,
 } from '../../db/repositories';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
+import { EntitlementsProvider, PRO_PLAN } from '../../entitlements';
+// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
+import type { Plan } from '../../entitlements';
+// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import i18n from '../../i18n/i18n';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { LanguageProvider } from '../../i18n';
@@ -46,14 +50,16 @@ async function seed() {
   });
 }
 
-async function renderHome() {
+async function renderHome(plan?: Plan) {
   await render(
     <SafeAreaProvider>
       <LanguageProvider>
         <ThemeProvider initialColorScheme="light">
-          <ExpenseEntryProvider>
-            <HomeScreen />
-          </ExpenseEntryProvider>
+          <EntitlementsProvider plan={plan}>
+            <ExpenseEntryProvider>
+              <HomeScreen />
+            </ExpenseEntryProvider>
+          </EntitlementsProvider>
         </ThemeProvider>
       </LanguageProvider>
     </SafeAreaProvider>,
@@ -88,13 +94,23 @@ describe('voice discovery banner (US-014)', () => {
       expect(screen.getByText(ar.home.voiceBadge)).toBeTruthy();
     });
 
-    it('opens entry when tapped', async () => {
+    /** Voice entry is Pro-gated (US-020a) — a free household is offered the upgrade, not a live mic. */
+    it('shows the Pro upsell when tapped on the free plan', async () => {
       await seed();
       await renderHome();
 
       await fireEvent.press(await screen.findByText(fr.home.voiceTitle));
 
-      expect(await screen.findByText(fr.expenseForm.titleExpense)).toBeTruthy();
+      expect(await screen.findByText(fr.voiceCapture.upsellMessage)).toBeTruthy();
+    });
+
+    it('opens the voice-capture sheet when tapped on the Pro plan', async () => {
+      await seed();
+      await renderHome(PRO_PLAN);
+
+      await fireEvent.press(await screen.findByText(fr.home.voiceTitle));
+
+      expect(await screen.findByText(fr.voiceCapture.explainerTitle)).toBeTruthy();
     });
   });
 

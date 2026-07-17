@@ -113,6 +113,26 @@ export const fr = {
     errorMember: 'Choisissez un membre.',
     errorDate: 'Saisissez une date valide (AAAA-MM-JJ).',
   },
+  voiceCapture: {
+    title: 'Saisie vocale',
+    explainerTitle: 'Pourquoi le micro ?',
+    explainerBody:
+      "On utilise la reconnaissance vocale de ton téléphone pour transcrire ta dépense. Aucun enregistrement audio n'est conservé après l'analyse.",
+    explainerContinue: 'Continuer',
+    explainerCancel: 'Pas maintenant',
+    listeningLabel: 'Je t’écoute…',
+    languageLabel: 'Langue de dictée',
+    cancelButton: 'Annuler',
+    deniedTitle: 'Micro indisponible',
+    deniedBody:
+      "L'accès au micro a été refusé. Active-le dans les réglages de ton téléphone, ou saisis au clavier.",
+    useKeyboard: 'Utiliser le clavier',
+    errorTitle: 'Un souci est survenu',
+    errorBody: 'La reconnaissance vocale a rencontré une erreur. Réessaie ou utilise le clavier.',
+    retry: 'Réessayer',
+    upsellMessage: 'La saisie vocale fait partie du forfait Pro.',
+    upsellCta: 'Passez à un forfait supérieur pour dicter vos dépenses.',
+  },
   confirmation: {
     title: 'Opération enregistrée !',
     remainingLabel: 'Il te reste ce mois',

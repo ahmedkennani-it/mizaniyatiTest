@@ -73,7 +73,7 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
   const [view, setView] = useState<'dashboard' | 'history' | 'vaults'>('dashboard');
   const { theme } = useTheme();
   const { language } = useLanguage();
-  const { openEntry, dataVersion } = useExpenseEntry();
+  const { openEntry, openVoiceEntry, dataVersion } = useExpenseEntry();
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -262,9 +262,7 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
           title={t('home.voiceTitle')}
           subtitle={t('home.voiceSubtitle')}
           badge={t('home.voiceBadge')}
-          // Voice capture itself lands with the entry stories (phase 6); until then this opens
-          // the same sheet rather than a screen that pretends to listen.
-          onPress={() => openEntry()}
+          onPress={openVoiceEntry}
           onDismiss={async () => {
             await dismissVoicePromo(getDatabase());
             setSettings(await getUserSettings(getDatabase()));
@@ -356,13 +354,11 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
           </Txt>
           <View style={{ flexDirection: 'row', gap: theme.spacing.sm, marginTop: theme.spacing.sm }}>
             <Button label={t('home.emptyStateExpense')} icon="plus" onPress={() => openEntry()} />
-            {/* Voice capture itself lands with the entry stories (phase 6); until then both routes
-                open the same sheet, rather than a button that pretends to listen. */}
             <Button
               label={t('home.emptyStateVoice')}
               icon="mic"
               variant="secondary"
-              onPress={() => openEntry()}
+              onPress={openVoiceEntry}
             />
           </View>
         </Card>

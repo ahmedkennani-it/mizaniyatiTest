@@ -10,6 +10,7 @@ function settings(patch: Partial<UserSettings> = {}): UserSettings {
     privacyAcceptedAt: '2026-07-16T10:00:00.000Z',
     voiceEntryCount: 0,
     voicePromoDismissed: false,
+    micPermissionExplainerSeen: false,
     createdAt: '2026-07-16T10:00:00.000Z',
     updatedAt: '2026-07-16T10:00:00.000Z',
     ...patch,

@@ -28,7 +28,7 @@ describe('EntitlementsProvider / useEntitlements', () => {
     );
 
     expect(screen.getByText('plan:free')).toBeTruthy();
-    expect(screen.getByText('voice:true')).toBeTruthy();
+    expect(screen.getByText('voice:false')).toBeTruthy();
     expect(screen.getByText('tontine:false')).toBeTruthy();
     expect(
       screen.getByText(

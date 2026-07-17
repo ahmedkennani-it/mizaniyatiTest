@@ -12,12 +12,13 @@ interface UserSettingsRow {
   privacy_accepted_at: string | null;
   voice_entry_count: number | null;
   voice_promo_dismissed: number | null;
+  mic_permission_explainer_seen: number | null;
   created_at: string;
   updated_at: string;
 }
 
 const SELECT_COLUMNS =
-  'language_code, country_code, currency_code, onboarding_step, privacy_accepted_at, voice_entry_count, voice_promo_dismissed, created_at, updated_at';
+  'language_code, country_code, currency_code, onboarding_step, privacy_accepted_at, voice_entry_count, voice_promo_dismissed, mic_permission_explainer_seen, created_at, updated_at';
 
 function fromRow(row: UserSettingsRow): UserSettings {
   return {
@@ -29,6 +30,7 @@ function fromRow(row: UserSettingsRow): UserSettings {
     privacyAcceptedAt: row.privacy_accepted_at ?? null,
     voiceEntryCount: row.voice_entry_count ?? 0,
     voicePromoDismissed: Boolean(row.voice_promo_dismissed),
+    micPermissionExplainerSeen: Boolean(row.mic_permission_explainer_seen),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -62,6 +64,7 @@ export async function saveLanguageCountry(
     privacyAcceptedAt: existing?.privacyAcceptedAt ?? null,
     voiceEntryCount: existing?.voiceEntryCount ?? 0,
     voicePromoDismissed: existing?.voicePromoDismissed ?? false,
+    micPermissionExplainerSeen: existing?.micPermissionExplainerSeen ?? false,
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };
@@ -79,7 +82,7 @@ export async function saveLanguageCountry(
     );
   } else {
     await db.runAsync(
-      'INSERT INTO user_settings (id, language_code, country_code, currency_code, onboarding_step, privacy_accepted_at, voice_entry_count, voice_promo_dismissed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);',
+      'INSERT INTO user_settings (id, language_code, country_code, currency_code, onboarding_step, privacy_accepted_at, voice_entry_count, voice_promo_dismissed, mic_permission_explainer_seen, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);',
       [
         USER_SETTINGS_ID,
         updated.languageCode,
@@ -89,6 +92,7 @@ export async function saveLanguageCountry(
         updated.privacyAcceptedAt,
         updated.voiceEntryCount,
         updated.voicePromoDismissed ? 1 : 0,
+        updated.micPermissionExplainerSeen ? 1 : 0,
         updated.createdAt,
         updated.updatedAt,
       ],
@@ -153,6 +157,24 @@ export async function dismissVoicePromo(db: SqlDatabase): Promise<UserSettings> 
   };
   await db.runAsync(
     'UPDATE user_settings SET voice_promo_dismissed = ?, updated_at = ? WHERE id = ?;',
+    [1, updated.updatedAt, USER_SETTINGS_ID],
+  );
+  return updated;
+}
+
+/**
+ * Records that the household has seen the "why we need the microphone" explainer (US-020a), so
+ * the next mic tap skips straight to the OS permission prompt / capture instead of repeating it.
+ */
+export async function markMicPermissionExplainerSeen(db: SqlDatabase): Promise<UserSettings> {
+  const existing = await requireSettings(db);
+  const updated: UserSettings = {
+    ...existing,
+    micPermissionExplainerSeen: true,
+    updatedAt: new Date().toISOString(),
+  };
+  await db.runAsync(
+    'UPDATE user_settings SET mic_permission_explainer_seen = ?, updated_at = ? WHERE id = ?;',
     [1, updated.updatedAt, USER_SETTINGS_ID],
   );
   return updated;

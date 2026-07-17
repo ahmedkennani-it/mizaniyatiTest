@@ -9,7 +9,9 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSFaceIDUsageDescription": "$(PRODUCT_NAME) utilise Face ID pour verrouiller l'accès à vos données financières."
+        "NSFaceIDUsageDescription": "$(PRODUCT_NAME) utilise Face ID pour verrouiller l'accès à vos données financières.",
+      "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) utilise le microphone pour la saisie vocale de vos dépenses.",
+      "NSSpeechRecognitionUsageDescription": "$(PRODUCT_NAME) transcrit votre dictée pour remplir la saisie de dépense. Aucun enregistrement n'est conservé."
       }
     },
     "android": {
@@ -30,7 +32,14 @@
       "expo-sqlite",
       "expo-notifications",
       "expo-secure-store",
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "$(PRODUCT_NAME) utilise le microphone pour la saisie vocale de vos dépenses.",
+          "speechRecognitionPermission": "$(PRODUCT_NAME) transcrit votre dictée pour remplir la saisie de dépense. Aucun enregistrement n'est conservé."
+        }
+      ]
     ],
     "extra": {
       "eas": {

@@ -16,6 +16,7 @@ import { userSettingsMigration } from './0014_user_settings';
 import { householdDebtTransferMigration } from './0015_household_debt_transfer';
 import { privacyAcceptanceMigration } from './0016_privacy_acceptance';
 import { voicePromoMigration } from './0017_voice_promo';
+import { micPermissionExplainerMigration } from './0018_mic_permission_explainer';
 
 /**
  * Ordered registry of schema migrations. Add new entries with a strictly increasing
@@ -40,4 +41,5 @@ export const migrations: Migration[] = [
   householdDebtTransferMigration,
   privacyAcceptanceMigration,
   voicePromoMigration,
+  micPermissionExplainerMigration,
 ];

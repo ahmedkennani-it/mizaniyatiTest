@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { AddExpenseForm } from './AddExpenseForm';
 import { ExpenseConfirmation } from './ExpenseConfirmation';
+import { VoiceEntrySheet } from './VoiceEntrySheet';
 import { getDatabase } from '../db/client';
 import { listTransactions } from '../db/repositories';
 import type { Transaction } from '../db/repositories';
@@ -12,13 +13,15 @@ import { computeMonthlyBalance } from '../transactions';
 interface ExpenseEntryContextValue {
   /** Opens the entry sheet — pass a transaction to edit it, omit to add a new one. */
   openEntry: (transaction?: Transaction) => void;
+  /** Opens the voice-capture sheet (US-020a) for a new expense. */
+  openVoiceEntry: () => void;
   /** Increments after every save/delete so data-displaying screens can refetch. */
   dataVersion: number;
 }
 
 const ExpenseEntryContext = createContext<ExpenseEntryContextValue | undefined>(undefined);
 
-type Mode = 'closed' | 'form' | 'confirmation';
+type Mode = 'closed' | 'form' | 'voice' | 'confirmation';
 
 function currentMonthKey(): string {
   return new Date().toISOString().slice(0, 7);
@@ -42,14 +45,19 @@ export function ExpenseEntryProvider({ children }: { children: React.ReactNode }
     setMode('form');
   }, []);
 
+  const openVoiceEntry = useCallback(() => {
+    setEditing(null);
+    setMode('voice');
+  }, []);
+
   const close = useCallback(() => {
     setEditing(null);
     setMode('closed');
   }, []);
 
   const value = useMemo<ExpenseEntryContextValue>(
-    () => ({ openEntry, dataVersion }),
-    [openEntry, dataVersion],
+    () => ({ openEntry, openVoiceEntry, dataVersion }),
+    [openEntry, openVoiceEntry, dataVersion],
   );
 
   return (
@@ -75,6 +83,14 @@ export function ExpenseEntryProvider({ children }: { children: React.ReactNode }
                 onDeleted={() => {
                   setDataVersion((v) => v + 1);
                   close();
+                }}
+              />
+            ) : mode === 'voice' ? (
+              <VoiceEntrySheet
+                onClose={close}
+                onFallbackToKeyboard={() => {
+                  setEditing(null);
+                  setMode('form');
                 }}
               />
             ) : (
