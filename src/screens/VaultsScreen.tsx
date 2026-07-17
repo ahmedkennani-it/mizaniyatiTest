@@ -19,6 +19,7 @@ import { getDatabase } from '../db/client';
 import { listVaultContributions, listVaults } from '../db/repositories';
 import type { Vault, VaultContribution } from '../db/repositories';
 import { useLanguage } from '../i18n';
+import { formatShortDate } from '../i18n/dateFormat';
 import { forceLTR, toLocalizedDigits } from '../i18n/numberFormat';
 import { DEFAULT_CURRENCY_CODE, formatMoney, toMajorUnits } from '../money';
 import { useTheme } from '../theme';
@@ -106,6 +107,9 @@ export function VaultsScreen({ onBack }: VaultsScreenProps) {
           <Txt weight="extrabold" size="xxl">
             {formatMoney(totalSavedMinor, DEFAULT_CURRENCY_CODE, language)}
           </Txt>
+          <Txt size="xs" color={theme.colors.textSecondary}>
+            {t('vaultsScreen.vaultCountLabel', { count: vaults.length })}
+          </Txt>
         </Card>
       ) : null}
 
@@ -164,6 +168,13 @@ export function VaultsScreen({ onBack }: VaultsScreenProps) {
                   />
                   <Txt size="xs" color={theme.colors.textSecondary}>
                     {`${num(status.savedMinor, vault.currencyCode)} / ${num(status.targetMinor, vault.currencyCode)} ${vault.currencyCode}`}
+                  </Txt>
+                  <Txt size="xs" color={theme.colors.textSecondary}>
+                    {vault.deadline
+                      ? t('vaultsScreen.deadlineLabel', {
+                          date: formatShortDate(new Date(`${vault.deadline}T00:00:00.000Z`), language),
+                        })
+                      : t('vaultsScreen.noDeadlineLabel')}
                   </Txt>
                 </Card>
               </Pressable>

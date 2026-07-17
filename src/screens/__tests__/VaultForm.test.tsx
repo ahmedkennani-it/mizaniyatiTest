@@ -1,10 +1,11 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
 
-import '../../i18n';
 import { createVault, listVaults } from '../../db/repositories';
 import type { Vault } from '../../db/repositories';
 import { createFakeDatabase } from '../../db/testUtils/createFakeDatabase';
+import { LanguageProvider } from '../../i18n';
+import { formatMoney } from '../../money';
 import { ThemeProvider } from '../../theme';
 import { VaultForm } from '../VaultForm';
 
@@ -18,11 +19,20 @@ function renderForm(
   vault?: Vault,
   onSaved: () => void = jest.fn(),
   onDeleted: () => void = jest.fn(),
+  savedMinor = 0,
 ) {
   return render(
-    <ThemeProvider initialColorScheme="light">
-      <VaultForm vault={vault} onSaved={onSaved} onCancel={jest.fn()} onDeleted={onDeleted} />
-    </ThemeProvider>,
+    <LanguageProvider>
+      <ThemeProvider initialColorScheme="light">
+        <VaultForm
+          vault={vault}
+          savedMinor={savedMinor}
+          onSaved={onSaved}
+          onCancel={jest.fn()}
+          onDeleted={onDeleted}
+        />
+      </ThemeProvider>
+    </LanguageProvider>,
   );
 }
 
@@ -81,6 +91,21 @@ describe('VaultForm — création (US-023)', () => {
     expect(await screen.findByText('Saisissez une échéance valide (AAAA-MM-JJ).')).toBeTruthy();
     expect(await listVaults(mockFakeDb)).toHaveLength(0);
   });
+
+  /** US-033: the suggested monthly amount updates live, as soon as a target + deadline are set,
+   *  without needing to submit first. */
+  it('shows a live suggested-monthly preview once a target and deadline are entered', async () => {
+    await renderForm();
+
+    expect(screen.queryByText(/Versement mensuel suggéré/)).toBeNull();
+
+    await fireEvent.changeText(screen.getByLabelText('Objectif'), '30000');
+    expect(screen.queryByText(/Versement mensuel suggéré/)).toBeNull();
+
+    await fireEvent.changeText(screen.getByLabelText('Échéance (optionnel)'), '2099-06-01');
+
+    expect(await screen.findByText(/Versement mensuel suggéré/)).toBeTruthy();
+  });
 });
 
 describe('VaultForm — édition et suppression (US-023)', () => {
@@ -102,6 +127,28 @@ describe('VaultForm — édition et suppression (US-023)', () => {
     expect(screen.getByLabelText('Nom').props.value).toBe('Omra 2027');
     expect(screen.getByLabelText('Objectif').props.value).toBe('30000');
     expect(screen.getByLabelText('Échéance (optionnel)').props.value).toBe('2027-06-01');
+  });
+
+  it('reflects the already-saved amount in the live preview when editing', async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
+    try {
+      // Deadline is 2027-06-01 → 17 whole months from 2026-01-01.
+      const remainingMinor = vault.targetMinor - 1000000;
+      // RNTL's text normalizer collapses all whitespace (including the non-breaking space
+      // `Intl.NumberFormat` puts before the currency code) to plain spaces before matching a
+      // RegExp against it, so the pattern built here must do the same or it silently never matches.
+      const expectedCore = formatMoney(Math.ceil(remainingMinor / 17), 'MAD', 'fr')
+        .replace(/‎/g, '')
+        .replace(/\s/g, ' ');
+      const expectedPattern = new RegExp(expectedCore.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+
+      await renderForm(vault, jest.fn(), jest.fn(), 1000000);
+
+      expect(await screen.findByText(expectedPattern)).toBeTruthy();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it('updates the vault', async () => {

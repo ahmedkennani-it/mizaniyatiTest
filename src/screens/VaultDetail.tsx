@@ -9,6 +9,7 @@ import {
   Card,
   Chip,
   IconTile,
+  Pill,
   ProgressBar,
   ScreenHeader,
   TextField,
@@ -24,6 +25,7 @@ import {
 } from '../db/repositories';
 import type { Member, Vault, VaultContribution } from '../db/repositories';
 import { useLanguage } from '../i18n';
+import { formatShortDate } from '../i18n/dateFormat';
 import { forceLTR, toLocalizedDigits } from '../i18n/numberFormat';
 import { formatMoney, parseAmountInput, toMajorUnits } from '../money';
 import { useTheme } from '../theme';
@@ -79,11 +81,13 @@ export function VaultDetail({ vault, onBack, onVaultChanged, onVaultDeleted }: V
     .filter((contribution) => contribution.vaultId === currentVault.id)
     .sort((a, b) => (a.date < b.date ? 1 : -1));
   const status = computeVaultStatus(currentVault, contributions);
+  const memberById = new Map(members.map((member) => [member.id, member] as const));
 
   if (view === 'edit') {
     return (
       <VaultForm
         vault={currentVault}
+        savedMinor={status.savedMinor}
         onSaved={async () => {
           const updated = await getVaultById(getDatabase(), currentVault.id);
           if (updated) {
@@ -233,12 +237,15 @@ export function VaultDetail({ vault, onBack, onVaultChanged, onVaultDeleted }: V
         </Txt>
 
         {status.isReached ? (
-          <Txt weight="bold" color={theme.colors.success} style={{ textAlign: 'center' }}>
-            {t('vaultDetail.reachedHint')}
-            {status.surplusMinor > 0
-              ? ` (+${formatMoney(status.surplusMinor, currentVault.currencyCode, language)})`
-              : ''}
-          </Txt>
+          <View style={{ alignItems: 'center', gap: theme.spacing.xs }}>
+            <IconTile icon="party-popper" accent="gold" />
+            <Txt weight="bold" color={theme.colors.success} style={{ textAlign: 'center' }}>
+              {t('vaultDetail.reachedCelebration')}
+              {status.surplusMinor > 0
+                ? ` (+${formatMoney(status.surplusMinor, currentVault.currencyCode, language)})`
+                : ''}
+            </Txt>
+          </View>
         ) : currentVault.deadline ? (
           <View style={{ alignItems: 'center', gap: 2 }}>
             <Txt size="sm">
@@ -246,14 +253,24 @@ export function VaultDetail({ vault, onBack, onVaultChanged, onVaultDeleted }: V
               {formatMoney(status.remainingMinor, currentVault.currencyCode, language)}
             </Txt>
             {status.isOverdue ? (
-              <Txt size="sm" color={theme.colors.danger}>
-                {t('vaultDetail.overdueHint')}
-              </Txt>
+              <>
+                <Pill
+                  label={t('vaultDetail.overdueBadge')}
+                  background={theme.banner.warningBg}
+                  color={theme.banner.warningText}
+                />
+                <Txt size="sm" color={theme.colors.danger}>
+                  {t('vaultDetail.overdueHint')}
+                </Txt>
+              </>
             ) : null}
             {status.suggestedMonthlyMinor !== null ? (
               <Txt size="sm" color={theme.colors.textSecondary}>
                 {t('vaultDetail.suggestedMonthlyLabel')}:{' '}
                 {formatMoney(status.suggestedMonthlyMinor, currentVault.currencyCode, language)}
+                {status.monthsRemaining !== null
+                  ? ` (${t('vaultDetail.monthsRemainingLabel', { count: status.monthsRemaining })})`
+                  : ''}
               </Txt>
             ) : null}
           </View>
@@ -294,11 +311,19 @@ export function VaultDetail({ vault, onBack, onVaultChanged, onVaultDeleted }: V
             <Card key={contribution.id} elevated style={{ gap: theme.spacing.xs }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
                 <IconTile icon="banknote" accent="teal" size="sm" />
-                <Txt size="sm" style={{ flex: 1 }}>
-                  {contribution.note || contribution.date.slice(0, 10)}
-                </Txt>
-                <Txt weight="bold" size="sm">
-                  {formatMoney(contribution.amountMinor, currentVault.currencyCode, language)}
+                <View style={{ flex: 1, gap: 2 }}>
+                  {contribution.note ? <Txt size="sm">{contribution.note}</Txt> : null}
+                  <Txt size="xs" color={theme.colors.textSecondary}>
+                    {[
+                      formatShortDate(new Date(contribution.date), language),
+                      memberById.get(contribution.memberId)?.name,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </Txt>
+                </View>
+                <Txt weight="bold" size="sm" color={theme.colors.success}>
+                  {`+${formatMoney(contribution.amountMinor, currentVault.currencyCode, language)}`}
                 </Txt>
               </View>
               {confirmingDeleteId === contribution.id ? (

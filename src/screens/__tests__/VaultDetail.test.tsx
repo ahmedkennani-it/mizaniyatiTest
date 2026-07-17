@@ -10,6 +10,8 @@ import {
 import type { Member, Vault } from '../../db/repositories';
 import { createFakeDatabase } from '../../db/testUtils/createFakeDatabase';
 import { LanguageProvider } from '../../i18n';
+import { formatShortDate } from '../../i18n/dateFormat';
+import { formatMoney } from '../../money';
 import { ThemeProvider } from '../../theme';
 import { VaultDetail } from '../VaultDetail';
 
@@ -62,7 +64,7 @@ describe('VaultDetail (US-023)', () => {
   it('adds a contribution and shows it in the history', async () => {
     await renderDetail();
 
-    await fireEvent.press(screen.getByText('Ajouter un versement'));
+    await fireEvent.press(screen.getByText("Ajouter de l'argent"));
     await fireEvent.changeText(screen.getByLabelText('Montant'), '444');
     await fireEvent.press(screen.getByText('Youssef'));
     await fireEvent.changeText(screen.getByLabelText('Note (optionnel)'), 'Prime de juin');
@@ -108,7 +110,62 @@ describe('VaultDetail (US-023)', () => {
 
     await renderDetail();
 
-    expect(await screen.findByText(/Objectif atteint/)).toBeTruthy();
+    expect(await screen.findByText(/objectif atteint/)).toBeTruthy();
+  });
+
+  /** US-032: a contribution row must show who gave it and when, not one or the other. */
+  it('shows the date and member name together on a contribution row', async () => {
+    await createVaultContribution(mockFakeDb, {
+      vaultId: vault.id,
+      amountMinor: 100000,
+      memberId: member.id,
+      date: '2026-07-01T10:00:00.000Z',
+    });
+
+    await renderDetail();
+
+    const expectedDate = formatShortDate(new Date('2026-07-01T10:00:00.000Z'), 'fr');
+    expect(await screen.findByText(`${expectedDate} · Youssef`)).toBeTruthy();
+  });
+
+  it('shows the contribution amount prefixed with a plus sign', async () => {
+    await createVaultContribution(mockFakeDb, {
+      vaultId: vault.id,
+      amountMinor: 100000,
+      memberId: member.id,
+      date: '2026-07-01T10:00:00.000Z',
+    });
+
+    await renderDetail();
+
+    const expected = `+${formatMoney(100000, 'MAD', 'fr')}`;
+    expect(await screen.findByText(expected)).toBeTruthy();
+  });
+
+  it('shows an overdue badge once the deadline has passed without reaching the target', async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2027-02-01T00:00:00.000Z'));
+    try {
+      await renderDetail();
+
+      expect(await screen.findByText('En retard')).toBeTruthy();
+      expect(await screen.findByText(/Échéance dépassée/)).toBeTruthy();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('shows the number of months remaining alongside the suggested monthly amount', async () => {
+    jest.useFakeTimers();
+    // Deadline is 2027-01-01 → exactly 12 whole months away.
+    jest.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
+    try {
+      await renderDetail();
+
+      expect(await screen.findByText(/sur 12 mois/)).toBeTruthy();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it('calls onBack when the back link is pressed', async () => {

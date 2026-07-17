@@ -55,6 +55,41 @@ describe('VaultsScreen (US-023)', () => {
     expect(await screen.findByText('Total épargné')).toBeTruthy();
   });
 
+  /** US-032: the hero shows how many vaults exist, not just the total saved. */
+  it('shows the number of vaults alongside the total saved', async () => {
+    await createVault(mockFakeDb, { name: 'Omra 2027', targetMinor: 300000, currencyCode: 'MAD' });
+    await createVault(mockFakeDb, { name: 'Voiture', targetMinor: 500000, currencyCode: 'MAD' });
+
+    await renderScreen();
+
+    expect(await screen.findByText(/2 coffre/)).toBeTruthy();
+  });
+
+  it('shows the deadline on a vault row, or "Sans échéance" when there is none', async () => {
+    await createVault(mockFakeDb, {
+      name: 'Omra 2027',
+      targetMinor: 300000,
+      currencyCode: 'MAD',
+      deadline: '2027-06-01',
+    });
+    await createVault(mockFakeDb, { name: 'Urgence', targetMinor: 500000, currencyCode: 'MAD' });
+
+    await renderScreen();
+
+    expect(await screen.findByText(/Échéance/)).toBeTruthy();
+    expect(await screen.findByText('Sans échéance')).toBeTruthy();
+  });
+
+  /** US-032: a goal at 0% must stay visible with an empty bar, not be filtered out. */
+  it('keeps a goal at 0% visible', async () => {
+    await createVault(mockFakeDb, { name: 'Fonds neuf', targetMinor: 100000, currencyCode: 'MAD' });
+
+    await renderScreen();
+
+    expect(await screen.findByText('Fonds neuf')).toBeTruthy();
+    expect(screen.getByText('0 %')).toBeTruthy();
+  });
+
   it('opens the vault detail on tap', async () => {
     await createVault(mockFakeDb, { name: 'Omra 2027', targetMinor: 300000, currencyCode: 'MAD' });
 

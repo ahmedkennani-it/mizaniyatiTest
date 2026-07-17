@@ -102,6 +102,15 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 7.6 | Seuil d'alerte configurable par catégorie | ✅ done |
 | 7.7 | Report du reste au mois suivant (rollover, Pro) | ✅ done |
 
+## État des tâches Phase 8 (Objectifs & coffres) — ✅ 4/4
+
+| Tâche | Titre | Statut |
+| --- | --- | --- |
+| 8.1 | Liste des objectifs & coffres | ✅ done |
+| 8.2 | Création d'un objectif d'épargne | ✅ done |
+| 8.3 | Détail d'un objectif avec versement suggéré | ✅ done |
+| 8.4 | Versements sur un objectif et historique | ✅ done |
+
 ## Journal
 
 ### Itération 1 — Tâche 1.1 (Scaffold Expo + TypeScript) ✅
@@ -1073,6 +1082,59 @@ interdiction éternelle du réseau.
   seulement borné à 0 (jamais un budget négatif). Le test existant est retourné pour affirmer le
   nouveau comportement voulu, pas contourné.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1681/1681, 138 suites** ✅.
+
+### Itération 42 — Phase 8 (Objectifs & coffres) ✅ 4/4
+- **Audit préalable** : `VaultsScreen`, `VaultForm` et `VaultDetail` existaient déjà (US-023) avec
+  `computeVaultStatus` (calcul pur savedMinor/percentage/remaining/monthsRemaining/
+  suggestedMonthlyMinor/isOverdue déjà couvert par `vaultStatus.test.ts`). Contrairement à la
+  phase 7, aucun écran ne manquait entièrement — seulement des affichages precis attendus par les
+  critères d'acceptation :
+  - 8.1 : le nombre de coffres n'était pas affiché à côté du total épargné, et l'échéance
+    (ou « Sans échéance ») n'apparaissait pas sur chaque ligne.
+  - 8.2 : le formulaire de création n'affichait pas d'aperçu en direct du versement mensuel
+    suggéré pendant la saisie — seul le détail le calculait, après enregistrement.
+  - 8.3 : `VaultDetail` n'affichait ni le nombre de mois restants à côté du montant suggéré, ni de
+    badge « En retard » distinct du texte d'échéance dépassée, ni de bloc de célébration à
+    l'atteinte de l'objectif (seulement du texte plat).
+  - 8.4 : chaque ligne de versement de l'historique affichait `note || date` (l'un OU l'autre) au
+    lieu de la date ET le membre ensemble — un versement sans note perdait silencieusement
+    l'information de qui l'avait fait.
+- **`vaultCountLabel` + échéance par ligne (8.1)** : réutilise `formatShortDate`, même motif que le
+  reste de l'app (`vaultsScreen.deadlineLabel`/`noDeadlineLabel`).
+- **Aperçu en direct du versement suggéré (8.2)** : `VaultForm` reçoit un `savedMinor` optionnel
+  (0 par défaut en création) et recalcule `computeVaultStatus` sur un `Vault`/`VaultContribution[]`
+  temporaires à chaque frappe sur l'objectif ou l'échéance — même fonction pure que l'écran de
+  détail, pas de second calcul divergent. `VaultDetail` passe son `status.savedMinor` réel à
+  `VaultForm` en édition, pour que l'aperçu reflète l'épargne déjà accumulée plutôt que de repartir
+  de zéro.
+- **Mois restants, badge retard, célébration (8.3)** : `monthsRemainingLabel` accolé au montant
+  suggéré (« Suggéré / mois : 250,00 MAD (sur 12 mois) ») ; le badge `Pill` « En retard »
+  (`theme.banner.warningBg/warningText`) s'ajoute au texte d'indice déjà présent au lieu de le
+  remplacer ; à l'atteinte, bloc dédié (icône `party-popper` + `reachedCelebration`) avec l'excédent
+  affiché entre parenthèses s'il y en a un, plutôt que le même texte que l'état « en cours ».
+- 🐛 **Ligne de versement corrigée pour toujours montrer date + membre (8.4)** : c'était
+  `note || date` (l'un remplaçait l'autre), désormais `[date, membre].filter(Boolean).join(' · ')`
+  avec la note affichée séparément au-dessus quand elle existe — aucune des trois informations
+  n'écrase plus les autres. Montant préfixé `+` en `theme.colors.success` pour le distinguer
+  visuellement d'une dépense.
+- **Tests** : 3 nouveaux dans `VaultsScreen.test.tsx` (compteur de coffres, échéance/« Sans
+  échéance », objectif à 0 % qui reste visible), 2 nouveaux dans `VaultForm.test.tsx` (aperçu qui
+  apparaît seulement une fois objectif + échéance renseignés, aperçu qui reflète le `savedMinor`
+  déjà épargné en édition — ce dernier avec `jest.useFakeTimers()` pour fixer « aujourd'hui » et
+  obtenir un nombre de mois déterministe), 4 nouveaux dans `VaultDetail.test.tsx` (date + membre
+  ensemble sur une ligne, montant préfixé `+`, badge « En retard », mois restants). Corrigé au
+  passage : `VaultForm.test.tsx` et `VaultDetail.test.tsx` manquaient/avaient des assertions
+  obsolètes découvertes en cours de route (wrapper `LanguageProvider` manquant, libellé du bouton
+  d'ajout renommé, casse de « objectif atteint »).
+- 🐛 **Piège de correspondance de texte avec espace insécable** : `Intl.NumberFormat` place un
+  espace insécable (U+00A0) avant le code devise ; le normalisateur de RNTL le convertit en espace
+  normal avant de tester une regex passée à `findByText`, mais si le motif de test est construit à
+  partir du texte brut de `formatMoney` (qui contient encore le U+00A0), il ne correspond plus au
+  texte normalisé — silencieusement, sans erreur claire au premier abord. Corrigé en normalisant
+  aussi l'espace côté attendu (`\s` → `' '`) avant de construire le motif.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1690/1690, 138 suites** ✅.
+- Aucune violation des garde-fous : toujours aucune API bancaire, toutes les valeurs passent par
+  `formatMoney`/i18n, aucune chaîne en dur ajoutée.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 
