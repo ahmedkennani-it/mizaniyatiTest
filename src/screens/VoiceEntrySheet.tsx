@@ -13,7 +13,7 @@ import {
   listMembers,
   markMicPermissionExplainerSeen,
 } from '../db/repositories';
-import type { Category, Household } from '../db/repositories';
+import type { Category, Household, Transaction } from '../db/repositories';
 import { useEntitlements } from '../entitlements';
 import { LANGUAGE_OPTIONS, useLanguage } from '../i18n';
 import type { SupportedLanguage } from '../i18n';
@@ -41,7 +41,7 @@ export interface VoiceEntrySheetProps {
    */
   onCaptured: (prefill: AddExpenseFormPrefill) => void;
   /** The review proposal (US-021b) was confirmed and saved. */
-  onSavedFromReview: () => void | Promise<void>;
+  onSavedFromReview: (created: Transaction) => void | Promise<void>;
 }
 
 type Stage = 'loading' | 'explainer' | 'denied' | 'listening' | 'error' | 'review';
@@ -209,7 +209,7 @@ export function VoiceEntrySheet({
     if (!canConfirmReview || reviewAmountMinor === null || !selectedCategoryId || !selectedMemberId) {
       return;
     }
-    await createTransaction(getDatabase(), {
+    const created = await createTransaction(getDatabase(), {
       type: 'expense',
       amountMinor: reviewAmountMinor,
       currencyCode: reviewCurrencyCode,
@@ -218,7 +218,7 @@ export function VoiceEntrySheet({
       occurredAt: new Date().toISOString(),
       note: capturedNote || undefined,
     });
-    await onSavedFromReview();
+    await onSavedFromReview(created);
   }
 
   if (!canUseVoice) {

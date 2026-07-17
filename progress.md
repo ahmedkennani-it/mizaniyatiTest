@@ -84,7 +84,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 6.4 | Transcription vocale multilingue (Pro) | ✅ done |
 | 6.5 | Extraction du montant depuis la dictée (Pro) | ✅ done |
 | 6.6 | Déduction catégorie/libellé et confirmation (Pro) | ✅ done |
-| 6.7 | Confirmation d'ajout | ⏳ |
+| 6.7 | Confirmation d'ajout | ✅ done |
 | 6.8 | Saisie d'un revenu | ⏳ |
 | 6.9 | Modification et suppression | ⏳ |
 | 6.10 | Attribution à un membre | ⏳ |
@@ -902,6 +902,27 @@ interdiction éternelle du réseau.
   ce texte était donc en course avec l'effet — remplacé par un `waitFor` qui attend la sélection
   elle-même, pas seulement la présence du chip.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1612/1612, 133 suites** ✅.
+
+### Itération 36 — Tâche 6.7 (Confirmation d'ajout avec solde mis à jour) ✅
+- `ExpenseConfirmation` (livrée avec la 5.x, réutilisée depuis) n'affichait **que** le solde
+  restant — jamais le détail de l'opération qu'on venait d'enregistrer, ni un avertissement de
+  dépassement. Ajoute une carte montant/catégorie/membre/date et, quand pertinent, un
+  `AlertBanner` réutilisant le même texte que `categoriesScreen.overBanner` (pas de doublon de
+  chaîne pour le même message).
+- 🐛 **Corrigé au passage, pas dans le périmètre du critère mais découvert en l'implémentant** :
+  la devise affichée sur cet écran était codée en dur sur `DEFAULT_CURRENCY_CODE` ('MAD'), au lieu
+  de celle de l'opération réellement enregistrée. Silencieux tant qu'un seul foyer/devise existe,
+  ça aurait affiché la mauvaise devise dès qu'une autre serait supportée.
+- **Le calcul de dépassement se fait sur l'opération qui vient d'être enregistrée**, pas sur l'état
+  général de la catégorie : `computeCategoryBudgetStatus` est recalculé après le `createTransaction`
+  à partir des transactions rechargées, donc l'avertissement reflète bien l'effet de *cette*
+  opération-là sur le plafond du mois.
+- **`AddExpenseForm.onSaved` et `VoiceEntrySheet.onSavedFromReview` remontent maintenant la
+  transaction créée** (au lieu d'un simple callback sans argument) — c'est ce qui permet à
+  `ExpenseEntryProvider` de résoudre catégorie/membre/dépassement sans un aller-retour DB
+  supplémentaire côté écran appelant. Une édition ne remonte toujours rien (`onSaved()` sans
+  argument) puisqu'elle ferme directement sans passer par la confirmation.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1615/1615, 133 suites** ✅.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

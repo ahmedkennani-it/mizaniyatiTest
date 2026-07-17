@@ -70,7 +70,9 @@ export interface AddExpenseFormProps {
   transaction?: Transaction;
   /** Ignored when `transaction` is set — editing always starts from the saved values. */
   prefill?: AddExpenseFormPrefill;
-  onSaved: () => void;
+  /** The saved transaction, for a *new* entry (US-022's confirmation needs it) — omitted when
+   *  editing, since editing closes straight back without a confirmation screen. */
+  onSaved: (created?: Transaction) => void;
   onCancel: () => void;
   /** Required when `transaction` is set — called after a successful delete. */
   onDeleted?: () => void;
@@ -225,6 +227,7 @@ export function AddExpenseForm({
 
     const occurredAt = new Date(dateInput).toISOString();
     const trimmedNote = note.trim() || undefined;
+    let created: Transaction | undefined;
     if (isEditing && transaction) {
       await updateTransaction(getDatabase(), transaction.id, {
         type,
@@ -236,7 +239,7 @@ export function AddExpenseForm({
         note: trimmedNote ?? null,
       });
     } else {
-      await createTransaction(getDatabase(), {
+      created = await createTransaction(getDatabase(), {
         type,
         amountMinor,
         currencyCode,
@@ -249,7 +252,7 @@ export function AddExpenseForm({
     if (type === 'expense') {
       await maybeSendBudgetAlert(categoryId);
     }
-    onSaved();
+    onSaved(created);
   }
 
   async function handleConfirmDelete() {
