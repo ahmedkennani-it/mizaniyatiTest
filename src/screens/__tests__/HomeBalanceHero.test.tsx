@@ -175,8 +175,8 @@ describe('balance hero (US-007)', () => {
 
     await fireEvent.press(await screen.findByText(fr.home.emptyStateExpense));
     await fireEvent.press(await screen.findByText('Courses'));
-    const memberChips = await screen.findAllByText('Youssef');
-    await fireEvent.press(memberChips[memberChips.length - 1]);
+    // A single-member household never shows a member chip (US-018) — "Youssef" is already
+    // auto-assigned.
     await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '1500');
     await fireEvent.press(screen.getByText(fr.expenseForm.submit));
 

@@ -225,8 +225,8 @@ describe('dashboard empty state (US-015)', () => {
 
       await fireEvent.press(screen.getByText(fr.home.emptyStateExpense));
       await fireEvent.press(await screen.findByText('Courses'));
-      const chips = await screen.findAllByText('Youssef');
-      await fireEvent.press(chips[chips.length - 1]);
+      // A single-member household never shows a member chip (US-018) — "Youssef" is already
+      // auto-assigned.
       await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '15');
       await fireEvent.press(screen.getByText(fr.expenseForm.submit));
 

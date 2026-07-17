@@ -87,7 +87,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 6.7 | Confirmation d'ajout | ✅ done |
 | 6.8 | Saisie d'un revenu | ✅ done |
 | 6.9 | Modification et suppression | ⚠️ `done: false` — 3/4 critères, bloqué sur « membre Lecture seule » |
-| 6.10 | Attribution à un membre | ⏳ |
+| 6.10 | Attribution à un membre | ✅ done |
 | 6.11 | Choix de la date | ⏳ |
 
 ## Journal
@@ -973,6 +973,26 @@ interdiction éternelle du réseau.
   et faire respecter cette distinction, une fois l'invitation multi-appareil en place. Documenté
   ici plutôt que masqué ; repris quand la 13.4 (ou ce qu'elle requiert) arrivera.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1630/1630, 135 suites** ✅.
+
+### Itération 39 — Tâche 6.10 (Attribution d'une opération à un membre) ✅
+- **`MemberChip` (nouveau)** : même forme que `CategoryChipV` (icône/avatar + libellé, empilés),
+  avec un `Avatar` à la place de l'icône — c'est littéralement ce que demande le critère
+  (« pré-sélectionné avec son avatar »).
+- **Champ masqué à 1 seul membre** (critère 3) : gardé volontairement sur `members.length <= 1`
+  plutôt que sur le plan — `FREE_PLAN.members.max` vaut aujourd'hui `2` dans `freePlan.ts`, alors
+  que la tâche **13.1 « Limite de 1 membre en plan Gratuit »** (encore `done: false`) est celle
+  censée corriger cette valeur placeholder. Un gardé sur le plan n'aurait donc rien masqué du tout
+  tant que 13.1 n'est pas faite ; un garde sur le nombre réel de membres fonctionne dès
+  aujourd'hui et convergera naturellement avec « plan Gratuit » une fois 13.1 livrée.
+- **Écart assumé sur le critère 2** (« quand je tape le champ, la liste s'affiche ») : lu comme
+  « la liste des membres est visible et sélectionnable », pas comme « masquée derrière un tap » —
+  les chips restent affichées directement (même traitement que la bande rapide de catégories,
+  6.2), ce qui est cohérent avec des foyers à effectif toujours restreint (2-3 membres au grand
+  maximum sur ce MVP) : un tap supplémentaire n'y ajouterait rien.
+- 🐛 **Six tests existants cassés par le masquage à 1 membre**, corrigés : ils pressaient un chip
+  membre qui n'existait déjà plus (la sélection étant automatique dès le chargement) — le press
+  était redondant avant même ce changement, seulement rendu visible maintenant.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1637/1637, 135 suites** ✅.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

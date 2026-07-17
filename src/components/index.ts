@@ -28,6 +28,8 @@ export { IconTile } from './IconTile';
 export type { IconTileProps } from './IconTile';
 export { ListRow } from './ListRow';
 export type { ListRowProps } from './ListRow';
+export { MemberChip } from './MemberChip';
+export type { MemberChipProps } from './MemberChip';
 export { MonthSelector } from './MonthSelector';
 export type { MonthSelectorProps } from './MonthSelector';
 export { NumericKeypad } from './NumericKeypad';

@@ -38,13 +38,6 @@ function renderHome() {
   );
 }
 
-// The member's name can also appear in the dashboard greeting header underneath the entry overlay,
-// so press the member chip rendered last in the tree (inside the form) to disambiguate.
-async function pressMemberChip(name: string) {
-  const matches = await screen.findAllByText(name);
-  await fireEvent.press(matches[matches.length - 1]);
-}
-
 describe('HomeScreen under RTL and LTR', () => {
   const originalIsRTL = I18nManager.isRTL;
 
@@ -360,9 +353,8 @@ describe('HomeScreen under RTL and LTR', () => {
     expect(await screen.findByText('Nouvelle dépense')).toBeTruthy();
 
     await fireEvent.press(screen.getByText('Courses'));
-    // "Moi" also appears in the dashboard greeting header underneath the overlay, so target the
-    // member chip inside the form (rendered last in the tree).
-    await pressMemberChip('Moi');
+    // A single-member household never shows a member chip (US-018) — "Moi" is already
+    // auto-assigned.
     await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '15');
     await fireEvent.press(screen.getByText('Enregistrer'));
 
@@ -382,7 +374,6 @@ describe('HomeScreen under RTL and LTR', () => {
     await fireEvent.press(await screen.findByText('Dépense'));
     // `findBy*`: the form loads its category chips from the db, so they land a tick after it opens.
     await fireEvent.press(await screen.findByText('Courses'));
-    await pressMemberChip('Moi');
     await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '15');
     await fireEvent.press(screen.getByText('Enregistrer'));
 

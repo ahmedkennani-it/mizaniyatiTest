@@ -9,6 +9,7 @@ import {
   Card,
   CategoryChipV,
   Chip,
+  MemberChip,
   NumericKeypad,
   ScreenHeader,
   TextField,
@@ -410,26 +411,31 @@ export function AddExpenseForm({
         ) : null}
       </View>
 
-      <View style={{ gap: theme.spacing.xs }}>
-        <Txt size="sm" color={theme.colors.textSecondary}>
-          {t('expenseForm.memberLabel')}
-        </Txt>
-        <View style={[styles.chipRow, { gap: theme.spacing.xs }]}>
-          {members.map((member) => (
-            <Chip
-              key={member.id}
-              label={member.name}
-              selected={member.id === memberId}
-              onPress={() => setMemberId(member.id)}
-            />
-          ))}
-        </View>
-        {errors.member ? (
-          <Txt size="xs" color={theme.colors.danger}>
-            {errors.member}
+      {/* US-018: with a single member there's nothing to attribute between — the sole member is
+          still assigned automatically (see the `listMembers` effect above), just not shown as a
+          choice that doesn't exist. */}
+      {members.length > 1 ? (
+        <View style={{ gap: theme.spacing.xs }}>
+          <Txt size="sm" color={theme.colors.textSecondary}>
+            {t('expenseForm.memberLabel')}
           </Txt>
-        ) : null}
-      </View>
+          <View style={[styles.chipRow, { gap: theme.spacing.xs }]}>
+            {members.map((member) => (
+              <MemberChip
+                key={member.id}
+                name={member.name}
+                selected={member.id === memberId}
+                onPress={() => setMemberId(member.id)}
+              />
+            ))}
+          </View>
+          {errors.member ? (
+            <Txt size="xs" color={theme.colors.danger}>
+              {errors.member}
+            </Txt>
+          ) : null}
+        </View>
+      ) : null}
 
       <TextField
         label={t('expenseForm.dateLabel')}

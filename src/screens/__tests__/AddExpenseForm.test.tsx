@@ -111,7 +111,8 @@ describe('AddExpenseForm', () => {
 
     await screen.findByText('Courses');
     await fireEvent.press(screen.getByText('Courses'));
-    await fireEvent.press(screen.getByText('Moi'));
+    // A single-member household never shows a member chip to press (US-018) — it's already
+    // auto-assigned.
     await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '42.50');
 
     await fireEvent.press(screen.getByText('Enregistrer'));
@@ -133,7 +134,6 @@ describe('AddExpenseForm', () => {
     expect(await screen.findByText('Nouveau revenu')).toBeTruthy();
 
     await fireEvent.press(screen.getByText('Courses'));
-    await fireEvent.press(screen.getByText('Moi'));
     await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '5000');
     await fireEvent.press(screen.getByText('Enregistrer'));
 
@@ -406,7 +406,6 @@ describe('AddExpenseForm — alertes de plafond (US-019)', () => {
     await renderForm(onSaved);
     await screen.findByText('Courses');
     await fireEvent.press(screen.getByText('Courses'));
-    await fireEvent.press(screen.getByText('Moi'));
     await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '90');
     await fireEvent.press(screen.getByText('Enregistrer'));
   }
@@ -513,8 +512,6 @@ describe('AddExpenseForm — pré-remplissage depuis la dictée vocale (US-021a)
     renderPrefillForm({ amountInput: '42', note: 'Quarante-deux dirhams de café' }, onSaved);
 
     await fireEvent.press(await screen.findByText('Courses'));
-    const chips = await screen.findAllByText('Moi');
-    await fireEvent.press(chips[chips.length - 1]);
     await fireEvent.press(screen.getByText('Enregistrer'));
 
     expect(onSaved).toHaveBeenCalledTimes(1);
@@ -555,7 +552,6 @@ describe('AddExpenseForm — revenu mensuel (US-023)', () => {
     await screen.findByText('Salaire');
     await fireEvent.press(screen.getByText('Revenu'));
     await fireEvent.press(screen.getByText('Salaire'));
-    await fireEvent.press(screen.getByText('Moi'));
     await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '5000');
 
     await fireEvent.press(screen.getByText('Enregistrer'));
@@ -568,7 +564,6 @@ describe('AddExpenseForm — revenu mensuel (US-023)', () => {
     await screen.findByText('Salaire');
     await fireEvent.press(screen.getByText('Revenu'));
     await fireEvent.press(screen.getByText('Salaire'));
-    await fireEvent.press(screen.getByText('Moi'));
     await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '5000');
     await fireEvent.changeText(screen.getByLabelText('Date'), '2026-07-16');
     await fireEvent.press(await screen.findByText('Rendre ce revenu mensuel'));
@@ -606,5 +601,75 @@ describe('AddExpenseForm — revenu mensuel (US-023)', () => {
     await fireEvent.press(screen.getByText('Enregistrer'));
 
     expect(await listRecurringRules(mockFakeDb)).toHaveLength(0);
+  });
+});
+
+/** US-018: attributing an operation to a household member. */
+describe('AddExpenseForm — attribution à un membre (US-018)', () => {
+  it('hides the member field entirely for a single-member household', async () => {
+    mockFakeDb = createFakeDatabase().db;
+    await createCategory(mockFakeDb, { name: 'Courses', icon: 'cart', color: '#111111' });
+    await createMember(mockFakeDb, { name: 'Moi' });
+
+    await renderForm();
+    await screen.findByText('Courses');
+
+    expect(screen.queryByText('Membre')).toBeNull();
+    expect(screen.queryByText('Moi')).toBeNull();
+  });
+
+  it('still saves under the sole member even though the field is hidden', async () => {
+    mockFakeDb = createFakeDatabase().db;
+    await createCategory(mockFakeDb, { name: 'Courses', icon: 'cart', color: '#111111' });
+    const solo = await createMember(mockFakeDb, { name: 'Moi' });
+
+    const onSaved = jest.fn();
+    await renderForm(onSaved);
+    await screen.findByText('Courses');
+    await fireEvent.press(screen.getByText('Courses'));
+    await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '42');
+    await fireEvent.press(screen.getByText('Enregistrer'));
+
+    expect(onSaved).toHaveBeenCalledTimes(1);
+    const [saved] = await listTransactions(mockFakeDb);
+    expect(saved.memberId).toBe(solo.id);
+  });
+
+  it('shows every household member as a choice, pre-selecting the first', async () => {
+    mockFakeDb = createFakeDatabase().db;
+    await createCategory(mockFakeDb, { name: 'Courses', icon: 'cart', color: '#111111' });
+    await createMember(mockFakeDb, { name: 'Youssef' });
+    await createMember(mockFakeDb, { name: 'Salma' });
+
+    await renderForm();
+    await screen.findByText('Courses');
+
+    // `listMembers` orders alphabetically — "Salma" sorts before "Youssef" regardless of which
+    // was created first, so it's the one pre-selected here.
+    const salmaChip = await screen.findByLabelText('Salma');
+    const youssefChip = screen.getByLabelText('Youssef');
+    expect(salmaChip.props.accessibilityState.selected).toBe(true);
+    expect(youssefChip.props.accessibilityState.selected).toBe(false);
+  });
+
+  it('lets the household switch the pre-selected member before saving', async () => {
+    mockFakeDb = createFakeDatabase().db;
+    await createCategory(mockFakeDb, { name: 'Courses', icon: 'cart', color: '#111111' });
+    // "Salma" sorts first and is pre-selected by default — switching to "Youssef" is what this
+    // test actually exercises.
+    const youssef = await createMember(mockFakeDb, { name: 'Youssef' });
+    await createMember(mockFakeDb, { name: 'Salma' });
+
+    const onSaved = jest.fn();
+    await renderForm(onSaved);
+    await screen.findByText('Courses');
+    await fireEvent.press(screen.getByText('Courses'));
+    await fireEvent.press(await screen.findByLabelText('Youssef'));
+    await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '42');
+    await fireEvent.press(screen.getByText('Enregistrer'));
+
+    expect(onSaved).toHaveBeenCalledTimes(1);
+    const [saved] = await listTransactions(mockFakeDb);
+    expect(saved.memberId).toBe(youssef.id);
   });
 });
