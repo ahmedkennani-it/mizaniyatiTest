@@ -117,7 +117,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | --- | --- | --- |
 | 9.1 | Vue d'ensemble d'une tontine (daret) | ✅ done |
 | 9.2 | Création et paramétrage d'une tontine | ✅ done |
-| 9.3 | Mise en avant de mon tour | ⬜ à faire |
+| 9.3 | Mise en avant de mon tour | ✅ done |
 | 9.4 | Suivi des paiements du tour en cours | ⬜ à faire |
 | 9.5 | Calendrier des tours | ⬜ à faire |
 
@@ -1216,6 +1216,39 @@ interdiction éternelle du réseau.
   disponible ») sans être sélectionnable. À lever si/quand le moteur de tours est généralisé
   au-delà du mois.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1694/1694, 138 suites** ✅.
+- ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé).
+
+### Itération 45 — Tâche 9.3 (Mise en avant de mon tour) ✅
+
+- **Audit préalable** : la carte « Mon tour » existait déjà (upcoming/current/none), mais deux
+  des trois critères n'étaient pas remplis à la lettre :
+- 🐛 **L'état « tour passé » n'affichait pas le montant reçu** : `myRoundPast` disait seulement
+  « Ton tour est passé (tour N, mois) », sans le montant — alors que le critère demande
+  explicitement « la carte affiche l'historique de ce que j'ai reçu ». `potLabel` est
+  maintenant interpolé, texte reformulé en reçu : « Tu as reçu {{amount}} au tour {{round}}
+  ({{month}}). ».
+- ⚠️ **« Historique » lu comme un reçu unique, pas une liste** : `findMyRound` (et le modèle de
+  génération des tours, `createTontineGroupWithMembers`) attribue à chaque membre **exactement
+  un** tour par cycle — il n'existe donc jamais plusieurs tours passés à lister pour un même
+  membre dans ce modèle de données. Construire une liste généralisée pour un cas qui ne peut
+  produire qu'un seul élément aurait été de la sur-ingénierie pour un besoin hypothétique (un
+  futur « renouvellement de cycle » hors du périmètre du PRD actuel). Le reçu unique, avec
+  montant/tour/mois, remplit le critère sans l'inventer.
+- 🐛 **`myRoundUpcoming` dans un ordre différent du critère écrit** : le critère dit « Ton tour
+  arrive en {mois} (tour N) », le code disait « Ton tour arrive au tour N (mois) ». Réordonné
+  pour suivre le texte du critère (ar/fr/en).
+- **Carte mise en évidence (critère 1, « une carte mise en évidence »)** : la carte « Mon tour »
+  est déplacée **avant** la carte « Tour courant » (elle concerne directement le foyer, contre
+  l'état général du groupe) et gagne un fond teinté (`theme.accents.teal.wash`/`.ink`, mêmes
+  tokens que la puce « payé » déjà utilisée sur cet écran) quand mon tour est actionnable
+  (à venir ou en cours) — pas quand il est passé ou que je ne fais pas partie du groupe, où rien
+  n'appelle à l'action.
+- Tests : nouveau cas pour l'état « à venir » (membre non-self bénéficiaire du tour courant, moi
+  au tour suivant) et pour l'état « passé » (mon tour au mois précédent), tous deux calculant le
+  texte attendu via les **mêmes helpers** que l'écran (`formatMoney`, `formatMonthLabel`,
+  `nextMonthKey`/`previousMonthKey`) plutôt que des séparateurs tapés à la main — dans l'esprit
+  du garde-fou déjà posé en 1.6/8.4 sur les caractères invisibles de `formatMoney`.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1696/1696, 138 suites** ✅.
 - ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé).
 
 ## Notes / blocages connus (hors périmètre Phase 1)

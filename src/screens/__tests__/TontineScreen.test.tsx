@@ -20,7 +20,11 @@ import { LanguageProvider } from '../../i18n';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { ThemeProvider } from '../../theme';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
+import { nextMonthKey, previousMonthKey } from '../../calendar';
+// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { formatMonthLabel } from '../../i18n/dateFormat';
+// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
+import { formatMoney } from '../../money';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { createTontineGroupWithMembers } from '../../tontine';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
@@ -115,6 +119,50 @@ describe('TontineScreen (US-024)', () => {
     const payments = await listTontinePayments(mockFakeDb);
     expect(payments.filter((p) => p.status === 'paid')).toHaveLength(1);
     expect(await screen.findByText('1/2 payé')).toBeTruthy();
+  });
+
+  it('highlights an upcoming personal round with month, round number and amount', async () => {
+    const thisMonth = new Date().toISOString().slice(0, 7);
+    await createTontineGroupWithMembers(mockFakeDb, {
+      name: 'Tontine famille',
+      contributionPerRoundMinor: 100000,
+      currencyCode: 'MAD',
+      startMonth: thisMonth,
+      memberNames: ['Youssef', 'Salma'],
+      selfIndex: 1,
+    });
+
+    await renderScreen(TONTINE_PLAN);
+
+    const nextMonth = nextMonthKey(thisMonth);
+    const potLabel = formatMoney(200000, 'MAD', 'fr');
+    expect(
+      await screen.findByText(
+        `Ton tour arrive en ${formatMonthLabel(nextMonth, 'fr')} (tour 2). Tu recevras ${potLabel}.`,
+      ),
+    ).toBeTruthy();
+  });
+
+  it('shows a receipt for a personal round already in the past', async () => {
+    const thisMonth = new Date().toISOString().slice(0, 7);
+    const lastMonth = previousMonthKey(thisMonth);
+    await createTontineGroupWithMembers(mockFakeDb, {
+      name: 'Tontine famille',
+      contributionPerRoundMinor: 100000,
+      currencyCode: 'MAD',
+      startMonth: lastMonth,
+      memberNames: ['Youssef', 'Salma'],
+      selfIndex: 0,
+    });
+
+    await renderScreen(TONTINE_PLAN);
+
+    const potLabel = formatMoney(200000, 'MAD', 'fr');
+    expect(
+      await screen.findByText(
+        `Tu as reçu ${potLabel} au tour 1 (${formatMonthLabel(lastMonth, 'fr')}).`,
+      ),
+    ).toBeTruthy();
   });
 
   it('toggles the reminder opt-in', async () => {

@@ -129,6 +129,7 @@ export function TontineScreen() {
     : null;
   const myRound = findMyRound(groupRounds, groupMembers);
   const myMonthsUntil = myRound ? monthsUntil(now, myRound.month) : null;
+  const isMyRoundActionable = myRound !== null && myMonthsUntil !== null && myMonthsUntil >= 0;
   const potLabel = formatMoney(
     group.contributionPerRoundMinor * groupMembers.length,
     group.currencyCode,
@@ -144,6 +145,47 @@ export function TontineScreen() {
       <Txt size="sm" color={theme.colors.textSecondary}>
         {t('tontineScreen.memberCountLabel', { count: groupMembers.length })}
       </Txt>
+
+      <Card
+        elevated
+        style={
+          isMyRoundActionable
+            ? {
+                gap: theme.spacing.sm,
+                backgroundColor: theme.accents.teal.wash,
+                borderColor: theme.accents.teal.ink,
+              }
+            : { gap: theme.spacing.sm }
+        }
+      >
+        <Txt weight="semibold" size="md">
+          {t('tontineScreen.myRoundTitle')}
+        </Txt>
+        {myRound && myMonthsUntil !== null ? (
+          <Txt size="sm">
+            {myMonthsUntil > 0
+              ? t('tontineScreen.myRoundUpcoming', {
+                  round: myRound.roundNumber,
+                  month: formatMonthLabel(myRound.month, language),
+                  amount: potLabel,
+                })
+              : myMonthsUntil === 0
+                ? t('tontineScreen.myRoundCurrent', {
+                    round: myRound.roundNumber,
+                    amount: potLabel,
+                  })
+                : t('tontineScreen.myRoundPast', {
+                    round: myRound.roundNumber,
+                    month: formatMonthLabel(myRound.month, language),
+                    amount: potLabel,
+                  })}
+          </Txt>
+        ) : (
+          <Txt size="sm" color={theme.colors.textSecondary}>
+            {t('tontineScreen.myRoundNone')}
+          </Txt>
+        )}
+      </Card>
 
       {roundStatus ? (
         <Card elevated style={{ gap: theme.spacing.sm }}>
@@ -206,35 +248,6 @@ export function TontineScreen() {
           </View>
         </Card>
       ) : null}
-
-      <Card elevated style={{ gap: theme.spacing.sm }}>
-        <Txt weight="semibold" size="md">
-          {t('tontineScreen.myRoundTitle')}
-        </Txt>
-        {myRound && myMonthsUntil !== null ? (
-          <Txt size="sm">
-            {myMonthsUntil > 0
-              ? t('tontineScreen.myRoundUpcoming', {
-                  round: myRound.roundNumber,
-                  month: formatMonthLabel(myRound.month, language),
-                  amount: potLabel,
-                })
-              : myMonthsUntil === 0
-                ? t('tontineScreen.myRoundCurrent', {
-                    round: myRound.roundNumber,
-                    amount: potLabel,
-                  })
-                : t('tontineScreen.myRoundPast', {
-                    round: myRound.roundNumber,
-                    month: formatMonthLabel(myRound.month, language),
-                  })}
-          </Txt>
-        ) : (
-          <Txt size="sm" color={theme.colors.textSecondary}>
-            {t('tontineScreen.myRoundNone')}
-          </Txt>
-        )}
-      </Card>
 
       <View style={{ gap: theme.spacing.sm }}>
         <SectionHeader title={t('tontineScreen.calendarTitle')} />
