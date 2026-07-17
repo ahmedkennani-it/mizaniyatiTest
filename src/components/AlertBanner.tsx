@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { Icon } from './Icon';
 import { Txt } from './Txt';
@@ -13,6 +13,8 @@ export interface AlertBannerProps {
   icon?: IconName;
   /** `warning` uses the rose/coral tone (over-budget); `info` uses the teal wash. */
   tone?: 'warning' | 'info';
+  /** Makes the whole banner tappable — e.g. "the concerned category's detail opens" (US-026). */
+  onPress?: () => void;
 }
 
 /**
@@ -25,6 +27,7 @@ export function AlertBanner({
   title,
   icon = 'alert-triangle',
   tone = 'warning',
+  onPress,
 }: AlertBannerProps) {
   const { theme } = useTheme();
   const isWarning = tone === 'warning';
@@ -42,8 +45,12 @@ export function AlertBanner({
         text: theme.accents.teal.ink,
       };
 
+  const Wrapper = onPress ? Pressable : View;
+
   return (
-    <View
+    <Wrapper
+      accessibilityRole={onPress ? 'button' : undefined}
+      onPress={onPress}
       style={{
         flexDirection: 'row',
         alignItems: 'center',
@@ -67,6 +74,6 @@ export function AlertBanner({
           {message}
         </Txt>
       </View>
-    </View>
+    </Wrapper>
   );
 }

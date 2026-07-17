@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { CATEGORY_COLOR_OPTIONS, CATEGORY_ICON_OPTIONS } from '../categories';
-import { AppScreen, Button, Card, Chip, ScreenHeader, TextField, Txt } from '../components';
+import { AppScreen, Button, Card, Chip, NumericKeypad, ScreenHeader, TextField, Txt } from '../components';
 import { getDatabase } from '../db/client';
 import {
   createCategory,
@@ -13,12 +13,20 @@ import {
   upsertCategoryBudget,
 } from '../db/repositories';
 import type { Category, CategoryBudget, Transaction } from '../db/repositories';
-import { DEFAULT_CURRENCY_CODE, parseAmountInput, toMajorUnits } from '../money';
+import { useLanguage } from '../i18n';
+import { DEFAULT_CURRENCY_CODE, formatMoney, parseAmountInput, toMajorUnits } from '../money';
 import { useTheme } from '../theme';
 
 function currentMonthKey(): string {
   return new Date().toISOString().slice(0, 7);
 }
+
+/** US-028: quick cap presets, in major units (MAD). */
+const CAP_PRESETS_MAJOR = [2500, 3000, 3500, 4000];
+
+/** US-029: alert-threshold percentages offered instead of a free-text MAD amount. */
+const THRESHOLD_PERCENT_OPTIONS = [50, 70, 80, 90, 100];
+const DEFAULT_THRESHOLD_PERCENT = 80;
 
 export interface CategoryFormProps {
   /** When set, the form edits this category instead of creating a new one. */
@@ -46,6 +54,7 @@ export function CategoryForm({
 }: CategoryFormProps) {
   const { t } = useTranslation();
   const { theme } = useTheme();
+  const { language } = useLanguage();
   const isEditing = category !== undefined;
 
   const [name, setName] = useState(category?.name ?? '');
@@ -56,12 +65,28 @@ export function CategoryForm({
   const [capInput, setCapInput] = useState(
     budget ? String(toMajorUnits(budget.capMinor, DEFAULT_CURRENCY_CODE)) : '',
   );
-  const [alertThresholdInput, setAlertThresholdInput] = useState(
-    budget ? String(toMajorUnits(budget.alertThresholdMinor, DEFAULT_CURRENCY_CODE)) : '',
-  );
+  const [thresholdPercent, setThresholdPercent] = useState<number>(() => {
+    if (budget && budget.capMinor > 0) {
+      const impliedPercent = Math.round((budget.alertThresholdMinor / budget.capMinor) * 100);
+      if (THRESHOLD_PERCENT_OPTIONS.includes(impliedPercent)) {
+        return impliedPercent;
+      }
+    }
+    return DEFAULT_THRESHOLD_PERCENT;
+  });
   const [errorCap, setErrorCap] = useState<string | undefined>(undefined);
-  const [errorAlertThreshold, setErrorAlertThreshold] = useState<string | undefined>(undefined);
   const [rolloverEnabled, setRolloverEnabled] = useState(budget?.rolloverEnabled ?? false);
+
+  // US-028: "un plafond inférieur au déjà dépensé" — known before the user asks, same reasoning
+  // as the Save button disabled at zero elsewhere in the app.
+  const monthKey = currentMonthKey();
+  const spentThisMonthMinor = transactionsToReassign
+    .filter(
+      (transaction) => transaction.type === 'expense' && transaction.occurredAt.slice(0, 7) === monthKey,
+    )
+    .reduce((sum, transaction) => sum + transaction.amountMinor, 0);
+  const capInputMinor = parseAmountInput(capInput, DEFAULT_CURRENCY_CODE);
+  const capBelowSpent = capInputMinor !== null && capInputMinor < spentThisMonthMinor;
 
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const defaultReassignTarget =
@@ -80,32 +105,19 @@ export function CategoryForm({
     setErrorName(undefined);
 
     const trimmedCapInput = capInput.trim();
-    const trimmedAlertThresholdInput = alertThresholdInput.trim();
     let capMinor: number | null = null;
     let alertThresholdMinor: number | null = null;
     setErrorCap(undefined);
-    setErrorAlertThreshold(undefined);
 
-    if (trimmedCapInput !== '' || trimmedAlertThresholdInput !== '') {
+    if (trimmedCapInput !== '') {
       capMinor = parseAmountInput(trimmedCapInput, DEFAULT_CURRENCY_CODE);
       if (capMinor === null) {
         setErrorCap(t('categoryForm.errorCap'));
         return;
       }
-      if (trimmedAlertThresholdInput === '') {
-        // No explicit alert threshold — default to alerting once the cap itself is reached.
-        alertThresholdMinor = capMinor;
-      } else {
-        alertThresholdMinor = parseAmountInput(trimmedAlertThresholdInput, DEFAULT_CURRENCY_CODE);
-        if (alertThresholdMinor === null) {
-          setErrorAlertThreshold(t('categoryForm.errorAlertThreshold'));
-          return;
-        }
-        if (alertThresholdMinor > capMinor) {
-          setErrorAlertThreshold(t('categoryForm.errorAlertThresholdExceedsCap'));
-          return;
-        }
-      }
+      // The threshold is a percentage of the cap (US-029), always derivable — no separate
+      // free-text amount that could disagree with it or go unset.
+      alertThresholdMinor = Math.round((capMinor * thresholdPercent) / 100);
     }
 
     if (isEditing && category) {
@@ -210,14 +222,53 @@ export function CategoryForm({
             keyboardType="decimal-pad"
             errorMessage={errorCap}
           />
-          <TextField
-            label={t('categoryForm.alertThresholdLabel')}
-            placeholder={t('categoryForm.alertThresholdPlaceholder')}
-            value={alertThresholdInput}
-            onChangeText={setAlertThresholdInput}
-            keyboardType="decimal-pad"
-            errorMessage={errorAlertThreshold}
-          />
+          {/* US-028: "éditable au clavier numérique" — the same custom keypad as the expense
+              amount (US-016), for the same reason (the OS decimal key varies by platform/locale).
+              The field above stays editable in parallel, as it does there. */}
+          <NumericKeypad value={capInput} onChange={setCapInput} currencyCode={DEFAULT_CURRENCY_CODE} />
+          <View style={[styles.chipRow, { gap: theme.spacing.xs }]}>
+            {CAP_PRESETS_MAJOR.map((preset) => (
+              <Chip
+                key={preset}
+                label={`${preset}`}
+                selected={capInputMinor === preset * 100}
+                onPress={() => setCapInput(String(preset))}
+              />
+            ))}
+          </View>
+          {capBelowSpent ? (
+            <Txt size="xs" color={theme.colors.danger}>
+              {t('categoryForm.capBelowSpentWarning', {
+                amount: formatMoney(spentThisMonthMinor, DEFAULT_CURRENCY_CODE, language),
+              })}
+            </Txt>
+          ) : null}
+
+          <Txt size="sm" color={theme.colors.textSecondary}>
+            {t('categoryForm.alertThresholdLabel')}
+          </Txt>
+          <View style={[styles.chipRow, { gap: theme.spacing.xs }]}>
+            {THRESHOLD_PERCENT_OPTIONS.map((percent) => (
+              <Chip
+                key={percent}
+                label={`${percent}%`}
+                selected={percent === thresholdPercent}
+                onPress={() => setThresholdPercent(percent)}
+              />
+            ))}
+          </View>
+          {capInputMinor !== null ? (
+            <Txt size="xs" color={theme.colors.textSecondary}>
+              {t('categoryForm.thresholdPreview', {
+                amount: formatMoney(
+                  Math.round((capInputMinor * thresholdPercent) / 100),
+                  DEFAULT_CURRENCY_CODE,
+                  language,
+                ),
+              })}
+            </Txt>
+          ) : null}
+
           <Txt size="sm" color={theme.colors.textSecondary}>
             {t('categoryForm.rolloverHint')}
           </Txt>

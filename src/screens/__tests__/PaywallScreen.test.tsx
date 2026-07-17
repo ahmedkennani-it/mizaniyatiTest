@@ -48,7 +48,7 @@ describe('PaywallScreen (US-029)', () => {
     await screen.findByText('Gratuit vs Pro');
     expect(screen.getByText('Tontine')).toBeTruthy();
     expect(screen.getAllByText('Illimité').length).toBeGreaterThan(0);
-    expect(screen.getByText('10')).toBeTruthy(); // FREE_PLAN's categories.max
+    expect(screen.getByText('3')).toBeTruthy(); // FREE_PLAN's categories.max
   });
 
   it('starts a trial and shows the trial-active status with an expiry date', async () => {

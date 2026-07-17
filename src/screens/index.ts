@@ -1,5 +1,7 @@
 export { HomeScreen } from './HomeScreen';
 export { CategoriesScreen } from './CategoriesScreen';
+export { CategoryDetail } from './CategoryDetail';
+export type { CategoryDetailProps } from './CategoryDetail';
 export { TontineScreen } from './TontineScreen';
 export { ProfileScreen } from './ProfileScreen';
 export { PlaceholderScreen } from './PlaceholderScreen';

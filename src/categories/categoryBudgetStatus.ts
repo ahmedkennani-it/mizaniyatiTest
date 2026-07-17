@@ -44,11 +44,14 @@ function previousMonthKey(monthKey: string): string {
  * caller re-fetches the budget after a save (same pattern as `computeMonthlyBalance`/
  * `computeCategoryBreakdown`).
  *
- * "Report du reste au mois suivant" (US-020): when `budget.rolloverEnabled`, the effective cap
- * adds last month's positive leftover (`max(0, capMinor - lastMonthSpentMinor)`) on top of the
- * configured `capMinor`. **Report simple, non composé**: this only ever looks at the single
+ * "Report du reste au mois suivant" (US-030): when `budget.rolloverEnabled`, the effective cap
+ * adjusts by last month's leftover against the same base `capMinor` — a surplus (`capMinor` minus
+ * a smaller spend) raises this month's cap, a **deficit** (last month overspent) lowers it, since
+ * "le déficit est déduit du plafond du mois suivant" is as much the point as the bonus is. Clamped
+ * so the effective cap itself never goes negative — a deficit can zero it out, not invert it into
+ * a negative budget. **Report simple, non composé**: this only ever looks at the single
  * immediately-preceding month's spend against the same base `capMinor` — never at an
- * already-rolled-over effective cap — so leftovers can't compound across several under-spent
+ * already-rolled-over effective cap — so leftovers can't compound across several under/over-spent
  * months in a row.
  */
 export function computeCategoryBudgetStatus(
@@ -59,13 +62,10 @@ export function computeCategoryBudgetStatus(
   const spentMinor = spentMinorInMonth(transactions, budget.categoryId, monthKey);
 
   const rolloverMinor = budget.rolloverEnabled
-    ? Math.max(
-        0,
-        budget.capMinor -
-          spentMinorInMonth(transactions, budget.categoryId, previousMonthKey(monthKey)),
-      )
+    ? budget.capMinor -
+      spentMinorInMonth(transactions, budget.categoryId, previousMonthKey(monthKey))
     : 0;
-  const capMinor = budget.capMinor + rolloverMinor;
+  const capMinor = Math.max(0, budget.capMinor + rolloverMinor);
 
   const percentage = capMinor > 0 ? (spentMinor / capMinor) * 100 : spentMinor > 0 ? Infinity : 0;
 

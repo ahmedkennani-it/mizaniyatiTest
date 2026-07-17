@@ -835,7 +835,7 @@
         "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
         "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
       ],
-      "done": false
+      "done": true
     },
     {
       "id": "7.2",
@@ -854,7 +854,7 @@
         "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
         "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
       ],
-      "done": false
+      "done": true
     },
     {
       "id": "7.3",
@@ -873,7 +873,7 @@
         "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
         "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
       ],
-      "done": false
+      "done": true
     },
     {
       "id": "7.4",
@@ -892,7 +892,7 @@
         "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
         "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
       ],
-      "done": false
+      "done": true
     },
     {
       "id": "7.5",
@@ -910,7 +910,7 @@
         "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
         "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
       ],
-      "done": false
+      "done": true
     },
     {
       "id": "7.6",
@@ -928,7 +928,7 @@
         "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
         "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
       ],
-      "done": false
+      "done": true
     },
     {
       "id": "7.7",
@@ -947,7 +947,7 @@
         "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
         "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
       ],
-      "done": false
+      "done": true
     },
     {
       "id": "8.1",

@@ -90,6 +90,18 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 6.10 | Attribution à un membre | ✅ done |
 | 6.11 | Choix de la date | ✅ done |
 
+## État des tâches Phase 7 (Catégories, plafonds & alertes) — ✅ 7/7
+
+| Tâche | Titre | Statut |
+| --- | --- | --- |
+| 7.1 | Liste des catégories avec plafonds mensuels | ✅ done |
+| 7.2 | Alerte de dépassement de plafond | ✅ done |
+| 7.3 | Détail d'une catégorie | ✅ done |
+| 7.4 | Édition du plafond mensuel avec presets | ✅ done |
+| 7.5 | Limite de 3 catégories en plan Gratuit | ✅ done |
+| 7.6 | Seuil d'alerte configurable par catégorie | ✅ done |
+| 7.7 | Report du reste au mois suivant (rollover, Pro) | ✅ done |
+
 ## Journal
 
 ### Itération 1 — Tâche 1.1 (Scaffold Expo + TypeScript) ✅
@@ -1015,6 +1027,52 @@ interdiction éternelle du réseau.
   une conversion UTC — exactement le piège que `calendarGrid.ts` évite déjà en restant en UTC de
   bout en bout plutôt que de mélanger les deux.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1665/1665, 137 suites** ✅.
+
+### Itération 41 — Phase 7 (Catégories, plafonds & alertes) ✅ 7/7
+- **Audit préalable** (comme pour la phase 6) : les fondations (liste, ligne de progression,
+  couleur d'alerte, formulaire combiné création/édition, calcul de plafond/report,
+  `computeCategoryBudgetStatus`, alerte une fois par mois) existaient déjà et sont bien testées.
+  Mais contrairement à la phase 6, plusieurs critères manquaient réellement en code, pas
+  seulement au bookkeeping : pas d'écran de détail, pas de presets, pas de sélecteur de seuil en
+  %, pas d'agrégation de bandeau, mauvais chiffre de limite gratuite, et le report qui faisait
+  l'**inverse** de ce que demande son propre critère sur un dépassement.
+- **Écart assumé sur la règle métier de la 7.1** (liste Maroc « Logement, Alimentation, École &
+  enfants, Transport, Zakat & dons, Autres ») : **non appliqué**. La tâche **10.3** possède son
+  propre critère « la catégorie Zakat & dons fait partie des catégories par défaut » (encore
+  `done: false`) et la tâche **15.1** possède son propre critère sur les catégories par défaut du
+  marché Maroc/Golfe (encore `done: false`) — renommer la liste ici aurait empiété sur les deux et
+  cassé des dizaines de tests qui référencent les noms actuels (Courses, École, Santé…) sans
+  aucune des deux tâches pour les remplacer proprement. Repris quand 10.3/15.1 arriveront.
+- **`CategoryDetail` (nouvel écran, 7.3)** : anneau + 3 tuiles (Dépensé/Plafond/Reste) +
+  transactions du mois filtrées par catégorie. Sert aussi de point d'entrée unique « taper une
+  catégorie » pour 7.1 (avant : ouvrait directement l'édition, sans état intermédiaire).
+- **`MonthSelector` ajouté à `CategoriesScreen`** (7.1, critère « le mois sélectionné ») —
+  réutilise le même composant que le tableau de bord (5.2) et `nextMonthKey`/`previousMonthKey` de
+  `src/calendar` (déjà écrits pour la 6.11), plutôt que d'écrire un troisième sélecteur de mois.
+- **Bandeau agrégé** (7.2) : `AlertBanner` gagne un `onPress` optionnel ; agrégation
+  (« N catégories dépassées ») seulement à partir de 2, sinon reste nommé + tapable vers le détail
+  — au-delà de 1, « la catégorie concernée » du critère n'a plus de référent non ambigu.
+- **Presets + clavier numérique + avertissement immédiat** (7.4) : le plafond utilise maintenant
+  le même `NumericKeypad` que le montant de dépense (US-016), pas seulement un clavier décimal
+  natif — cohérence avec la justification déjà posée en 6.1 (séparateur décimal variable selon
+  OS/locale). L'avertissement « déjà dépensé plus que ce nouveau plafond » se calcule en direct
+  pendant la saisie, avant l'enregistrement.
+- 🐛 **Limite gratuite corrigée : 10 → 3** (7.5), au chiffre exact du critère d'acceptation plutôt
+  que le placeholder précédent. Le « + » à la limite ouvre maintenant `PaywallScreen` (déjà utilisé
+  ailleurs depuis Profil) au lieu de ne rien faire silencieusement.
+- **Seuil en pourcentage plutôt qu'en montant libre** (7.6) : remplace le champ de saisie libre
+  (qui pouvait dépasser le plafond, nécessitant sa propre validation) par des puces 50/70/80/90/100
+  % — dépasser le plafond devient structurellement impossible, l'ancienne erreur de validation est
+  supprimée avec ce qu'elle validait. Texte d'aperçu dynamique (« Notification quand tu atteins X
+  MAD ») recalculé à chaque changement de plafond ou de seuil.
+- 🐛 **Le report faisait l'inverse de son propre critère (7.7)** : `computeCategoryBudgetStatus`
+  pinçait le report à `max(0, ...)`, ignorant tout dépassement du mois précédent — un test
+  existant épinglait explicitement ce comportement comme correct (« does not roll over a negative
+  leftover »). Le critère 7.7 dit noir sur blanc l'inverse (« le déficit est déduit du plafond du
+  mois suivant »). Formule corrigée pour laisser `rolloverMinor` négatif, plafond effectif
+  seulement borné à 0 (jamais un budget négatif). Le test existant est retourné pour affirmer le
+  nouveau comportement voulu, pas contourné.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1681/1681, 138 suites** ✅.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

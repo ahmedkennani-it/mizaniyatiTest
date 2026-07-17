@@ -23,6 +23,8 @@ import type { Plan } from '../../entitlements';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { LanguageProvider } from '../../i18n';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
+import { SubscriptionProvider } from '../../subscriptions';
+// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { ThemeProvider } from '../../theme';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { CategoriesScreen } from '../CategoriesScreen';
@@ -41,9 +43,11 @@ function renderScreen(plan?: Plan) {
     <LanguageProvider>
       <ThemeProvider initialColorScheme="light">
         <EntitlementsProvider plan={plan}>
-          <ExpenseEntryProvider>
-            <CategoriesScreen />
-          </ExpenseEntryProvider>
+          <SubscriptionProvider>
+            <ExpenseEntryProvider>
+              <CategoriesScreen />
+            </ExpenseEntryProvider>
+          </SubscriptionProvider>
         </EntitlementsProvider>
       </ThemeProvider>
     </LanguageProvider>,
@@ -55,11 +59,14 @@ describe('CategoriesScreen', () => {
     mockFakeDb = createFakeDatabase().db;
   });
 
-  it('lists existing categories and opens the edit form when tapped', async () => {
+  it('lists existing categories and opens the detail, then the edit form (US-025/US-027)', async () => {
     await createCategory(mockFakeDb, { name: 'Courses', icon: 'cart', color: '#1E7B34' });
     await renderScreen();
 
     await fireEvent.press(await screen.findByText('Courses'));
+    expect(await screen.findByText('Aucun plafond défini pour cette catégorie ce mois-ci.')).toBeTruthy();
+
+    await fireEvent.press(screen.getByText('Modifier le plafond'));
 
     expect(await screen.findByText('Modifier la catégorie')).toBeTruthy();
     expect(screen.getByLabelText('Nom').props.value).toBe('Courses');
@@ -91,8 +98,9 @@ describe('CategoriesScreen', () => {
     ).toBeTruthy();
 
     await fireEvent.press(screen.getByLabelText('Ajouter une catégorie'));
-    // Still on the list — the limit blocked navigation to the create form.
+    // The limit blocked navigation to the create form — the Pro paywall opens instead (US-031).
     expect(screen.queryByText('Nouvelle catégorie')).toBeNull();
+    expect(await screen.findByText('Mizaniyati Pro')).toBeTruthy();
   });
 
   it('does not show the upsell when under the plan limit', async () => {

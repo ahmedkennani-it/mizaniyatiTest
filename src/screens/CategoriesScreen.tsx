@@ -2,22 +2,26 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { CategoryDetail } from './CategoryDetail';
 import { CategoryForm } from './CategoryForm';
 import { useExpenseEntry } from './ExpenseEntryProvider';
+import { PaywallScreen } from './PaywallScreen';
 import { computeCategoryBudgetStatus } from '../categories';
 import { categoryAccent, categoryIconName } from '../categories/categoryVisual';
+import { nextMonthKey, previousMonthKey } from '../calendar';
 import {
   AlertBanner,
   AppScreen,
   Card,
   CategoryBudgetRow,
   ListRow,
+  MonthSelector,
   ScreenHeader,
   Txt,
 } from '../components';
 import { getDatabase } from '../db/client';
-import { listCategories, listCategoryBudgets, listTransactions } from '../db/repositories';
-import type { Category, CategoryBudget, Transaction } from '../db/repositories';
+import { listCategories, listCategoryBudgets, listMembers, listTransactions } from '../db/repositories';
+import type { Category, CategoryBudget, Member, Transaction } from '../db/repositories';
 import { useEntitlements } from '../entitlements';
 import { useLanguage } from '../i18n';
 import { formatMonthLabel } from '../i18n/dateFormat';
@@ -36,17 +40,21 @@ export function CategoriesScreen() {
   const entitlements = useEntitlements();
   const { dataVersion } = useExpenseEntry();
 
-  const [view, setView] = useState<'list' | 'form'>('list');
+  const [view, setView] = useState<'list' | 'form' | 'detail' | 'paywall'>('list');
+  const [selectedMonthKey, setSelectedMonthKey] = useState(currentMonthKey());
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [budgets, setBudgets] = useState<CategoryBudget[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [detailCategory, setDetailCategory] = useState<Category | null>(null);
 
   const refresh = useCallback(() => {
     const db = getDatabase();
     listCategories(db).then(setCategories);
     listTransactions(db).then(setTransactions);
     listCategoryBudgets(db).then(setBudgets);
+    listMembers(db).then(setMembers);
   }, []);
 
   // US-024: an edit/delete from the entry form bumps `dataVersion` — this screen's own totals
@@ -61,7 +69,41 @@ export function CategoriesScreen() {
     [language],
   );
 
-  const monthLabel = useMemo(() => formatMonthLabel(currentMonthKey(), language), [language]);
+  const monthLabel = useMemo(
+    () => formatMonthLabel(selectedMonthKey, language),
+    [selectedMonthKey, language],
+  );
+
+  const openDetail = useCallback((category: Category) => {
+    setDetailCategory(category);
+    setView('detail');
+  }, []);
+
+  if (view === 'paywall') {
+    return <PaywallScreen onBack={() => setView('list')} />;
+  }
+
+  if (view === 'detail' && detailCategory) {
+    const budget = budgets.find((candidate) => candidate.categoryId === detailCategory.id);
+    return (
+      <CategoryDetail
+        category={detailCategory}
+        budget={budget}
+        transactions={transactions}
+        members={members}
+        monthKey={selectedMonthKey}
+        currencyCode={DEFAULT_CURRENCY_CODE}
+        onEdit={() => {
+          setEditingCategory(detailCategory);
+          setView('form');
+        }}
+        onBack={() => {
+          setDetailCategory(null);
+          setView('list');
+        }}
+      />
+    );
+  }
 
   if (view === 'form') {
     const otherCategories = editingCategory
@@ -82,15 +124,17 @@ export function CategoriesScreen() {
         onSaved={() => {
           refresh();
           setEditingCategory(null);
+          setDetailCategory(null);
           setView('list');
         }}
         onCancel={() => {
           setEditingCategory(null);
-          setView('list');
+          setView(detailCategory ? 'detail' : 'list');
         }}
         onDeleted={() => {
           refresh();
           setEditingCategory(null);
+          setDetailCategory(null);
           setView('list');
         }}
       />
@@ -101,20 +145,25 @@ export function CategoriesScreen() {
   const atLimit = categories.length >= categoryLimit;
 
   const openCreate = () => {
-    if (atLimit) return;
+    if (atLimit) {
+      setView('paywall');
+      return;
+    }
     setEditingCategory(null);
     setView('form');
   };
 
-  // First over-budget category drives the top alert banner (matching the design).
-  const firstOver = categories
+  // Every over-budget category for the selected month drives the top banner — aggregated once
+  // there's more than one (US-026: "2 catégories dépassées"), tap-through only when there's
+  // exactly one unambiguous "catégorie concernée" to open.
+  const overCategories = categories
     .map((category) => {
       const budget = budgets.find((candidate) => candidate.categoryId === category.id);
       if (!budget) return null;
-      const status = computeCategoryBudgetStatus(transactions, budget, currentMonthKey());
+      const status = computeCategoryBudgetStatus(transactions, budget, selectedMonthKey);
       return status.isOverBudget ? { category, status } : null;
     })
-    .find((entry): entry is NonNullable<typeof entry> => entry !== null);
+    .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
 
   return (
     <AppScreen scroll bottomInset={110} contentStyle={{ gap: theme.spacing.md }}>
@@ -124,16 +173,24 @@ export function CategoriesScreen() {
           { icon: 'plus', onPress: openCreate, accessibilityLabel: t('categoriesScreen.a11yAdd') },
         ]}
       />
-      <Txt size="sm" color={theme.colors.textSecondary}>
-        {`${monthLabel} · ${t('categoriesScreen.capsSubtitle')}`}
-      </Txt>
+      <MonthSelector
+        label={`${monthLabel} · ${t('categoriesScreen.capsSubtitle')}`}
+        onPrev={() => setSelectedMonthKey((month) => previousMonthKey(month))}
+        onNext={() => setSelectedMonthKey((month) => nextMonthKey(month))}
+        disableNext={nextMonthKey(selectedMonthKey) > currentMonthKey()}
+      />
 
-      {firstOver ? (
+      {overCategories.length === 1 ? (
         <AlertBanner
           message={t('categoriesScreen.overBanner', {
-            name: firstOver.category.name,
-            amount: formatMoney(firstOver.status.overageMinor, DEFAULT_CURRENCY_CODE, language),
+            name: overCategories[0].category.name,
+            amount: formatMoney(overCategories[0].status.overageMinor, DEFAULT_CURRENCY_CODE, language),
           })}
+          onPress={() => openDetail(overCategories[0].category)}
+        />
+      ) : overCategories.length > 1 ? (
+        <AlertBanner
+          message={t('categoriesScreen.overBannerAggregate', { count: overCategories.length })}
         />
       ) : null}
 
@@ -151,10 +208,6 @@ export function CategoriesScreen() {
           const icon = categoryIconName(category.icon);
           const accent = categoryAccent(category.color);
           const budget = budgets.find((candidate) => candidate.categoryId === category.id);
-          const openEdit = () => {
-            setEditingCategory(category);
-            setView('form');
-          };
 
           if (!budget) {
             return (
@@ -164,12 +217,12 @@ export function CategoriesScreen() {
                 accent={accent}
                 title={category.name}
                 chevron
-                onPress={openEdit}
+                onPress={() => openDetail(category)}
               />
             );
           }
 
-          const status = computeCategoryBudgetStatus(transactions, budget, currentMonthKey());
+          const status = computeCategoryBudgetStatus(transactions, budget, selectedMonthKey);
           return (
             <CategoryBudgetRow
               key={category.id}
@@ -182,7 +235,7 @@ export function CategoriesScreen() {
               percentLabel={
                 status.percentage === Infinity ? undefined : `${Math.round(status.percentage)}%`
               }
-              onPress={openEdit}
+              onPress={() => openDetail(category)}
             />
           );
         })}

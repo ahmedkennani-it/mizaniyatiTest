@@ -141,7 +141,8 @@ describe('computeCategoryBudgetStatus', () => {
       expect(status.capMinor).toBe(160000);
     });
 
-    it('does not roll over a negative leftover (last month already over budget)', () => {
+    /** US-030: "un dépassement avec report actif" deducts the deficit from next month's cap. */
+    it('deducts a negative leftover from next month’s cap (last month already over budget)', () => {
       const transactions = [
         makeTransaction('expense', 130000, '2026-06-10T10:00:00.000Z', 'cat-courses'),
       ];
@@ -149,8 +150,20 @@ describe('computeCategoryBudgetStatus', () => {
 
       const status = computeCategoryBudgetStatus(transactions, budget, '2026-07');
 
-      expect(status.rolloverMinor).toBe(0);
-      expect(status.capMinor).toBe(100000);
+      expect(status.rolloverMinor).toBe(-30000);
+      expect(status.capMinor).toBe(70000);
+    });
+
+    it('floors the effective cap at zero rather than going negative on a large deficit', () => {
+      const transactions = [
+        makeTransaction('expense', 500000, '2026-06-10T10:00:00.000Z', 'cat-courses'),
+      ];
+      const budget = makeBudget({ rolloverEnabled: true, capMinor: 100000 });
+
+      const status = computeCategoryBudgetStatus(transactions, budget, '2026-07');
+
+      expect(status.rolloverMinor).toBe(-400000);
+      expect(status.capMinor).toBe(0);
     });
 
     it('is a simple, non-compounding rollover: only the immediately preceding month counts', () => {
