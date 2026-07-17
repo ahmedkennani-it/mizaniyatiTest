@@ -116,6 +116,7 @@ export const ar: TranslationSchema = {
     explainerContinue: 'متابعة',
     explainerCancel: 'ليس الآن',
     listeningLabel: 'أنا أستمع إليك…',
+    transcriptA11yLabel: 'النص المفرغ: {{transcript}}',
     languageLabel: 'لغة الإملاء',
     cancelButton: 'إلغاء',
     deniedTitle: 'الميكروفون غير متاح',

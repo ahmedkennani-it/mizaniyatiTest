@@ -41,6 +41,7 @@ export function VoiceEntrySheet({ onClose, onFallbackToKeyboard }: VoiceEntryShe
   const [stage, setStage] = useState<Stage>('loading');
   const [recognitionLanguage, setRecognitionLanguage] = useState<SupportedLanguage>(language);
   const [volumeLevel, setVolumeLevel] = useState(0);
+  const [transcript, setTranscript] = useState('');
   const watcherRef = useRef<SilenceWatcher | null>(null);
 
   const canUseVoice = entitlements.can('voice');
@@ -79,6 +80,7 @@ export function VoiceEntrySheet({ onClose, onFallbackToKeyboard }: VoiceEntryShe
     if (stage !== 'listening') {
       return;
     }
+    setTranscript('');
     const watcher = createSilenceWatcher(() => speechRecognitionClient.stop());
     watcherRef.current = watcher;
 
@@ -86,6 +88,12 @@ export function VoiceEntrySheet({ onClose, onFallbackToKeyboard }: VoiceEntryShe
       const level = normalizeVolumeLevel(raw);
       setVolumeLevel(level);
       watcher.reportVolume(level);
+    });
+    // US-020b: shown live while the recognizer is still working, not only once it settles — the
+    // first result is already interim (`interimResults: true` in the client), it just keeps
+    // getting replaced by a better one as more speech arrives.
+    const unsubscribeResult = speechRecognitionClient.onResult((event) => {
+      setTranscript(event.results[0]?.transcript ?? '');
     });
     const unsubscribeEnd = speechRecognitionClient.onEnd(() => {
       watcher.stop();
@@ -103,6 +111,7 @@ export function VoiceEntrySheet({ onClose, onFallbackToKeyboard }: VoiceEntryShe
       watcher.stop();
       watcherRef.current = null;
       unsubscribeVolume();
+      unsubscribeResult();
       unsubscribeEnd();
       unsubscribeError();
       speechRecognitionClient.abort();
@@ -197,6 +206,15 @@ export function VoiceEntrySheet({ onClose, onFallbackToKeyboard }: VoiceEntryShe
             {t('voiceCapture.listeningLabel')}
           </Txt>
           <VoiceWaveform level={volumeLevel} />
+          {transcript ? (
+            <Txt
+              size="md"
+              style={{ textAlign: 'center' }}
+              accessibilityLabel={t('voiceCapture.transcriptA11yLabel', { transcript })}
+            >
+              {transcript}
+            </Txt>
+          ) : null}
           {languageRow}
           <Button
             label={t('voiceCapture.cancelButton')}

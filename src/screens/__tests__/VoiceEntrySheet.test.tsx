@@ -186,6 +186,54 @@ describe('VoiceEntrySheet (US-020a)', () => {
     );
   });
 
+  /** US-020b: the transcription shows up live, not only once the recognizer settles. */
+  it('shows the live transcript as results come in', async () => {
+    mockSpeechClient.getPermissionsAsync.mockResolvedValue(GRANTED);
+    await seedSettings(true);
+
+    renderSheet({ plan: PRO_PLAN });
+    await screen.findByText(fr.voiceCapture.listeningLabel);
+
+    expect(screen.queryByText('Quarante-deux dirhams')).toBeNull();
+
+    const resultListener = mockSpeechClient.onResult.mock.calls[0][0];
+    act(() =>
+      resultListener({
+        isFinal: false,
+        results: [{ transcript: 'Quarante-deux dirhams', confidence: -1, segments: [] }],
+      }),
+    );
+
+    expect(await screen.findByText('Quarante-deux dirhams')).toBeTruthy();
+
+    act(() =>
+      resultListener({
+        isFinal: false,
+        results: [{ transcript: 'Quarante-deux dirhams de café', confidence: -1, segments: [] }],
+      }),
+    );
+
+    expect(await screen.findByText('Quarante-deux dirhams de café')).toBeTruthy();
+  });
+
+  it('clears the previous transcript when capture restarts in another language', async () => {
+    mockSpeechClient.getPermissionsAsync.mockResolvedValue(GRANTED);
+    await seedSettings(true);
+
+    renderSheet({ plan: PRO_PLAN });
+    await screen.findByText(fr.voiceCapture.listeningLabel);
+
+    const resultListener = mockSpeechClient.onResult.mock.calls[0][0];
+    act(() =>
+      resultListener({ isFinal: false, results: [{ transcript: 'Quarante-deux', confidence: -1, segments: [] }] }),
+    );
+    await screen.findByText('Quarante-deux');
+
+    await fireEvent.press(screen.getByText(ar.language.nativeArabic));
+
+    expect(screen.queryByText('Quarante-deux')).toBeNull();
+  });
+
   it('falls back to the keyboard when permission is refused', async () => {
     mockSpeechClient.getPermissionsAsync.mockResolvedValue(DENIED);
     mockSpeechClient.requestPermissionsAsync.mockResolvedValue(DENIED);

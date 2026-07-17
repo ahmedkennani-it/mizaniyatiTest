@@ -81,7 +81,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 6.1 | Saisie rapide au pavé numérique | ✅ done |
 | 6.2 | Sélection de catégorie par chips | ✅ done |
 | 6.3 | Capture audio et état d'écoute (Pro) | ✅ done |
-| 6.4 | Transcription vocale multilingue (Pro) | ⏳ |
+| 6.4 | Transcription vocale multilingue (Pro) | ✅ done |
 | 6.5 | Extraction du montant depuis la dictée (Pro) | ⏳ |
 | 6.6 | Déduction catégorie/libellé et confirmation (Pro) | ⏳ |
 | 6.7 | Confirmation d'ajout | ⏳ |
@@ -826,6 +826,24 @@ interdiction éternelle du réseau.
   reconnaisseur rend un résultat final ; 6.4/6.5 brancheront le traitement du contenu.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1544/1544, 130 suites** ✅. Bundle web
   vérifié via `npx expo export --platform web`.
+
+### Itération 33 — Tâche 6.4 (Transcription vocale multilingue) ✅
+- Trois critères sur quatre étaient déjà couverts par la 6.3 (langue alignée sur l'app + bascule
+  manuelle, message d'erreur clair + repli clavier) : cette tâche ajoute l'affichage de la
+  transcription **en direct** et prouve par un test qu'aucun fichier audio n'est conservé.
+- **Transcription live** : `VoiceEntrySheet` s'abonne à l'évènement `result` du reconnaisseur et
+  affiche `results[0].transcript`, remplacé au fil des résultats intermédiaires
+  (`interimResults: true` déjà activé côté client depuis la 6.3) plutôt que d'attendre un résultat
+  final — c'est ce que « pendant l'analyse » demande. Réinitialisée à chaque redémarrage de
+  capture (changement de langue), pour ne pas laisser un fragment de l'ancienne langue affiché
+  sous la nouvelle écoute.
+- **`speechRecognitionClient.test.ts` (nouveau)** : jusqu'ici seul le wrapper natif n'avait pas de
+  test dédié (mocké dans tous les autres). Le test qui compte pour US-020b/US-021a assère que
+  `start()` n'envoie **jamais** `recordingOptions` au module natif — c'est cette absence, pas une
+  suppression après coup, qui garantit qu'aucun fichier n'est écrit sur le disque de l'appareil.
+  Une suppression après capture serait une promesse plus faible (une fenêtre where le fichier a
+  existé) que ne jamais l'écrire.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1553/1553, 131 suites** ✅.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

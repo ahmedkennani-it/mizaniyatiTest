@@ -121,6 +121,7 @@ export const fr = {
     explainerContinue: 'Continuer',
     explainerCancel: 'Pas maintenant',
     listeningLabel: 'Je t’écoute…',
+    transcriptA11yLabel: 'Transcription : {{transcript}}',
     languageLabel: 'Langue de dictée',
     cancelButton: 'Annuler',
     deniedTitle: 'Micro indisponible',

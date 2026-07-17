@@ -117,6 +117,7 @@ export const en: TranslationSchema = {
     explainerContinue: 'Continue',
     explainerCancel: 'Not now',
     listeningLabel: "I'm listening…",
+    transcriptA11yLabel: 'Transcript: {{transcript}}',
     languageLabel: 'Dictation language',
     cancelButton: 'Cancel',
     deniedTitle: 'Microphone unavailable',
