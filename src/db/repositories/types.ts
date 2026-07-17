@@ -439,6 +439,12 @@ export interface DiasporaTransfer {
   currencyCode: string;
   /** ISO 8601 date/time the transfer was sent. */
   occurredAt: string;
+  /**
+   * The recurring beneficiary this was sent to (US-046), or `null` for a one-off transfer.
+   * Stays `null` forever once that beneficiary is deleted — the transfer row itself is never
+   * touched, per "sans perdre l'historique".
+   */
+  beneficiaryId: string | null;
   createdAt: string;
 }
 
@@ -446,6 +452,40 @@ export interface NewDiasporaTransfer {
   amountMinor: number;
   currencyCode: string;
   occurredAt: string;
+  beneficiaryId?: string | null;
+}
+
+export type DiasporaBeneficiaryFrequency = 'monthly' | 'occasional';
+
+/**
+ * A "bénéficiaire habituel" (US-046) a diaspora household sends money to regularly — distinct
+ * from `Member` (a person *inside* this household) and from `DiasporaTransfer` (one instance of
+ * money sent). `usualAmountMinor` is in the household's own currency (the same one the Transferts
+ * screen already reads from `households[0]?.currencyCode`), and `null` for an "occasional"
+ * beneficiary with no habitual amount to prefill.
+ */
+export interface DiasporaBeneficiary {
+  id: string;
+  name: string;
+  relationship: string;
+  usualAmountMinor: number | null;
+  frequency: DiasporaBeneficiaryFrequency;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NewDiasporaBeneficiary {
+  name: string;
+  relationship: string;
+  usualAmountMinor: number | null;
+  frequency: DiasporaBeneficiaryFrequency;
+}
+
+export interface DiasporaBeneficiaryPatch {
+  name?: string;
+  relationship?: string;
+  usualAmountMinor?: number | null;
+  frequency?: DiasporaBeneficiaryFrequency;
 }
 
 export type SeasonalThemeType = 'ramadan' | 'aid_kebir' | 'back_to_school';

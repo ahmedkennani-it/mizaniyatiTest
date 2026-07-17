@@ -110,6 +110,13 @@ export {
   deleteTransfer,
 } from './transferRepository';
 export { createDiasporaTransfer, listDiasporaTransfers } from './diasporaTransferRepository';
+export {
+  createDiasporaBeneficiary,
+  getDiasporaBeneficiaryById,
+  listDiasporaBeneficiaries,
+  updateDiasporaBeneficiary,
+  deleteDiasporaBeneficiary,
+} from './diasporaBeneficiaryRepository';
 export { NotFoundError } from './errors';
 export type {
   Member,
@@ -177,4 +184,8 @@ export type {
   TransferPatch,
   DiasporaTransfer,
   NewDiasporaTransfer,
+  DiasporaBeneficiary,
+  NewDiasporaBeneficiary,
+  DiasporaBeneficiaryPatch,
+  DiasporaBeneficiaryFrequency,
 } from './types';

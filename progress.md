@@ -1534,6 +1534,41 @@ tâche réelle était de brancher `HomeScreen` sur cet état déjà persistant, 
   `left`/`right` codé en dur.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1794/1794, 147 suites** ✅.
 
+### Itération 53 — Tâche 11.2 (Bénéficiaires récurrents) ✅
+
+- Migration **0023** : nouvelle table `diaspora_beneficiaries` (nom, lien de parenté, montant
+  habituel nullable, rythme `monthly`/`occasional`) + `diaspora_transfers.beneficiary_id`
+  (nullable, sans `ON DELETE`) — la 0022 précédait le concept de bénéficiaire, sa propre note
+  l'anticipait déjà. Pas de colonne `currency_code` sur le bénéficiaire : le montant habituel se
+  lit dans la devise du foyer (`households[0]?.currencyCode`), déjà la donnée que l'écran Transferts
+  affiche partout ailleurs — une seconde devise par bénéficiaire aurait pu diverger de celle du
+  foyer sans qu'aucun critère ne le demande.
+- **Critère 3 (« modifier/supprimer sans perdre l'historique ») pris au sérieux plutôt que supposé** :
+  `beneficiary_id` est nullable et sans cascade — supprimer un bénéficiaire ne touche jamais aux
+  lignes `diaspora_transfers` déjà écrites (append-only, même principe que `category_id` survivant
+  au renommage d'une catégorie). Testé explicitement : créer un transfert lié, supprimer le
+  bénéficiaire, vérifier que `listDiasporaTransfers` renvoie toujours la ligne intacte — à la fois
+  au niveau repository et de bout en bout depuis l'écran (le total annuel ne bouge pas après la
+  suppression).
+- **`BeneficiaryForm`** (nouveau, calqué sur `VaultForm`) : nom, lien de parenté (texte libre),
+  bascule mensuel/occasionnel, montant habituel — obligatoire si mensuel, optionnel sinon (repli
+  silencieux vers `null` si le champ est laissé vide en occasionnel, jamais l'inverse). Suppression
+  avec confirmation inline, même mécanique que `VaultForm`.
+- **`TransfersScreen`** gagne une section « Bénéficiaires » (liste avec `Avatar`, lien de parenté et
+  rythme formaté — « 300,00 MAD / mois » ou « Occasionnel ») et un flux d'envoi rapide : toucher un
+  bénéficiaire ouvre un formulaire pré-rempli avec son montant habituel (critère 2), qui écrit via
+  `createDiasporaTransfer` en renseignant désormais `beneficiaryId`. Le futur US-047 (méthode +
+  conversion manuelle) étendra ce même appel plutôt que d'en écrire un second.
+- Tests : nouvelle suite `diasporaBeneficiaryRepository.test.ts` (CRUD + le cas « historique
+  préservé après suppression ») ; `diasporaTransferRepository.test.ts` étendu (lien vers un
+  bénéficiaire, rejet FK vers un bénéficiaire inconnu) ; `TransfersScreen.test.tsx` +7 cas
+  (liste vide, rythme mensuel/occasionnel, pré-remplissage, envoi, édition et suppression sans
+  perte d'historique) ; `TransfersScreen.rtl.test.tsx` étendu à la liste + au formulaire d'envoi/
+  édition sous le drapeau RTL.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1818/1818, 148 suites** ✅.
+- ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé) — repli sur
+  `TransfersScreen.rtl.test.tsx` comme en 11.1.
+
 ## Notes / blocages connus (hors périmètre Phase 1)
 
 - L'arbre de travail contient des changements accumulés multi-phases non

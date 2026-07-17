@@ -10,7 +10,12 @@ jest.mock('../../db/client', () => ({
 }));
 
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
-import { createDiasporaTransfer, createHousehold } from '../../db/repositories';
+import {
+  createDiasporaBeneficiary,
+  createDiasporaTransfer,
+  createHousehold,
+  listDiasporaTransfers,
+} from '../../db/repositories';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { EntitlementsProvider } from '../../entitlements';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
@@ -115,5 +120,126 @@ describe('TransfersScreen (US-045)', () => {
 
     expect((await screen.findAllByText(/100,00 €/)).length).toBeGreaterThan(0);
     expect(await screen.findByText(/≈ .*MAD/)).toBeTruthy();
+  });
+});
+
+describe('TransfersScreen — bénéficiaires récurrents (US-046)', () => {
+  beforeEach(() => {
+    mockFakeDb = createFakeDatabase().db;
+  });
+
+  it('shows an empty state when there is no beneficiary yet', async () => {
+    await renderScreen(TRANSFERS_PLAN);
+
+    expect(await screen.findByText('Aucun bénéficiaire enregistré.')).toBeTruthy();
+  });
+
+  it('lists a monthly beneficiary with name, relationship and rhythm', async () => {
+    await createDiasporaBeneficiary(mockFakeDb, {
+      name: 'Fatima Benali',
+      relationship: 'Mère',
+      usualAmountMinor: 30000,
+      frequency: 'monthly',
+    });
+    await renderScreen(TRANSFERS_PLAN);
+
+    expect(await screen.findByText('Fatima Benali')).toBeTruthy();
+    expect(await screen.findByText(/Mère.*300,00 MAD.*mois/)).toBeTruthy();
+  });
+
+  it('lists an occasional beneficiary as "Occasionnel", without a rate', async () => {
+    await createDiasporaBeneficiary(mockFakeDb, {
+      name: 'Karim Benali',
+      relationship: 'Frère',
+      usualAmountMinor: null,
+      frequency: 'occasional',
+    });
+    await renderScreen(TRANSFERS_PLAN);
+
+    expect(await screen.findByText(/Frère.*Occasionnel/)).toBeTruthy();
+  });
+
+  it('prefills the send form with the usual amount when a beneficiary is selected', async () => {
+    await createDiasporaBeneficiary(mockFakeDb, {
+      name: 'Fatima Benali',
+      relationship: 'Mère',
+      usualAmountMinor: 30000,
+      frequency: 'monthly',
+    });
+    await renderScreen(TRANSFERS_PLAN);
+
+    fireEvent.press(await screen.findByText('Fatima Benali'));
+
+    expect(await screen.findByText('Envoyer à Fatima Benali')).toBeTruthy();
+    expect(await screen.findByDisplayValue('300')).toBeTruthy();
+  });
+
+  it('saves a transfer linked to the selected beneficiary', async () => {
+    const beneficiary = await createDiasporaBeneficiary(mockFakeDb, {
+      name: 'Fatima Benali',
+      relationship: 'Mère',
+      usualAmountMinor: 30000,
+      frequency: 'monthly',
+    });
+    await renderScreen(TRANSFERS_PLAN);
+
+    fireEvent.press(await screen.findByText('Fatima Benali'));
+    fireEvent.press(await screen.findByText('Enregistrer le transfert'));
+
+    expect(await screen.findByText('1 transfert(s) enregistré(s)')).toBeTruthy();
+    const transfers = await listDiasporaTransfers(mockFakeDb);
+    expect(transfers).toHaveLength(1);
+    expect(transfers[0].amountMinor).toBe(30000);
+    expect(transfers[0].beneficiaryId).toBe(beneficiary.id);
+  });
+
+  it('edits a beneficiary without losing its past transfers', async () => {
+    const beneficiary = await createDiasporaBeneficiary(mockFakeDb, {
+      name: 'Fatima Benali',
+      relationship: 'Mère',
+      usualAmountMinor: 30000,
+      frequency: 'monthly',
+    });
+    await createDiasporaTransfer(mockFakeDb, {
+      amountMinor: 30000,
+      currencyCode: 'MAD',
+      occurredAt: `${CURRENT_YEAR}-02-10T00:00:00.000Z`,
+      beneficiaryId: beneficiary.id,
+    });
+    await renderScreen(TRANSFERS_PLAN);
+
+    fireEvent.press(await screen.findByText('Fatima Benali'));
+    fireEvent.press(await screen.findByText('Modifier ce bénéficiaire'));
+    fireEvent.changeText(await screen.findByDisplayValue('Fatima Benali'), 'Fatima B.');
+    fireEvent.press(await screen.findByText('Enregistrer'));
+
+    expect(await screen.findByText('Fatima B.')).toBeTruthy();
+    expect(await screen.findByText('1 transfert(s) enregistré(s)')).toBeTruthy();
+  });
+
+  it('deletes a beneficiary and keeps its past transfers in the annual history', async () => {
+    const beneficiary = await createDiasporaBeneficiary(mockFakeDb, {
+      name: 'Fatima Benali',
+      relationship: 'Mère',
+      usualAmountMinor: 30000,
+      frequency: 'monthly',
+    });
+    await createDiasporaTransfer(mockFakeDb, {
+      amountMinor: 30000,
+      currencyCode: 'MAD',
+      occurredAt: `${CURRENT_YEAR}-02-10T00:00:00.000Z`,
+      beneficiaryId: beneficiary.id,
+    });
+    await renderScreen(TRANSFERS_PLAN);
+
+    fireEvent.press(await screen.findByText('Fatima Benali'));
+    fireEvent.press(await screen.findByText('Modifier ce bénéficiaire'));
+    fireEvent.press(await screen.findByText('Supprimer ce bénéficiaire'));
+    fireEvent.press(await screen.findByText('Oui, supprimer'));
+
+    expect(await screen.findByText('Aucun bénéficiaire enregistré.')).toBeTruthy();
+    expect(await screen.findByText('1 transfert(s) enregistré(s)')).toBeTruthy();
+    const transfers = await listDiasporaTransfers(mockFakeDb);
+    expect(transfers).toHaveLength(1);
   });
 });

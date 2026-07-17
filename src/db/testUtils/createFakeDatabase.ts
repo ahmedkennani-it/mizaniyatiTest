@@ -42,6 +42,7 @@ const FOREIGN_KEYS: Record<string, { column: string; referencesTable: string }[]
     { column: 'to_member_id', referencesTable: 'members' },
   ],
   zakat_assessments: [{ column: 'transaction_id', referencesTable: 'transactions' }],
+  diaspora_transfers: [{ column: 'beneficiary_id', referencesTable: 'diaspora_beneficiaries' }],
 };
 
 function validateRow(tableName: string, row: Row, tables: Map<string, Map<string, Row>>): void {

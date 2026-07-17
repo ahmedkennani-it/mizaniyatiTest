@@ -1,4 +1,5 @@
 import { createFakeDatabase } from '../../testUtils/createFakeDatabase';
+import { createDiasporaBeneficiary } from '../diasporaBeneficiaryRepository';
 import { createDiasporaTransfer, listDiasporaTransfers } from '../diasporaTransferRepository';
 
 describe('diasporaTransferRepository', () => {
@@ -14,7 +15,40 @@ describe('diasporaTransferRepository', () => {
     expect(transfer.id).toEqual(expect.any(String));
     expect(transfer.amountMinor).toBe(30000);
     expect(transfer.currencyCode).toBe('EUR');
+    expect(transfer.beneficiaryId).toBeNull();
     expect(await listDiasporaTransfers(db)).toEqual([transfer]);
+  });
+
+  it('links a transfer to a beneficiary', async () => {
+    const { db } = createFakeDatabase();
+    const beneficiary = await createDiasporaBeneficiary(db, {
+      name: 'Fatima',
+      relationship: 'Mère',
+      usualAmountMinor: 30000,
+      frequency: 'monthly',
+    });
+
+    const transfer = await createDiasporaTransfer(db, {
+      amountMinor: 30000,
+      currencyCode: 'EUR',
+      occurredAt: '2026-03-15T10:00:00.000Z',
+      beneficiaryId: beneficiary.id,
+    });
+
+    expect(transfer.beneficiaryId).toBe(beneficiary.id);
+  });
+
+  it('rejects a transfer linked to an unknown beneficiary (FOREIGN KEY)', async () => {
+    const { db } = createFakeDatabase();
+
+    await expect(
+      createDiasporaTransfer(db, {
+        amountMinor: 30000,
+        currencyCode: 'EUR',
+        occurredAt: '2026-03-15T10:00:00.000Z',
+        beneficiaryId: 'missing',
+      }),
+    ).rejects.toThrow(/FOREIGN KEY constraint failed/);
   });
 
   it('lists transfers ordered by occurred_at descending', async () => {

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
 import { I18nManager } from 'react-native';
 
@@ -11,7 +11,7 @@ jest.mock('../../db/client', () => ({
 }));
 
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
-import { createDiasporaTransfer } from '../../db/repositories';
+import { createDiasporaBeneficiary, createDiasporaTransfer } from '../../db/repositories';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { EntitlementsProvider } from '../../entitlements';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
@@ -90,5 +90,24 @@ describe('TransfersScreen under RTL and LTR (US-045)', () => {
     expect(screen.getByText(fr.transfersScreen.disclaimer)).toBeTruthy();
     expect(screen.getByText(fr.transfersScreen.totalLabel)).toBeTruthy();
     expect(screen.getByText(fr.transfersScreen.historyTitle)).toBeTruthy();
+  });
+
+  it('renders the beneficiary list and the send/edit form under the RTL layout flag', async () => {
+    I18nManager.isRTL = true;
+    await createDiasporaBeneficiary(mockFakeDb, {
+      name: 'Fatima Benali',
+      relationship: 'Mère',
+      usualAmountMinor: 30000,
+      frequency: 'monthly',
+    });
+    await renderScreen();
+
+    expect(await screen.findByText('Fatima Benali')).toBeTruthy();
+
+    fireEvent.press(screen.getByText('Fatima Benali'));
+    expect(await screen.findByText('Envoyer à Fatima Benali')).toBeTruthy();
+
+    fireEvent.press(screen.getByText(fr.transfersScreen.sendEditBeneficiary));
+    expect(await screen.findByText(fr.beneficiaryForm.titleEdit)).toBeTruthy();
   });
 });

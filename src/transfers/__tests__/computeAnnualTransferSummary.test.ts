@@ -2,7 +2,14 @@ import type { DiasporaTransfer } from '../../db/repositories';
 import { computeAnnualTransferSummary, listTransferYears } from '../computeAnnualTransferSummary';
 
 function transfer(amountMinor: number, occurredAt: string): DiasporaTransfer {
-  return { id: occurredAt, amountMinor, currencyCode: 'EUR', occurredAt, createdAt: occurredAt };
+  return {
+    id: occurredAt,
+    amountMinor,
+    currencyCode: 'EUR',
+    occurredAt,
+    beneficiaryId: null,
+    createdAt: occurredAt,
+  };
 }
 
 describe('computeAnnualTransferSummary', () => {

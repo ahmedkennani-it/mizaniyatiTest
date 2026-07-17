@@ -7,10 +7,11 @@ interface DiasporaTransferRow {
   amount_minor: number;
   currency_code: string;
   occurred_at: string;
+  beneficiary_id: string | null;
   created_at: string;
 }
 
-const SELECT_COLUMNS = 'id, amount_minor, currency_code, occurred_at, created_at';
+const SELECT_COLUMNS = 'id, amount_minor, currency_code, occurred_at, beneficiary_id, created_at';
 
 function fromRow(row: DiasporaTransferRow): DiasporaTransfer {
   return {
@@ -18,6 +19,7 @@ function fromRow(row: DiasporaTransferRow): DiasporaTransfer {
     amountMinor: row.amount_minor,
     currencyCode: row.currency_code,
     occurredAt: row.occurred_at,
+    beneficiaryId: row.beneficiary_id,
     createdAt: row.created_at,
   };
 }
@@ -28,15 +30,17 @@ export async function createDiasporaTransfer(
 ): Promise<DiasporaTransfer> {
   const id = generateId();
   const now = new Date().toISOString();
+  const beneficiaryId = input.beneficiaryId ?? null;
   await db.runAsync(
-    `INSERT INTO diaspora_transfers (id, amount_minor, currency_code, occurred_at, created_at) VALUES (?, ?, ?, ?, ?);`,
-    [id, input.amountMinor, input.currencyCode, input.occurredAt, now],
+    `INSERT INTO diaspora_transfers (id, amount_minor, currency_code, occurred_at, beneficiary_id, created_at) VALUES (?, ?, ?, ?, ?, ?);`,
+    [id, input.amountMinor, input.currencyCode, input.occurredAt, beneficiaryId, now],
   );
   return {
     id,
     amountMinor: input.amountMinor,
     currencyCode: input.currencyCode,
     occurredAt: input.occurredAt,
+    beneficiaryId,
     createdAt: now,
   };
 }
