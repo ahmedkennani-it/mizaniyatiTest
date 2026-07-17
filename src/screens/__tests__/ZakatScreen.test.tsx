@@ -10,7 +10,13 @@ jest.mock('../../db/client', () => ({
 }));
 
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
-import { createHousehold, listZakatAssessments } from '../../db/repositories';
+import {
+  createCategory,
+  createHousehold,
+  createMember,
+  listTransactions,
+  listZakatAssessments,
+} from '../../db/repositories';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { EntitlementsProvider } from '../../entitlements';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
@@ -117,11 +123,78 @@ describe('ZakatScreen (US-025)', () => {
     await renderScreen(jest.fn(), ZAKAT_PLAN);
 
     await fireEvent.changeText(await screen.findByLabelText('Liquidités & comptes'), '1000');
-    await fireEvent.press(screen.getByText('Enregistrer ce calcul'));
+    await fireEvent.press(screen.getByText('Enregistrer & planifier le don'));
 
     const assessments = await listZakatAssessments(mockFakeDb);
     expect(assessments).toHaveLength(1);
     expect(assessments[0].baseMinor).toBe(100000);
+  });
+
+  /** US-043: "quand je tape 'Enregistrer & planifier le don', le montant est sauvegardé avec sa
+   * date de calcul" — plus the chosen due date, when given. */
+  it('saves the chosen due date alongside the calculation', async () => {
+    await renderScreen(jest.fn(), ZAKAT_PLAN);
+
+    await fireEvent.changeText(await screen.findByLabelText('Liquidités & comptes'), '1000');
+    await fireEvent.changeText(
+      screen.getByLabelText('Date de versement prévue (optionnel)'),
+      '2026-08-01',
+    );
+    await fireEvent.press(screen.getByText('Enregistrer & planifier le don'));
+
+    const assessments = await listZakatAssessments(mockFakeDb);
+    expect(assessments[0].dueDate).toBe('2026-08-01');
+    expect(assessments[0].paidAt).toBeNull();
+  });
+
+  it('shows a note instead of "mark as paid" when no Zakat & dons category exists yet', async () => {
+    await renderScreen(jest.fn(), ZAKAT_PLAN);
+
+    await fireEvent.changeText(await screen.findByLabelText("Prix de l'or (par gramme)"), '100');
+    await fireEvent.press(screen.getByText('Mettre à jour la configuration'));
+    await fireEvent.changeText(screen.getByLabelText('Liquidités & comptes'), '10000');
+    await fireEvent.press(screen.getByText('Enregistrer & planifier le don'));
+
+    expect(screen.queryByText('Marquer comme versé')).toBeNull();
+    expect(
+      await screen.findByText(
+        'Créez une catégorie « Zakat & dons » pour pouvoir marquer un versement comme effectué.',
+      ),
+    ).toBeTruthy();
+  });
+
+  /** US-043: "elle est rattachée à la catégorie Zakat & dons et impacte son plafond une fois
+   * versée" — marking paid must create a real expense Transaction in that category, since
+   * category budgets are computed purely from `Transaction` rows. */
+  it('marking a plan paid creates a linked expense transaction in the Zakat & dons category', async () => {
+    const category = await createCategory(mockFakeDb, {
+      name: 'Zakat & dons',
+      icon: 'hand-heart',
+      color: '#B45309',
+    });
+    await createMember(mockFakeDb, { name: 'Youssef' });
+    await renderScreen(jest.fn(), ZAKAT_PLAN);
+
+    await fireEvent.changeText(await screen.findByLabelText("Prix de l'or (par gramme)"), '100');
+    await fireEvent.press(screen.getByText('Mettre à jour la configuration'));
+    // Nisab = 8 500 MAD; base = 10000 - 1000 = 9000 MAD, due = 225 MAD (22 500 minor).
+    await fireEvent.changeText(screen.getByLabelText('Liquidités & comptes'), '10000');
+    await fireEvent.changeText(screen.getByLabelText('Dettes à déduire'), '1000');
+    await fireEvent.press(screen.getByText('Enregistrer & planifier le don'));
+
+    await fireEvent.press(await screen.findByText('Marquer comme versé'));
+
+    expect(await screen.findByText('Versé')).toBeTruthy();
+    const transactions = await listTransactions(mockFakeDb);
+    expect(transactions).toHaveLength(1);
+    expect(transactions[0]).toMatchObject({
+      type: 'expense',
+      categoryId: category.id,
+      amountMinor: 22500,
+    });
+    const assessments = await listZakatAssessments(mockFakeDb);
+    expect(assessments[0].paidAt).not.toBeNull();
+    expect(assessments[0].transactionId).toBe(transactions[0].id);
   });
 
   it('calls onBack when the back link is pressed', async () => {

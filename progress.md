@@ -121,14 +121,14 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 9.4 | Suivi des paiements du tour en cours | ✅ done |
 | 9.5 | Calendrier des tours | ✅ done |
 
-## État des tâches Phase 10 (Zakat & mode Ramadan) — 1/4
+## État des tâches Phase 10 (Zakat & mode Ramadan) — ✅ 4/4
 
 | Tâche | Titre | Statut |
 | --- | --- | --- |
 | 10.1 | Mode Ramadan (thème saisonnier) | ✅ done |
 | 10.2 | Calculateur de Zakat | ✅ done |
 | 10.3 | Catégorie Zakat & dons avec plafond | ✅ done |
-| 10.4 | Enregistrement et planification du don de Zakat | ⬜ à faire |
+| 10.4 | Enregistrement et planification du don de Zakat | ✅ done |
 
 ## Journal
 
@@ -1453,6 +1453,47 @@ tâche réelle était de brancher `HomeScreen` sur cet état déjà persistant, 
   n'a jamais restreint les noms) ; testé explicitement pour le documenter comme un critère vérifié,
   pas seulement supposé.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1747/1747, 140 suites** ✅.
+- ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé).
+
+### Itération 51 — Tâche 10.4 (Enregistrement et planification du don de Zakat) ✅ — phase 10 terminée
+
+- **Audit préalable** : `ZakatAssessment` n'était qu'un historique de calculs, append-only, sans
+  aucune notion de date de versement, de statut payé, ni de lien vers une transaction réelle — le
+  docstring du type disait déjà « enregistrer/planifier le don » mais aucun champ ne le portait.
+- **Migration 0021** : `due_date`/`paid_at`/`transaction_id`/`reminded_at`, tous nullables. Même
+  choix qu'en 9.4 : **pas de colonne « statut » séparée** — `paid_at IS NULL` est l'unique signal
+  « encore planifié », pour ne jamais pouvoir diverger d'un enum parallèle.
+  `markZakatAssessmentPaid`/`markZakatAssessmentReminded` (nouveau) rejoignent
+  `createZakatAssessment`/`listZakatAssessments`, toujours pas d'`update` générique — seules ces
+  deux mutations précises existent.
+- **« Rattachée à la catégorie et impacte son plafond une fois versée » (critère 2)** : les
+  plafonds de catégorie se calculent **uniquement** à partir de vraies lignes `Transaction`
+  (`computeCategoryBudgetStatus`, jamais d'un canal parallèle « montant planifié »). Marquer un
+  don comme versé crée donc une vraie dépense dans la catégorie « Zakat & dons » — c'est le seul
+  moyen honnête de l'y faire compter, plutôt qu'un second système de suivi qui la contournerait.
+  **Catégorie retrouvée par icône (`hand-heart`), pas par nom** — même principe déjà appliqué à la
+  déduction vocale (itération 35) : robuste à un foyer qui aurait renommé sa catégorie. Un foyer
+  sans catégorie « Zakat & dons » (marché hors MENA/Golfe, ou catégorie supprimée) voit le bouton
+  « Marquer comme versé » remplacé par une invite à créer la catégorie d'abord — plutôt que de
+  fabriquer une transaction sans catégorie valable (`categoryId` est un FK obligatoire).
+- **Rappel à échéance (critère 3), même mécanisme que la tontine — pas un nouveau** : ce projet n'a
+  **aucune notification programmée par l'OS à une date future** ; chaque « rappel » existant
+  (plafond de catégorie, tontine) est une fonction de décision pure évaluée à **chaque démarrage
+  de l'app**, qui déclenche `notificationClient.presentNow()` séance tenante si les conditions sont
+  réunies. `shouldSendZakatReminder`/`processZakatReminders` (nouveaux, dans `src/zakat/`) suivent
+  exactement ce patron — branchés dans `ensureAppReady`, comme `processTontineReminders`. Limite
+  assumée et déjà présente ailleurs : si l'app n'est pas ouverte le jour de l'échéance, le rappel
+  arrive au prochain lancement, pas pile à la date choisie.
+- **Bouton renommé** « Enregistrer ce calcul » → « Enregistrer & planifier le don » (texte exact du
+  critère 1), avec un champ de date de versement optionnel ajouté juste au-dessus.
+- **Critère 4 (historique des années précédentes)** : déjà satisfait par la liste chronologique
+  inversée existante (`listZakatAssessments`, `ORDER BY created_at DESC`) — aucun regroupement par
+  année n'était nécessaire pour remplir le critère tel qu'écrit.
+- Tests : nouveaux cas pour la date de planification sauvegardée, l'absence de catégorie (message
+  au lieu du bouton), et le marquage payé qui crée bien une `Transaction` `expense` liée à la bonne
+  catégorie et au bon montant — plus la suite dédiée `zakatReminderDecision`/`processZakatReminders`
+  (12 cas, même structure que les tests tontine déjà en place).
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1769/1769, 142 suites** ✅.
 - ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé).
 
 ## Notes / blocages connus (hors périmètre Phase 1)

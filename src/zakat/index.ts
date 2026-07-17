@@ -6,3 +6,6 @@ export {
   ZAKAT_RATE,
 } from './computeZakat';
 export type { ZakatAssets, ZakatResult } from './computeZakat';
+export { processZakatReminders } from './processZakatReminders';
+export { shouldSendZakatReminder } from './zakatReminderDecision';
+export type { ZakatReminderDecisionInput } from './zakatReminderDecision';

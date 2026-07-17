@@ -1,5 +1,15 @@
 import { createFakeDatabase } from '../../testUtils/createFakeDatabase';
-import { createZakatAssessment, listZakatAssessments } from '../zakatAssessmentRepository';
+import { createCategory } from '../categoryRepository';
+import { NotFoundError } from '../errors';
+import { createMember } from '../memberRepository';
+import { createTransaction } from '../transactionRepository';
+import {
+  createZakatAssessment,
+  getZakatAssessmentById,
+  listZakatAssessments,
+  markZakatAssessmentPaid,
+  markZakatAssessmentReminded,
+} from '../zakatAssessmentRepository';
 import { getZakatConfig, updateZakatConfig } from '../zakatConfigRepository';
 
 describe('zakatConfigRepository', () => {
@@ -110,5 +120,89 @@ describe('zakatAssessmentRepository', () => {
         aboveNisab: false,
       }),
     ).rejects.toThrow(/CHECK constraint failed/);
+  });
+
+  /** US-043: "enregistrer & planifier le don" — a chosen due date, and the paid/reminded state
+   * that starts unset until the household acts on the plan. */
+  describe('planning (US-043)', () => {
+    async function seed(dueDate: string | null = '2026-08-01') {
+      const { db } = createFakeDatabase();
+      const assessment = await createZakatAssessment(db, {
+        cashMinor: 1000000,
+        goldSilverMinor: 0,
+        investmentsMinor: 0,
+        debtsMinor: 0,
+        baseMinor: 1000000,
+        dueMinor: 25000,
+        aboveNisab: true,
+        dueDate,
+      });
+      return { db, assessment };
+    }
+
+    it('starts with no due date when none is given', async () => {
+      const { db } = createFakeDatabase();
+      const assessment = await createZakatAssessment(db, {
+        cashMinor: 100,
+        goldSilverMinor: 0,
+        investmentsMinor: 0,
+        debtsMinor: 0,
+        baseMinor: 100,
+        dueMinor: 2,
+        aboveNisab: false,
+      });
+      expect(assessment.dueDate).toBeNull();
+      expect(assessment.paidAt).toBeNull();
+      expect(assessment.transactionId).toBeNull();
+      expect(assessment.remindedAt).toBeNull();
+    });
+
+    it('stores the chosen due date', async () => {
+      const { assessment } = await seed('2026-08-01');
+      expect(assessment.dueDate).toBe('2026-08-01');
+    });
+
+    it('marks a plan paid, linking its transaction', async () => {
+      const { db, assessment } = await seed();
+      const category = await createCategory(db, {
+        name: 'Zakat & dons',
+        icon: 'hand-heart',
+        color: '#B45309',
+      });
+      const member = await createMember(db, { name: 'Youssef' });
+      const transaction = await createTransaction(db, {
+        type: 'expense',
+        amountMinor: assessment.dueMinor,
+        currencyCode: 'MAD',
+        categoryId: category.id,
+        memberId: member.id,
+        occurredAt: '2026-08-01T09:00:00.000Z',
+      });
+
+      const paid = await markZakatAssessmentPaid(db, assessment.id, {
+        paidAt: '2026-08-01T09:00:00.000Z',
+        transactionId: transaction.id,
+      });
+
+      expect(paid.paidAt).toBe('2026-08-01T09:00:00.000Z');
+      expect(paid.transactionId).toBe(transaction.id);
+      expect(await getZakatAssessmentById(db, assessment.id)).toEqual(paid);
+    });
+
+    it('refuses to mark an unknown assessment paid', async () => {
+      const { db } = createFakeDatabase();
+      await expect(
+        markZakatAssessmentPaid(db, 'missing', { paidAt: '2026-08-01', transactionId: 'tx-1' }),
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('marks a plan reminded, independent of paid status', async () => {
+      const { db, assessment } = await seed();
+
+      const reminded = await markZakatAssessmentReminded(db, assessment.id, '2026-08-01T09:00:00.000Z');
+
+      expect(reminded.remindedAt).toBe('2026-08-01T09:00:00.000Z');
+      expect(reminded.paidAt).toBeNull();
+    });
   });
 });

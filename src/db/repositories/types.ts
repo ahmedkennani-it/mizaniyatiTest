@@ -386,7 +386,12 @@ export interface ZakatConfigPatch {
   silverPricePerGramMinor?: number | null;
 }
 
-/** A saved calculation — "enregistrer/planifier le don" per the spec. History, never edited. */
+/**
+ * A saved calculation — "enregistrer/planifier le don" per the spec (US-043). The core fields
+ * (amounts, `createdAt`) are never edited once created; `paidAt`/`transactionId` are the one thing
+ * that *does* change, the moment the household marks the plan as paid. `paidAt === null` is the
+ * sole "still planned" signal — no separate status enum that could disagree with it.
+ */
 export interface ZakatAssessment {
   id: string;
   cashMinor: number;
@@ -396,6 +401,14 @@ export interface ZakatAssessment {
   baseMinor: number;
   dueMinor: number;
   aboveNisab: boolean;
+  /** ISO `YYYY-MM-DD` the household intends to pay by, or `null` if not planned for a date. */
+  dueDate: string | null;
+  /** Set once marked paid; `null` means still planned. */
+  paidAt: string | null;
+  /** The expense `Transaction` created for the "Zakat & dons" category once paid, or `null`. */
+  transactionId: string | null;
+  /** Set once the due-date reminder has fired, so it is never sent twice for the same plan. */
+  remindedAt: string | null;
   createdAt: string;
 }
 
@@ -407,6 +420,12 @@ export interface NewZakatAssessment {
   baseMinor: number;
   dueMinor: number;
   aboveNisab: boolean;
+  dueDate?: string | null;
+}
+
+export interface ZakatAssessmentPaidPatch {
+  paidAt: string;
+  transactionId: string;
 }
 
 export type SeasonalThemeType = 'ramadan' | 'aid_kebir' | 'back_to_school';

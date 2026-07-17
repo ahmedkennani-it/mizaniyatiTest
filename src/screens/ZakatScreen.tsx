@@ -18,13 +18,24 @@ import {
 } from '../components';
 import { getDatabase } from '../db/client';
 import {
+  createTransaction,
   createZakatAssessment,
   getZakatConfig,
+  listCategories,
   listHouseholds,
+  listMembers,
   listZakatAssessments,
+  markZakatAssessmentPaid,
   updateZakatConfig,
 } from '../db/repositories';
-import type { Household, ZakatAssessment, ZakatConfig, ZakatNisabBasis } from '../db/repositories';
+import type {
+  Category,
+  Household,
+  Member,
+  ZakatAssessment,
+  ZakatConfig,
+  ZakatNisabBasis,
+} from '../db/repositories';
 import { useEntitlements } from '../entitlements';
 import { useLanguage } from '../i18n';
 import { DEFAULT_CURRENCY_CODE, formatMoney, parseNonNegativeAmountInput } from '../money';
@@ -44,6 +55,8 @@ export function ZakatScreen({ onBack }: ZakatScreenProps) {
   const [config, setConfig] = useState<ZakatConfig | null>(null);
   const [assessments, setAssessments] = useState<ZakatAssessment[]>([]);
   const [households, setHouseholds] = useState<Household[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
 
   const [madhhabInput, setMadhhabInput] = useState('');
   const [priceInput, setPriceInput] = useState('');
@@ -51,6 +64,7 @@ export function ZakatScreen({ onBack }: ZakatScreenProps) {
   const [goldSilverInput, setGoldSilverInput] = useState('');
   const [investmentsInput, setInvestmentsInput] = useState('');
   const [debtsInput, setDebtsInput] = useState('');
+  const [dueDateInput, setDueDateInput] = useState('');
 
   const refresh = useCallback(() => {
     const db = getDatabase();
@@ -69,6 +83,8 @@ export function ZakatScreen({ onBack }: ZakatScreenProps) {
     });
     listZakatAssessments(db).then(setAssessments);
     listHouseholds(db).then(setHouseholds);
+    listCategories(db).then(setCategories);
+    listMembers(db).then(setMembers);
   }, []);
 
   useEffect(() => {
@@ -137,6 +153,11 @@ export function ZakatScreen({ onBack }: ZakatScreenProps) {
     nisabMinor,
   );
 
+  // Matched by icon, not name (same reasoning as the voice-dictation category matcher, US-021):
+  // robust to the household having renamed its "Zakat & dons" category, and to non-MENA/Gulf
+  // households that never had one seeded (US-044) and would need to create it by hand first.
+  const zakatCategory = categories.find((category) => category.icon === 'hand-heart');
+
   async function handleSaveAssessment() {
     await createZakatAssessment(getDatabase(), {
       cashMinor,
@@ -146,7 +167,28 @@ export function ZakatScreen({ onBack }: ZakatScreenProps) {
       baseMinor: result.baseMinor,
       dueMinor: result.dueMinor,
       aboveNisab: result.aboveNisab,
+      dueDate: dueDateInput.trim() || null,
     });
+    setDueDateInput('');
+    refresh();
+  }
+
+  async function handleMarkPaid(assessment: ZakatAssessment) {
+    if (!zakatCategory || !members[0]) {
+      return;
+    }
+    const db = getDatabase();
+    const paidAt = new Date().toISOString();
+    const transaction = await createTransaction(db, {
+      type: 'expense',
+      amountMinor: assessment.dueMinor,
+      currencyCode,
+      categoryId: zakatCategory.id,
+      memberId: members[0].id,
+      occurredAt: paidAt,
+      note: t('zakatScreen.paidTransactionNote'),
+    });
+    await markZakatAssessmentPaid(db, assessment.id, { paidAt, transactionId: transaction.id });
     refresh();
   }
 
@@ -280,6 +322,12 @@ export function ZakatScreen({ onBack }: ZakatScreenProps) {
             color={result.aboveNisab ? theme.accents.gold.ink : theme.colors.textSecondary}
           />
         ) : null}
+        <TextField
+          label={t('zakatScreen.dueDateLabel')}
+          placeholder={t('zakatScreen.dueDatePlaceholder')}
+          value={dueDateInput}
+          onChangeText={setDueDateInput}
+        />
         <Button label={t('zakatScreen.saveButton')} onPress={handleSaveAssessment} />
       </Card>
 
@@ -298,10 +346,39 @@ export function ZakatScreen({ onBack }: ZakatScreenProps) {
               icon="hand-heart"
               accent="gold"
               title={assessment.createdAt.slice(0, 10)}
-              value={formatMoney(assessment.dueMinor, currencyCode, language)}
+              subtitle={
+                assessment.dueDate
+                  ? t('zakatScreen.dueDateSubtitle', { date: assessment.dueDate })
+                  : undefined
+              }
+              trailing={
+                <View style={{ alignItems: 'flex-end', gap: theme.spacing.xs }}>
+                  <Txt weight="semibold" size="sm">
+                    {formatMoney(assessment.dueMinor, currencyCode, language)}
+                  </Txt>
+                  {assessment.paidAt ? (
+                    <Pill
+                      label={t('zakatScreen.paidLabel')}
+                      background={theme.accents.gold.wash}
+                      color={theme.accents.gold.ink}
+                    />
+                  ) : (
+                    <Button
+                      label={t('zakatScreen.markPaidButton')}
+                      variant="secondary"
+                      onPress={() => handleMarkPaid(assessment)}
+                    />
+                  )}
+                </View>
+              }
             />
           ))
         )}
+        {!zakatCategory ? (
+          <Txt size="xs" color={theme.colors.textSecondary}>
+            {t('zakatScreen.noZakatCategoryNote')}
+          </Txt>
+        ) : null}
       </View>
     </AppScreen>
   );

@@ -65,7 +65,13 @@ export {
   updateTontinePayment,
 } from './tontinePaymentRepository';
 export { getZakatConfig, updateZakatConfig } from './zakatConfigRepository';
-export { createZakatAssessment, listZakatAssessments } from './zakatAssessmentRepository';
+export {
+  createZakatAssessment,
+  getZakatAssessmentById,
+  listZakatAssessments,
+  markZakatAssessmentPaid,
+  markZakatAssessmentReminded,
+} from './zakatAssessmentRepository';
 export {
   createSeasonalTheme,
   getSeasonalThemeById,
@@ -147,6 +153,7 @@ export type {
   ZakatNisabBasis,
   ZakatAssessment,
   NewZakatAssessment,
+  ZakatAssessmentPaidPatch,
   SeasonalTheme,
   NewSeasonalTheme,
   SeasonalThemePatch,
