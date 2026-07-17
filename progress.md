@@ -111,7 +111,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 8.3 | Détail d'un objectif avec versement suggéré | ✅ done |
 | 8.4 | Versements sur un objectif et historique | ✅ done |
 
-## État des tâches Phase 9 (Tontine / daret) — 1/5
+## État des tâches Phase 9 (Tontine / daret) — ✅ 5/5
 
 | Tâche | Titre | Statut |
 | --- | --- | --- |
@@ -119,7 +119,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 9.2 | Création et paramétrage d'une tontine | ✅ done |
 | 9.3 | Mise en avant de mon tour | ✅ done |
 | 9.4 | Suivi des paiements du tour en cours | ✅ done |
-| 9.5 | Calendrier des tours | ⬜ à faire |
+| 9.5 | Calendrier des tours | ✅ done |
 
 ## Journal
 
@@ -1291,6 +1291,34 @@ interdiction éternelle du réseau.
   `updateTontineRound` (`closedAt` nul à la création, mis à jour une fois).
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1700/1700, 138 suites** ✅.
 - ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé).
+
+### Itération 47 — Tâche 9.5 (Calendrier des tours) ✅ — phase 9 terminée
+
+- **Le calendrier était une liste verticale** (`ListRow` empilées), alors que les 3 critères
+  décrivent une **frise horizontale scrollable** avec des états visuels distincts (grisé/mis en
+  évidence/« Toi »). Remplacé par un `ScrollView horizontal` de tuiles (mois + « Tour X sur N » +
+  nom du bénéficiaire ou « Toi »), même motif déjà utilisé pour la bande de catégories de
+  `AddExpenseForm` (US-017) — jusqu'au commentaire expliquant que `ScrollView` inverse déjà tout
+  seul son sens de lecture en RTL, donc rien à coder en plus pour le critère 3.
+- **Grisé / mis en évidence** : `opacity: 0.5` pour un tour passé (`monthsUntil(now, round.month)
+  < 0`, même fonction que 9.3), fond + bordure `theme.accents.teal` (déjà la couleur « en cours »
+  sur cet écran, cf. la puce « payé » et la carte « mon tour » actionnable) pour le tour courant —
+  jamais l'opacité et la couleur toutes seules l'une sans l'autre pour porter l'information (même
+  garde-fou que la 2.4 : dans les deux cas le mois/numéro du tour reste lisible en texte, la
+  couleur n'est qu'un renfort).
+- **« Toi »** : nouvelle clé `calendarMineBadge` (distincte de `calendarMineTag`, le suffixe
+  « (Toi) » toujours utilisé ailleurs sur l'écran) — sur la frise, le libellé du bénéficiaire est
+  **remplacé** par « Toi » plutôt que suffixé, le critère demandant que mon tour « porte le
+  libellé Toi », pas mon nom affublé d'un tag.
+- Test : `testID` déterministe par tour (`tontine-round-tile-{id}`, l'id venant de
+  `listTontineRounds` après création, pas deviné) pour cibler précisément la tuile passée vs la
+  tuile courante et vérifier `opacity`/le libellé sur chacune séparément — repris du même besoin
+  que le badge « En retard » de la 8.3, où le style seul ne suffit pas à prouver le bon état sans
+  savoir *laquelle* des tuiles on regarde.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1701/1701, 138 suites** ✅.
+- ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé) — en particulier
+  le sens de défilement réel de la frise en RTL, qui dépend du moteur natif et n'est pas
+  observable depuis les tests de rendu.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

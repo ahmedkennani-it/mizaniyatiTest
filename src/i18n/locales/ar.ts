@@ -342,6 +342,7 @@ export const ar: TranslationSchema = {
     myRoundNone: 'أنت لست ضمن هذه المجموعة.',
     calendarTitle: 'تقويم الجولات',
     calendarMineTag: ' (أنت)',
+    calendarMineBadge: 'أنت',
     statusPaid: 'مدفوع',
     statusPending: 'قيد الانتظار',
     beneficiaryBadge: 'المستفيد - يستلم هذه الجولة',

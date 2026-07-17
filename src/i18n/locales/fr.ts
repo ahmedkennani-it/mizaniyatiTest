@@ -349,6 +349,7 @@ export const fr = {
     myRoundNone: 'Tu ne fais pas partie de ce groupe.',
     calendarTitle: 'Calendrier des tours',
     calendarMineTag: ' (Toi)',
+    calendarMineBadge: 'Toi',
     statusPaid: 'Payé',
     statusPending: 'En attente',
     beneficiaryBadge: 'Bénéficiaire - reçoit ce tour',

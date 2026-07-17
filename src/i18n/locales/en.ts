@@ -344,6 +344,7 @@ export const en: TranslationSchema = {
     myRoundNone: 'You are not part of this group.',
     calendarTitle: 'Round calendar',
     calendarMineTag: ' (You)',
+    calendarMineBadge: 'You',
     statusPaid: 'Paid',
     statusPending: 'Pending',
     beneficiaryBadge: 'Beneficiary - receives this round',

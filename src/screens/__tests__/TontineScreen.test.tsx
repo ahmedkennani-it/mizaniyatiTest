@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import React from 'react';
 
 import { createFakeDatabase } from '../../db/testUtils/createFakeDatabase';
@@ -10,7 +10,7 @@ jest.mock('../../db/client', () => ({
 }));
 
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
-import { listTontinePayments } from '../../db/repositories';
+import { listTontinePayments, listTontineRounds } from '../../db/repositories';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { EntitlementsProvider } from '../../entitlements';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
@@ -207,6 +207,33 @@ describe('TontineScreen (US-024)', () => {
         `Tu as reçu ${potLabel} au tour 1 (${formatMonthLabel(lastMonth, 'fr')}).`,
       ),
     ).toBeTruthy();
+  });
+
+  it('greys past rounds, highlights the current one, and labels my round "Toi" in the horizontal calendar', async () => {
+    const thisMonth = new Date().toISOString().slice(0, 7);
+    const lastMonth = previousMonthKey(thisMonth);
+    await createTontineGroupWithMembers(mockFakeDb, {
+      name: 'Tontine famille',
+      contributionPerRoundMinor: 100000,
+      currencyCode: 'MAD',
+      startMonth: lastMonth,
+      memberNames: ['Youssef', 'Salma'],
+      selfIndex: 1,
+    });
+    const rounds = await listTontineRounds(mockFakeDb);
+    const pastRound = rounds.find((r) => r.roundNumber === 1)!;
+    const currentRoundRow = rounds.find((r) => r.roundNumber === 2)!;
+
+    await renderScreen(TONTINE_PLAN);
+    await screen.findByText('Tontine famille');
+
+    const pastTile = await screen.findByTestId(`tontine-round-tile-${pastRound.id}`);
+    expect(pastTile.props.style).toMatchObject({ opacity: 0.5 });
+    expect(within(pastTile).getByText('Youssef')).toBeTruthy();
+
+    const currentTile = await screen.findByTestId(`tontine-round-tile-${currentRoundRow.id}`);
+    expect(currentTile.props.style).toMatchObject({ opacity: 1 });
+    expect(within(currentTile).getByText('Toi')).toBeTruthy();
   });
 
   it('toggles the reminder opt-in', async () => {

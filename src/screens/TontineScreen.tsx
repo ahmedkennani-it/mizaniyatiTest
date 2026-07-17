@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { TontineGroupForm } from './TontineGroupForm';
@@ -9,7 +9,6 @@ import {
   Avatar,
   Button,
   Card,
-  ListRow,
   Pill,
   ScreenHeader,
   SectionHeader,
@@ -289,25 +288,54 @@ export function TontineScreen() {
 
       <View style={{ gap: theme.spacing.sm }}>
         <SectionHeader title={t('tontineScreen.calendarTitle')} />
-        {groupRounds.map((round) => {
-          const beneficiary = groupMembers.find(
-            (member) => member.id === round.beneficiaryMemberId,
-          );
-          const isCurrent = round.id === currentRound?.id;
-          return (
-            <ListRow
-              key={round.id}
-              icon={isCurrent ? 'handshake' : 'users'}
-              accent={isCurrent ? 'teal' : 'purple'}
-              title={t('tontineScreen.roundLabelWithMonth', {
-                current: round.roundNumber,
-                total: groupRounds.length,
-                month: formatMonthLabel(round.month, language),
-              })}
-              subtitle={`${beneficiary?.name ?? ''}${beneficiary?.isSelf ? t('tontineScreen.calendarMineTag') : ''}`}
-            />
-          );
-        })}
+        {/* Horizontal, not wrapped: a cycle's rounds are meant to be scanned as a strip and
+            scrolled past. `ScrollView` flips its own reading direction under RTL (US-040). */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: theme.spacing.sm }}
+        >
+          {groupRounds.map((round) => {
+            const beneficiary = groupMembers.find(
+              (member) => member.id === round.beneficiaryMemberId,
+            );
+            const isCurrent = round.id === currentRound?.id;
+            const isPast = monthsUntil(now, round.month) < 0;
+            return (
+              <View
+                key={round.id}
+                testID={`tontine-round-tile-${round.id}`}
+                style={{
+                  minWidth: 108,
+                  alignItems: 'center',
+                  gap: theme.spacing.xs,
+                  padding: theme.spacing.sm,
+                  borderRadius: theme.radius.md,
+                  borderWidth: 1,
+                  borderColor: isCurrent ? theme.accents.teal.ink : theme.colors.border,
+                  backgroundColor: isCurrent ? theme.accents.teal.wash : theme.colors.surface,
+                  opacity: isPast ? 0.5 : 1,
+                }}
+              >
+                <Txt
+                  size="xs"
+                  color={isCurrent ? theme.accents.teal.ink : theme.colors.textSecondary}
+                >
+                  {formatMonthLabel(round.month, language)}
+                </Txt>
+                <Txt weight="bold" size="sm">
+                  {t('tontineScreen.roundLabel', {
+                    current: round.roundNumber,
+                    total: groupRounds.length,
+                  })}
+                </Txt>
+                <Txt size="xs" color={theme.colors.textSecondary}>
+                  {beneficiary?.isSelf ? t('tontineScreen.calendarMineBadge') : beneficiary?.name}
+                </Txt>
+              </View>
+            );
+          })}
+        </ScrollView>
       </View>
 
       <Card elevated style={{ gap: theme.spacing.sm }}>
