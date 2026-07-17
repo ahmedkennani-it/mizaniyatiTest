@@ -27,6 +27,8 @@ import { fr } from '../../i18n/locales/fr';
 // eslint-disable-next-line import/first -- must come after the jest.mock(...) calls above
 import { ThemeProvider } from '../../theme';
 // eslint-disable-next-line import/first -- must come after the jest.mock(...) calls above
+import { EntitlementsProvider } from '../../entitlements';
+// eslint-disable-next-line import/first -- must come after the jest.mock(...) calls above
 import { ExpenseEntryProvider } from '../ExpenseEntryProvider';
 // eslint-disable-next-line import/first -- must come after the jest.mock(...) calls above
 import { HomeScreen } from '../HomeScreen';
@@ -67,9 +69,11 @@ async function renderHome() {
     <SafeAreaProvider>
       <LanguageProvider>
         <ThemeProvider initialColorScheme="light">
-          <ExpenseEntryProvider>
-            <HomeScreen navigation={{ navigate: mockNavigate } as never} />
-          </ExpenseEntryProvider>
+          <EntitlementsProvider>
+            <ExpenseEntryProvider>
+              <HomeScreen navigation={{ navigate: mockNavigate } as never} />
+            </ExpenseEntryProvider>
+          </EntitlementsProvider>
         </ThemeProvider>
       </LanguageProvider>
     </SafeAreaProvider>,

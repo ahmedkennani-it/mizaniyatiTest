@@ -75,6 +75,7 @@ export {
 export { getSubscription, upsertSubscription } from './subscriptionRepository';
 export {
   acceptPrivacy,
+  dismissRamadanSuggestion,
   dismissVoicePromo,
   getUserSettings,
   markMicPermissionExplainerSeen,

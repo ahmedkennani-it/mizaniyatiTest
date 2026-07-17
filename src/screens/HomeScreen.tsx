@@ -4,8 +4,10 @@ import { useTranslation } from 'react-i18next';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 
 import { useExpenseEntry } from './ExpenseEntryProvider';
+import { RamadanScreen } from './RamadanScreen';
 import { TransactionHistoryScreen } from './TransactionHistoryScreen';
 import { VaultsScreen } from './VaultsScreen';
+import { ZakatScreen } from './ZakatScreen';
 import {
   AppScreen,
   BalanceHeroCard,
@@ -13,9 +15,11 @@ import {
   Card,
   DonutBreakdown,
   GoalCard,
+  IconTile,
   MonthSelector,
   ScreenHeader,
   SectionHeader,
+  StatCard,
   TransactionRow,
   TrustChip,
   Txt,
@@ -26,28 +30,34 @@ import type { DonutSegment } from '../components';
 import { categoryAccent, categoryIconName } from '../categories/categoryVisual';
 import { getDatabase } from '../db/client';
 import {
+  dismissRamadanSuggestion,
   dismissVoicePromo,
   getUserSettings,
   listCategories,
   listHouseholds,
   listMembers,
+  listSeasonalThemes,
   listTransactions,
   listVaultContributions,
   listVaults,
+  updateSeasonalTheme,
 } from '../db/repositories';
 import type {
   Category,
   Household,
   Member,
+  SeasonalTheme,
   Transaction,
   UserSettings,
   Vault,
   VaultContribution,
 } from '../db/repositories';
+import { useEntitlements } from '../entitlements';
 import { useLanguage } from '../i18n';
 import { formatMonthLabel, monthKeyOf, monthKeyToDate } from '../i18n/dateFormat';
 import { forceLTR, toLocalizedDigits } from '../i18n/numberFormat';
 import { DEFAULT_CURRENCY_CODE, formatMoney, toMajorUnits } from '../money';
+import { computeSeasonalThemeStatus, gregorianToHijri, shouldSuggestRamadanActivation } from '../seasonalThemes';
 import { useTheme } from '../theme';
 import { computeCategoryBreakdown, rankCategories } from '../transactions';
 import { computeVaultStatus } from '../vaults';
@@ -70,9 +80,12 @@ export type HomeScreenProps = Partial<Pick<BottomTabScreenProps<RootTabParamList
 
 export function HomeScreen({ navigation }: HomeScreenProps = {}) {
   const { t } = useTranslation();
-  const [view, setView] = useState<'dashboard' | 'history' | 'vaults'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'history' | 'vaults' | 'ramadan' | 'zakat'>(
+    'dashboard',
+  );
   const { theme } = useTheme();
   const { language } = useLanguage();
+  const entitlements = useEntitlements();
   const { openEntry, openVoiceEntry, dataVersion } = useExpenseEntry();
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -82,6 +95,7 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [vaults, setVaults] = useState<Vault[]>([]);
   const [contributions, setContributions] = useState<VaultContribution[]>([]);
+  const [seasonalThemes, setSeasonalThemes] = useState<SeasonalTheme[]>([]);
   const [monthKey, setMonthKey] = useState<string>(() => monthKeyOf(new Date()));
 
   const refresh = useCallback(() => {
@@ -93,6 +107,7 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
     getUserSettings(db).then(setSettings);
     listVaults(db).then(setVaults);
     listVaultContributions(db).then(setContributions);
+    listSeasonalThemes(db).then(setSeasonalThemes);
   }, []);
 
   // Refetch on mount and after every add/edit/delete (the FAB flow bumps `dataVersion`).
@@ -206,12 +221,150 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
     [contributions, monthKey],
   );
 
+  // The dashboard only switches identity for an *entitled* household — an expired/free plan sees
+  // its regular dashboard even if a theme row was activated while still on Pro (US-041).
+  const activeRamadanTheme =
+    entitlements.can('ramadan')
+      ? (seasonalThemes.find((candidate) => candidate.type === 'ramadan' && candidate.active) ??
+        null)
+      : null;
+  const ramadanStatus = activeRamadanTheme
+    ? computeSeasonalThemeStatus(activeRamadanTheme, categories, transactions)
+    : null;
+
+  const now = new Date();
+  const currentHijriYear = gregorianToHijri(now).year;
+  // Never nag once a theme is active (nothing to suggest), and never nag twice in the same
+  // approximate Hijri year once dismissed — but a new year's Ramadan gets its own chance.
+  const showRamadanSuggestion =
+    entitlements.can('ramadan') &&
+    !activeRamadanTheme &&
+    shouldSuggestRamadanActivation(now) &&
+    settings?.ramadanSuggestionDismissedHijriYear !== currentHijriYear;
+
   if (view === 'history') {
     return <TransactionHistoryScreen onBack={() => setView('dashboard')} />;
   }
 
   if (view === 'vaults') {
     return <VaultsScreen onBack={() => setView('dashboard')} />;
+  }
+
+  if (view === 'ramadan') {
+    return (
+      <RamadanScreen
+        onBack={() => setView('dashboard')}
+        onNavigateToZakat={() => setView('zakat')}
+      />
+    );
+  }
+
+  if (view === 'zakat') {
+    return <ZakatScreen onBack={() => setView('dashboard')} />;
+  }
+
+  if (activeRamadanTheme && ramadanStatus) {
+    const ramadanHeaderActions = [
+      {
+        icon: 'globe' as const,
+        text: language.toUpperCase(),
+        accessibilityLabel: t('home.a11yLanguage'),
+      },
+      { icon: 'bell' as const, badge: true, accessibilityLabel: t('home.a11yNotifications') },
+    ];
+
+    if (ramadanStatus.isEnded) {
+      return (
+        <AppScreen scroll bottomInset={110} contentStyle={{ gap: theme.spacing.md }}>
+          <ScreenHeader title={t('ramadanScreen.title')} actions={ramadanHeaderActions} />
+          <Card elevated style={{ gap: theme.spacing.sm }}>
+            <Txt weight="semibold" size="md">
+              {t('ramadanScreen.recapTitle')}
+            </Txt>
+            <Txt size="sm" color={theme.colors.textSecondary}>
+              {t('ramadanScreen.recapMessage')}
+            </Txt>
+            <Txt size="sm">
+              {t('ramadanScreen.spentLabel')}:{' '}
+              {formatMoney(ramadanStatus.spentMinor, activeRamadanTheme.currencyCode, language)}
+            </Txt>
+            <Txt size="sm">
+              {t('ramadanScreen.envelopeLabel')}:{' '}
+              {formatMoney(
+                activeRamadanTheme.envelopeMinor,
+                activeRamadanTheme.currencyCode,
+                language,
+              )}
+            </Txt>
+            <Button
+              label={t('ramadanScreen.revertButton')}
+              onPress={async () => {
+                await updateSeasonalTheme(getDatabase(), activeRamadanTheme.id, { active: false });
+                refresh();
+              }}
+            />
+          </Card>
+        </AppScreen>
+      );
+    }
+
+    const ramadanProgress =
+      activeRamadanTheme.envelopeMinor > 0
+        ? Math.max(0, ramadanStatus.remainingMinor) / activeRamadanTheme.envelopeMinor
+        : undefined;
+
+    return (
+      <AppScreen scroll bottomInset={110} contentStyle={{ gap: theme.spacing.md }}>
+        <ScreenHeader title={t('ramadanScreen.title')} actions={ramadanHeaderActions} />
+
+        <BalanceHeroCard
+          label={t('ramadanScreen.envelopeTitle')}
+          amountMinor={ramadanStatus.remainingMinor}
+          currencyCode={activeRamadanTheme.currencyCode}
+          gradient="ramadan"
+          barColor={theme.onAccent.accentGold}
+          cornerIcon="moon-star"
+          progress={ramadanProgress}
+          footerStart={{
+            label: t('ramadanScreen.envelopeLabel'),
+            value: formatMoney(
+              activeRamadanTheme.envelopeMinor,
+              activeRamadanTheme.currencyCode,
+              language,
+            ),
+          }}
+          footerEnd={{
+            label: t('ramadanScreen.daysRemainingShortLabel'),
+            value: String(ramadanStatus.daysRemaining),
+          }}
+        />
+
+        <TrustChip label={t('home.disclaimer')} />
+
+        <View style={{ gap: theme.spacing.sm }}>
+          <SectionHeader title={t('ramadanScreen.subcategoriesTitle')} />
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
+            {ramadanStatus.categorySpend.map(({ category, spentMinor }) => (
+              <StatCard
+                key={category.id}
+                icon={categoryIconName(category.icon)}
+                accent={categoryAccent(category.color)}
+                label={category.name}
+                value={formatMoney(spentMinor, activeRamadanTheme.currencyCode, language)}
+                style={{ width: '47%' }}
+              />
+            ))}
+          </View>
+        </View>
+
+        <Button
+          label={t('ramadanScreen.zakatShortcutWithRate')}
+          variant="secondary"
+          icon="moon-star"
+          onPress={() => setView('zakat')}
+        />
+      </AppScreen>
+    );
   }
 
   return (
@@ -229,6 +382,38 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
           { icon: 'bell', badge: true, accessibilityLabel: t('home.a11yNotifications') },
         ]}
       />
+
+      {/* Approximate Hijri-calendar nudge (US-041) — never shown once a theme is active, and
+          silenced for the rest of this approximate Hijri year once dismissed. */}
+      {showRamadanSuggestion ? (
+        <Card elevated style={{ gap: theme.spacing.sm }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
+            <IconTile icon="moon-star" accent="gold" />
+            <Txt weight="semibold" size="md" style={{ flex: 1 }}>
+              {t('ramadanScreen.suggestionTitle')}
+            </Txt>
+          </View>
+          <Txt size="sm" color={theme.colors.textSecondary}>
+            {t('ramadanScreen.suggestionMessage')}
+          </Txt>
+          <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+            <Button
+              label={t('ramadanScreen.suggestionActivate')}
+              onPress={() => setView('ramadan')}
+              style={{ flex: 1 }}
+            />
+            <Button
+              label={t('ramadanScreen.suggestionDismiss')}
+              variant="secondary"
+              style={{ flex: 1 }}
+              onPress={async () => {
+                await dismissRamadanSuggestion(getDatabase(), currentHijriYear);
+                refresh();
+              }}
+            />
+          </View>
+        </Card>
+      ) : null}
 
       <MonthSelector
         label={monthLabel}

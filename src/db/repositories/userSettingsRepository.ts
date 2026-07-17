@@ -13,12 +13,13 @@ interface UserSettingsRow {
   voice_entry_count: number | null;
   voice_promo_dismissed: number | null;
   mic_permission_explainer_seen: number | null;
+  ramadan_suggestion_dismissed_hijri_year: number | null;
   created_at: string;
   updated_at: string;
 }
 
 const SELECT_COLUMNS =
-  'language_code, country_code, currency_code, onboarding_step, privacy_accepted_at, voice_entry_count, voice_promo_dismissed, mic_permission_explainer_seen, created_at, updated_at';
+  'language_code, country_code, currency_code, onboarding_step, privacy_accepted_at, voice_entry_count, voice_promo_dismissed, mic_permission_explainer_seen, ramadan_suggestion_dismissed_hijri_year, created_at, updated_at';
 
 function fromRow(row: UserSettingsRow): UserSettings {
   return {
@@ -31,6 +32,7 @@ function fromRow(row: UserSettingsRow): UserSettings {
     voiceEntryCount: row.voice_entry_count ?? 0,
     voicePromoDismissed: Boolean(row.voice_promo_dismissed),
     micPermissionExplainerSeen: Boolean(row.mic_permission_explainer_seen),
+    ramadanSuggestionDismissedHijriYear: row.ramadan_suggestion_dismissed_hijri_year ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -65,6 +67,7 @@ export async function saveLanguageCountry(
     voiceEntryCount: existing?.voiceEntryCount ?? 0,
     voicePromoDismissed: existing?.voicePromoDismissed ?? false,
     micPermissionExplainerSeen: existing?.micPermissionExplainerSeen ?? false,
+    ramadanSuggestionDismissedHijriYear: existing?.ramadanSuggestionDismissedHijriYear ?? null,
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };
@@ -82,7 +85,7 @@ export async function saveLanguageCountry(
     );
   } else {
     await db.runAsync(
-      'INSERT INTO user_settings (id, language_code, country_code, currency_code, onboarding_step, privacy_accepted_at, voice_entry_count, voice_promo_dismissed, mic_permission_explainer_seen, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);',
+      'INSERT INTO user_settings (id, language_code, country_code, currency_code, onboarding_step, privacy_accepted_at, voice_entry_count, voice_promo_dismissed, mic_permission_explainer_seen, ramadan_suggestion_dismissed_hijri_year, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);',
       [
         USER_SETTINGS_ID,
         updated.languageCode,
@@ -93,6 +96,7 @@ export async function saveLanguageCountry(
         updated.voiceEntryCount,
         updated.voicePromoDismissed ? 1 : 0,
         updated.micPermissionExplainerSeen ? 1 : 0,
+        updated.ramadanSuggestionDismissedHijriYear,
         updated.createdAt,
         updated.updatedAt,
       ],
@@ -176,6 +180,28 @@ export async function markMicPermissionExplainerSeen(db: SqlDatabase): Promise<U
   await db.runAsync(
     'UPDATE user_settings SET mic_permission_explainer_seen = ?, updated_at = ? WHERE id = ?;',
     [1, updated.updatedAt, USER_SETTINGS_ID],
+  );
+  return updated;
+}
+
+/**
+ * Records that the household dismissed the "activate Ramadan mode?" dashboard suggestion for a
+ * given approximate Hijri year (US-041) — stored per-year so the suggestion resurfaces next year
+ * rather than being silenced forever after one dismissal.
+ */
+export async function dismissRamadanSuggestion(
+  db: SqlDatabase,
+  hijriYear: number,
+): Promise<UserSettings> {
+  const existing = await requireSettings(db);
+  const updated: UserSettings = {
+    ...existing,
+    ramadanSuggestionDismissedHijriYear: hijriYear,
+    updatedAt: new Date().toISOString(),
+  };
+  await db.runAsync(
+    'UPDATE user_settings SET ramadan_suggestion_dismissed_hijri_year = ?, updated_at = ? WHERE id = ?;',
+    [hijriYear, updated.updatedAt, USER_SETTINGS_ID],
   );
   return updated;
 }

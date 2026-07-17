@@ -26,6 +26,8 @@ import { ThemeProvider } from '../../theme';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { gradients } from '../../theme/tokens';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
+import { EntitlementsProvider } from '../../entitlements';
+// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { ExpenseEntryProvider } from '../ExpenseEntryProvider';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { HomeScreen } from '../HomeScreen';
@@ -57,9 +59,11 @@ async function renderHome() {
     <SafeAreaProvider>
       <LanguageProvider>
         <ThemeProvider initialColorScheme="light">
-          <ExpenseEntryProvider>
-            <HomeScreen />
-          </ExpenseEntryProvider>
+          <EntitlementsProvider>
+            <ExpenseEntryProvider>
+              <HomeScreen />
+            </ExpenseEntryProvider>
+          </EntitlementsProvider>
         </ThemeProvider>
       </LanguageProvider>
     </SafeAreaProvider>,

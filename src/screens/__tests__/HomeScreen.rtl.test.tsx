@@ -22,6 +22,8 @@ import { ThemeProvider } from '../../theme';
 import { HomeScreen } from '../HomeScreen';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { ExpenseEntryProvider } from '../ExpenseEntryProvider';
+// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
+import { EntitlementsProvider } from '../../entitlements';
 
 // HomeScreen is now a pure dashboard: the add/edit/confirm flow lives in the app-wide
 // `ExpenseEntryProvider` overlay (opened by the tab bar's FAB, the empty-state CTA, or a
@@ -30,9 +32,11 @@ function renderHome() {
   return render(
     <LanguageProvider>
       <ThemeProvider initialColorScheme="light">
-        <ExpenseEntryProvider>
-          <HomeScreen />
-        </ExpenseEntryProvider>
+        <EntitlementsProvider>
+          <ExpenseEntryProvider>
+            <HomeScreen />
+          </ExpenseEntryProvider>
+        </EntitlementsProvider>
       </ThemeProvider>
     </LanguageProvider>,
   );

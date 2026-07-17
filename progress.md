@@ -121,6 +121,15 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 9.4 | Suivi des paiements du tour en cours | ✅ done |
 | 9.5 | Calendrier des tours | ✅ done |
 
+## État des tâches Phase 10 (Zakat & mode Ramadan) — 1/4
+
+| Tâche | Titre | Statut |
+| --- | --- | --- |
+| 10.1 | Mode Ramadan (thème saisonnier) | ✅ done |
+| 10.2 | Calculateur de Zakat | ⬜ à faire |
+| 10.3 | Catégorie Zakat & dons avec plafond | ⬜ à faire |
+| 10.4 | Enregistrement et planification du don de Zakat | ⬜ à faire |
+
 ## Journal
 
 ### Itération 1 — Tâche 1.1 (Scaffold Expo + TypeScript) ✅
@@ -1319,6 +1328,64 @@ interdiction éternelle du réseau.
 - ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé) — en particulier
   le sens de défilement réel de la frise en RTL, qui dépend du moteur natif et n'est pas
   observable depuis les tests de rendu.
+
+### Itération 48 — Tâche 10.1 (Mode Ramadan) ✅ — phase 10 amorcée
+
+Tâche à choix d'architecture réels ; les deux ont été posés à l'utilisateur avant d'écrire du
+code plutôt que tranchés seul (cf. guide de collaboration — un vrai fourchement, pas une
+préférence esthétique) :
+
+- **« L'onglet Accueil doit-il vraiment changer d'identité, ou l'écran séparé (Profil > Mode
+  Ramadan, déjà livré) suffit-il ? »** → utilisateur : faire basculer l'onglet Accueil. C'est le
+  changement le plus lourd des deux (touche l'écran vu chaque jour), mais suit le critère à la
+  lettre plutôt qu'une lecture élastique.
+- **« Construire un calendrier hégirien approximatif pour la suggestion automatique, ou laisser
+  l'activation manuelle seule et documenter le blocage ? »** → utilisateur : construire le
+  calendrier, documenté comme approximation.
+
+**Audit préalable** : `RamadanScreen` (Profil), `computeSeasonalThemeStatus`,
+`activateRamadanTheme` et les 4 sous-catégories existaient déjà et sont réutilisés tels quels — la
+tâche réelle était de brancher `HomeScreen` sur cet état déjà persistant, pas de le reconstruire.
+
+- **`src/seasonalThemes/hijriCalendar.ts` (nouveau)** : conversion grégorien ⇄ hégirien en
+  **arithmétique pure** (calendrier « tabulaire »/civil, cycle fixe de 30 ans) plutôt que via le
+  calendrier `islamic-civil` d'`Intl` — Hermes sur l'appareil n'expose qu'un sous-ensemble d'ICU
+  (déjà la cause du correctif de l'itération 30 sur `RelativeTimeFormat`/`PluralRules`) ; réutiliser
+  la même surface ICU pour un calendrier aurait exposé au même risque. Le calendrier `islamic-civil`
+  d'Intl **existe sous Node** (ICU complet de Jest) : utilisé uniquement comme oracle de test, jamais
+  à l'exécution — les 16 tests du module comparent la sortie de l'arithmétique manuelle à celle
+  d'`Intl` sur 7 dates, plus l'aller-retour et les propriétés de la fenêtre de suggestion.
+  **Documenté comme approximation** : ±1-2 jours par rapport à la date par observation lunaire
+  qu'annoncent les autorités religieuses — jamais présenté comme faisant autorité, seulement utile
+  pour proposer l'activation une semaine à l'avance.
+- **Migration 0020** (`user_settings.ramadan_suggestion_dismissed_hijri_year`, nullable) +
+  `dismissRamadanSuggestion(db, hijriYear)` : l'année hégirienne du refus est stockée, pas un
+  booléen — la suggestion doit revenir l'année suivante plutôt qu'être réduite au silence pour
+  toujours après un seul refus (même logique que `voice_promo_dismissed`, mais annuelle).
+- **`HomeScreen` bascule d'identité (critères 1-4)** : `ScreenHeader` passe en titre simple « Mode
+  Ramadan », `BalanceHeroCard` est réutilisé avec `gradient="ramadan"` (dégradé nuit/or déjà défini
+  mais jamais consommé) + `barColor`/`cornerIcon="moon-star"` dorés — au lieu d'un nouveau
+  composant hero, exactement ce que les commentaires de `BalanceHeroCard` anticipaient déjà
+  (« Ramadan uses gold », « cornerIcon e.g. moon-star for Ramadan »). Les 4 tuiles réutilisent
+  `StatCard` (son propre commentaire disait déjà « Used in the Ramadan grid ») sur
+  `ramadanStatus.categorySpend`, avec `categoryIconName`/`categoryAccent` déjà utilisés partout
+  ailleurs pour mapper icône/couleur stockées → tokens. Le raccourci Zakat mentionne le taux
+  (`zakatShortcutWithRate`, nouvelle clé) et ouvre l'écran Zakat existant sans dupliquer son calcul.
+- **Fin du Ramadan (critère 5)** : un récapitulatif (dépensé/enveloppe) + bouton « Revenir au thème
+  standard » qui désactive la ligne `seasonal_themes` — l'onglet redevient normal au prochain
+  rendu puisque `activeRamadanTheme` ne trouve plus de ligne active.
+- **Suggestion automatique (règle métier)** : bannière dismissible sur le tableau de bord normal
+  (`shouldSuggestRamadanActivation`, fenêtre = semaine avant + toute la durée du Ramadan), visible
+  seulement si Pro, aucun thème actif, et pas déjà refusée pour cette année hégirienne. « Activer »
+  ouvre l'écran `RamadanScreen` existant (son formulaire de configuration, réutilisé, pas dupliqué) ;
+  « Pas maintenant » enregistre le refus.
+- 🐛 **9 fichiers de test `HomeScreen` cassés par l'ajout d'`useEntitlements()`** : aucun ne
+  fournissait `EntitlementsProvider` (l'écran n'en avait jamais eu besoin avant). Corrigés
+  uniformément — plan par défaut (Gratuit), donc `ramadan: false`, aucune interférence avec les
+  tests existants.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1733/1733, 140 suites** ✅. Bundle web
+  vérifié via `npx expo export --platform web` (2609 modules, aucune erreur).
+- ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé).
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

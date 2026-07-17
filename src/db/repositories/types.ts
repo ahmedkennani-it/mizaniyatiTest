@@ -501,6 +501,9 @@ export interface UserSettings {
   voicePromoDismissed: boolean;
   /** The contextual mic-permission explainer (US-020a) has been shown at least once. */
   micPermissionExplainerSeen: boolean;
+  /** The approximate Hijri year the household last dismissed the Ramadan activation suggestion
+   * (US-041), or `null` if never dismissed — a year, not a boolean, so it resurfaces next year. */
+  ramadanSuggestionDismissedHijriYear: number | null;
   createdAt: string;
   updatedAt: string;
 }

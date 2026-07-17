@@ -2,6 +2,7 @@ import { createFakeDatabase } from '../../testUtils/createFakeDatabase';
 import { NotFoundError } from '../errors';
 import {
   acceptPrivacy,
+  dismissRamadanSuggestion,
   dismissVoicePromo,
   getUserSettings,
   markMicPermissionExplainerSeen,
@@ -210,5 +211,44 @@ describe('mic permission explainer state', () => {
   it('refuses to record it with no settings row', async () => {
     const { db } = createFakeDatabase();
     await expect(markMicPermissionExplainerSeen(db)).rejects.toThrow(NotFoundError);
+  });
+});
+
+/** US-041: dismissal is per Hijri year, so the suggestion resurfaces next year rather than being
+ * silenced forever after one dismissal. */
+describe('Ramadan suggestion dismissal', () => {
+  async function seed(db: ReturnType<typeof createFakeDatabase>['db']) {
+    await saveLanguageCountry(db, { languageCode: 'fr', countryCode: 'MA', currencyCode: 'MAD' });
+  }
+
+  it('starts never dismissed', async () => {
+    const { db } = createFakeDatabase();
+    await seed(db);
+
+    expect((await getUserSettings(db))?.ramadanSuggestionDismissedHijriYear).toBeNull();
+  });
+
+  it('records the dismissed Hijri year', async () => {
+    const { db } = createFakeDatabase();
+    await seed(db);
+
+    await dismissRamadanSuggestion(db, 1446);
+
+    expect((await getUserSettings(db))?.ramadanSuggestionDismissedHijriYear).toBe(1446);
+  });
+
+  it('never clears the dismissal when the language & country step is re-run', async () => {
+    const { db } = createFakeDatabase();
+    await seed(db);
+    await dismissRamadanSuggestion(db, 1446);
+
+    await saveLanguageCountry(db, { languageCode: 'ar', countryCode: 'MA', currencyCode: 'MAD' });
+
+    expect((await getUserSettings(db))?.ramadanSuggestionDismissedHijriYear).toBe(1446);
+  });
+
+  it('refuses to record it with no settings row', async () => {
+    const { db } = createFakeDatabase();
+    await expect(dismissRamadanSuggestion(db, 1446)).rejects.toThrow(NotFoundError);
   });
 });
