@@ -18,5 +18,6 @@ export const PRO_PLAN: Plan = {
     { key: 'tontine', type: 'feature', booleanValue: true },
     { key: 'zakat', type: 'feature', booleanValue: true },
     { key: 'ramadan', type: 'feature', booleanValue: true },
+    { key: 'transfers', type: 'feature', booleanValue: true },
   ],
 };

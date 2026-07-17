@@ -428,6 +428,26 @@ export interface ZakatAssessmentPaidPatch {
   transactionId: string;
 }
 
+/**
+ * A single money transfer a diaspora household sends "back home" (US-045) — append-only, like
+ * `ZakatAssessment`. Not to be confused with `Transfer`, an unrelated feature (a "virement"
+ * between two members *within* the same household).
+ */
+export interface DiasporaTransfer {
+  id: string;
+  amountMinor: number;
+  currencyCode: string;
+  /** ISO 8601 date/time the transfer was sent. */
+  occurredAt: string;
+  createdAt: string;
+}
+
+export interface NewDiasporaTransfer {
+  amountMinor: number;
+  currencyCode: string;
+  occurredAt: string;
+}
+
 export type SeasonalThemeType = 'ramadan' | 'aid_kebir' | 'back_to_school';
 
 /**

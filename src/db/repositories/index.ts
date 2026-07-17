@@ -109,6 +109,7 @@ export {
   updateTransfer,
   deleteTransfer,
 } from './transferRepository';
+export { createDiasporaTransfer, listDiasporaTransfers } from './diasporaTransferRepository';
 export { NotFoundError } from './errors';
 export type {
   Member,
@@ -174,4 +175,6 @@ export type {
   Transfer,
   NewTransfer,
   TransferPatch,
+  DiasporaTransfer,
+  NewDiasporaTransfer,
 } from './types';

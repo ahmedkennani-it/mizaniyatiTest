@@ -434,6 +434,18 @@ export const fr = {
     historyTitle: 'Historique',
     historyEmpty: 'Aucun calcul enregistré.',
   },
+  transfersScreen: {
+    title: 'Transferts',
+    upsellMessage: 'Le suivi des transferts fait partie du forfait Pro.',
+    upsellCta: 'Passez à un forfait supérieur pour suivre vos transferts.',
+    disclaimer:
+      "Les envois sont enregistrés manuellement. Mizaniyati n'est pas un service de transfert d'argent.",
+    totalLabel: 'Total envoyé cette année',
+    approxLabel: '≈ {{amount}} (contre-valeur indicative)',
+    countLabel: '{{count}} transfert(s) enregistré(s)',
+    historyTitle: 'Historique',
+    historyEmpty: 'Aucun transfert enregistré pour cette année.',
+  },
   ramadanScreen: {
     back: 'Retour',
     title: 'Mode Ramadan',

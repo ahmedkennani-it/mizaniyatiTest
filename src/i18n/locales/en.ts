@@ -429,6 +429,17 @@ export const en: TranslationSchema = {
     historyTitle: 'History',
     historyEmpty: 'No saved calculations.',
   },
+  transfersScreen: {
+    title: 'Transfers',
+    upsellMessage: 'Transfer tracking is part of the Pro plan.',
+    upsellCta: 'Upgrade to a higher plan to track your transfers.',
+    disclaimer: "Transfers are recorded manually. Mizaniyati is not a money transfer service.",
+    totalLabel: 'Total sent this year',
+    approxLabel: '≈ {{amount}} (indicative equivalent)',
+    countLabel: '{{count}} transfer(s) recorded',
+    historyTitle: 'History',
+    historyEmpty: 'No transfer recorded for this year.',
+  },
   ramadanScreen: {
     back: 'Back',
     title: 'Ramadan mode',

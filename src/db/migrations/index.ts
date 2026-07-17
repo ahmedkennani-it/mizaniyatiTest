@@ -20,6 +20,7 @@ import { micPermissionExplainerMigration } from './0018_mic_permission_explainer
 import { tontineRoundClosureMigration } from './0019_tontine_round_closure';
 import { ramadanSuggestionMigration } from './0020_ramadan_suggestion';
 import { zakatPlanningMigration } from './0021_zakat_planning';
+import { diasporaTransfersMigration } from './0022_diaspora_transfers';
 
 /**
  * Ordered registry of schema migrations. Add new entries with a strictly increasing
@@ -48,4 +49,5 @@ export const migrations: Migration[] = [
   tontineRoundClosureMigration,
   ramadanSuggestionMigration,
   zakatPlanningMigration,
+  diasporaTransfersMigration,
 ];

@@ -426,6 +426,17 @@ export const ar: TranslationSchema = {
     historyTitle: 'السجل',
     historyEmpty: 'لا يوجد حساب محفوظ.',
   },
+  transfersScreen: {
+    title: 'التحويلات',
+    upsellMessage: 'متابعة التحويلات جزء من باقة Pro.',
+    upsellCta: 'قم بالترقية إلى باقة أعلى لمتابعة تحويلاتك.',
+    disclaimer: 'يتم تسجيل التحويلات يدويًا. ميزانيتي ليست خدمة تحويل أموال.',
+    totalLabel: 'إجمالي المُرسَل هذه السنة',
+    approxLabel: '≈ {{amount}} (قيمة تقريبية إرشادية)',
+    countLabel: '{{count}} تحويل(ات) مسجّلة',
+    historyTitle: 'السجل',
+    historyEmpty: 'لا يوجد تحويل مسجل لهذه السنة.',
+  },
   ramadanScreen: {
     back: 'رجوع',
     title: 'وضع رمضان',

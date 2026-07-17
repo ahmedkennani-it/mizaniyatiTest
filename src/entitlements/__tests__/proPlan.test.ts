@@ -6,7 +6,7 @@ describe('PRO_PLAN', () => {
   });
 
   it('unlocks every Pro feature', () => {
-    for (const key of ['tontine', 'zakat', 'ramadan', 'voice']) {
+    for (const key of ['tontine', 'zakat', 'ramadan', 'voice', 'transfers']) {
       const entitlement = PRO_PLAN.entitlements.find((e) => e.key === key);
       expect(entitlement?.booleanValue).toBe(true);
     }

@@ -1496,6 +1496,44 @@ tâche réelle était de brancher `HomeScreen` sur cet état déjà persistant, 
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1769/1769, 142 suites** ✅.
 - ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé).
 
+### Itération 52 — Tâche 11.1 (Suivi annuel des transferts vers le pays d'origine) ✅ — phase 11 amorcée
+
+- Nouvelle table `diaspora_transfers` (migration `0022`) — journal d'envois, séparé de la table
+  `transfers` déjà existante (`0015_household_debt_transfer`) qui modélise un tout autre concept
+  (virement **entre deux membres du même foyer**) : mêmes noms de fonctions étaient déjà pris
+  (`createTransfer`/`listTransfers`), d'où `diasporaTransferRepository.ts` et le préfixe partout.
+- **Devise du « pays d'origine »** : aucune notion de pays d'origine n'existe encore nulle part
+  dans le schéma (seule `user_settings.country_code` existe, et c'est le pays de **résidence**).
+  La US-064 (tâche 15.2, phase 15) est explicitement celle qui rend cette devise secondaire
+  *configurable par foyer* — la construire ici aurait empiété sur son périmètre en pure perte
+  (UI à refaire). Choix : `DEFAULT_ORIGIN_CURRENCY_CODE = 'MAD'` (nouveau `src/lib/rates/`),
+  documenté comme un placeholder explicite en attendant 15.2 — cohérent avec le fait que le lancement
+  MVP est Maroc uniquement (`SELECTABLE_MARKETS` n'a que MA ; FR/AE/SA sont juste « annoncés »),
+  donc aucun vrai foyer ne peut aujourd'hui avoir une autre devise d'origine réelle.
+- **Taux de change** : `src/lib/rates/mockExchangeRates.ts` — table fixe et fictive (documentée
+  comme telle), exprimée en unités par dollar US pour convertir n'importe quelle paire sans table
+  N×N. Respecte le garde-fou « jamais d'API de change réelle ».
+- `computeAnnualTransferSummary`/`listTransferYears` (nouveau `src/transfers/`) : somme et compte
+  purs sur l'année sélectionnée, recalculés en mémoire au changement d'année (aucune re-requête
+  DB) — même schéma que `categoryBudgetStatus`.
+- `TransfersScreen` (déjà présent comme `PlaceholderScreen` depuis la phase 9, wiré dans
+  `RootNavigator`/`resolveTabs` — aucun changement de navigation nécessaire) : bandeau
+  « saisie manuelle, pas un service de transfert », sélecteur d'année en `Chip`, carte total +
+  contre-valeur `≈` + nombre, historique. Nouvelle entitlement `transfers` (free: false, pro: true).
+- **Vérification navigateur (LTR/RTL)** tentée pour de vrai cette fois (Chromium/Playwright installés
+  localement, `npm run web` lancé) — nouveau diagnostic précis du blocage récurrent des itérations
+  précédentes : la racine `#root` reste vide, `pageerror` montre
+  `ExpoSecureStore.default.getValueWithKeyAsync is not a function` (`expo-secure-store` n'a pas
+  d'implémentation web, et ça casse le montage de `App.tsx` entier, pas juste cet écran) plus
+  `SharedArrayBuffer is not defined` (`expo-sqlite` web a besoin d'isolation cross-origin que le
+  serveur de dev n'active pas). **Aucun écran** ne peut donc être vérifié dans ce navigateur tant que
+  ce n'est pas corrigé — hors périmètre de 11.1, pas retouché. Repli sur le même stand-in que le
+  reste du projet (`HomeScreen.rtl.test.tsx`, `RootNavigator.rtl.test.tsx`) : nouveau
+  `TransfersScreen.rtl.test.tsx` qui rend l'écran sous `I18nManager.isRTL` true/false. L'écran
+  n'utilise que des primitives partagées (`AppScreen`, `Card`, `Chip`, `ListRow`…) sans
+  `left`/`right` codé en dur.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1794/1794, 147 suites** ✅.
+
 ## Notes / blocages connus (hors périmètre Phase 1)
 
 - L'arbre de travail contient des changements accumulés multi-phases non
