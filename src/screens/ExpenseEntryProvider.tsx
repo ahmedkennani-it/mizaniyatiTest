@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useMemo, useState } from
 import { StyleSheet, View } from 'react-native';
 
 import { AddExpenseForm } from './AddExpenseForm';
+import type { AddExpenseFormPrefill } from './AddExpenseForm';
 import { ExpenseConfirmation } from './ExpenseConfirmation';
 import { VoiceEntrySheet } from './VoiceEntrySheet';
 import { getDatabase } from '../db/client';
@@ -37,11 +38,13 @@ function currentMonthKey(): string {
 export function ExpenseEntryProvider({ children }: { children: React.ReactNode }) {
   const [mode, setMode] = useState<Mode>('closed');
   const [editing, setEditing] = useState<Transaction | null>(null);
+  const [prefill, setPrefill] = useState<AddExpenseFormPrefill | undefined>(undefined);
   const [remainingBalanceMinor, setRemainingBalanceMinor] = useState(0);
   const [dataVersion, setDataVersion] = useState(0);
 
   const openEntry = useCallback((transaction?: Transaction) => {
     setEditing(transaction ?? null);
+    setPrefill(undefined);
     setMode('form');
   }, []);
 
@@ -69,6 +72,7 @@ export function ExpenseEntryProvider({ children }: { children: React.ReactNode }
             {mode === 'form' ? (
               <AddExpenseForm
                 transaction={editing ?? undefined}
+                prefill={prefill}
                 onSaved={async () => {
                   const loaded = await listTransactions(getDatabase());
                   setDataVersion((v) => v + 1);
@@ -90,6 +94,12 @@ export function ExpenseEntryProvider({ children }: { children: React.ReactNode }
                 onClose={close}
                 onFallbackToKeyboard={() => {
                   setEditing(null);
+                  setPrefill(undefined);
+                  setMode('form');
+                }}
+                onCaptured={(captured) => {
+                  setEditing(null);
+                  setPrefill(captured);
                   setMode('form');
                 }}
               />

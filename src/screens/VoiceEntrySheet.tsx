@@ -11,28 +11,37 @@ import type { SupportedLanguage } from '../i18n';
 import { useTheme } from '../theme';
 import {
   createSilenceWatcher,
+  extractAmountFromDictation,
   normalizeVolumeLevel,
   recognitionLocale,
   speechRecognitionClient,
 } from '../voice';
 import type { SilenceWatcher } from '../voice';
+import type { AddExpenseFormPrefill } from './AddExpenseForm';
 
 export interface VoiceEntrySheetProps {
   onClose: () => void;
   /** Permission refused, or the household would rather type — always reachable (US-020a). */
   onFallbackToKeyboard: () => void;
+  /**
+   * The recognizer stopped with *something* said (US-021a). Always fires instead of `onClose` once
+   * listening has genuinely started — with the amount pre-filled when one was understood, and
+   * always with the raw transcript as the note, so nothing the household said is lost even when no
+   * amount was found.
+   */
+  onCaptured: (prefill: AddExpenseFormPrefill) => void;
 }
 
 type Stage = 'loading' | 'explainer' | 'denied' | 'listening' | 'error';
 
 /**
- * The voice-capture screen (US-020a): contextual mic explainer on first-ever use, then the
+ * The voice-capture screen: contextual mic explainer on first-ever use (US-020a), then the
  * permission prompt, then a listening state with a sound-reactive waveform that auto-stops after
- * 5s of silence. What the dictation *means* (transcript display, amount extraction) is built on
- * top of this in US-020b/US-021a — this stage machine only gets the household from "tap the mic"
- * to "recognizer stopped", closing the sheet once it does.
+ * 5s of silence, showing the live transcript as it comes in (US-020b). Once the recognizer stops,
+ * the amount is extracted from the transcript (US-021a) and handed off to the keyboard form to
+ * finish — category/member assignment and confirmation are built on top of this in US-021b/US-012.
  */
-export function VoiceEntrySheet({ onClose, onFallbackToKeyboard }: VoiceEntrySheetProps) {
+export function VoiceEntrySheet({ onClose, onFallbackToKeyboard, onCaptured }: VoiceEntrySheetProps) {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const { language } = useLanguage();
@@ -43,6 +52,10 @@ export function VoiceEntrySheet({ onClose, onFallbackToKeyboard }: VoiceEntryShe
   const [volumeLevel, setVolumeLevel] = useState(0);
   const [transcript, setTranscript] = useState('');
   const watcherRef = useRef<SilenceWatcher | null>(null);
+  // `onEnd`'s closure is set up once per listening session and must not restart on every partial
+  // result, so `transcript` (state) can't be a dependency — this ref is what lets it read the
+  // latest value anyway.
+  const transcriptRef = useRef('');
 
   const canUseVoice = entitlements.can('voice');
 
@@ -81,6 +94,7 @@ export function VoiceEntrySheet({ onClose, onFallbackToKeyboard }: VoiceEntryShe
       return;
     }
     setTranscript('');
+    transcriptRef.current = '';
     const watcher = createSilenceWatcher(() => speechRecognitionClient.stop());
     watcherRef.current = watcher;
 
@@ -93,11 +107,18 @@ export function VoiceEntrySheet({ onClose, onFallbackToKeyboard }: VoiceEntryShe
     // first result is already interim (`interimResults: true` in the client), it just keeps
     // getting replaced by a better one as more speech arrives.
     const unsubscribeResult = speechRecognitionClient.onResult((event) => {
-      setTranscript(event.results[0]?.transcript ?? '');
+      const latest = event.results[0]?.transcript ?? '';
+      setTranscript(latest);
+      transcriptRef.current = latest;
     });
     const unsubscribeEnd = speechRecognitionClient.onEnd(() => {
       watcher.stop();
-      onClose();
+      const finalTranscript = transcriptRef.current;
+      const amount = extractAmountFromDictation(finalTranscript, recognitionLanguage);
+      onCaptured({
+        amountInput: amount !== null ? String(amount) : undefined,
+        note: finalTranscript || undefined,
+      });
     });
     const unsubscribeError = speechRecognitionClient.onError(() => {
       watcher.stop();
@@ -117,7 +138,7 @@ export function VoiceEntrySheet({ onClose, onFallbackToKeyboard }: VoiceEntryShe
       speechRecognitionClient.abort();
     };
     // Switching the dictation language mid-listen restarts capture with the new locale.
-  }, [stage, recognitionLanguage, onClose]);
+  }, [stage, recognitionLanguage, onCaptured]);
 
   if (!canUseVoice) {
     return (

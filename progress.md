@@ -82,7 +82,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 6.2 | Sélection de catégorie par chips | ✅ done |
 | 6.3 | Capture audio et état d'écoute (Pro) | ✅ done |
 | 6.4 | Transcription vocale multilingue (Pro) | ✅ done |
-| 6.5 | Extraction du montant depuis la dictée (Pro) | ⏳ |
+| 6.5 | Extraction du montant depuis la dictée (Pro) | ✅ done |
 | 6.6 | Déduction catégorie/libellé et confirmation (Pro) | ⏳ |
 | 6.7 | Confirmation d'ajout | ⏳ |
 | 6.8 | Saisie d'un revenu | ⏳ |
@@ -844,6 +844,31 @@ interdiction éternelle du réseau.
   Une suppression après capture serait une promesse plus faible (une fenêtre where le fichier a
   existé) que ne jamais l'écrire.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1553/1553, 131 suites** ✅.
+
+### Itération 34 — Tâche 6.5 (Extraction du montant depuis la dictée) ✅
+- **`src/voice/numberWords/{fr,en,ar}.ts` + `extractAmountFromDictation.ts`** : un petit moteur
+  partagé (fusion des composés multiplicatifs type « quatre-vingt » = 4×20, classification
+  token par token, somme/multiplication additive) piloté par un lexique par langue plutôt que
+  trois implémentations séparées. Portée assumée et documentée dans le code : couvre 0-999 999 et
+  une décimale (centimes), pas une grammaire complète — le commentaire de `ar.ts` explique
+  précisément ce qui est **volontairement** hors périmètre (accord de genre, formes figées des
+  centaines) plutôt que de le passer sous silence.
+- 🐛 **Piège classique évité, pas rencontré en prod** : les lexiques utilisaient `token in
+  lexicon.words` pour la recherche — remplacé par `Object.prototype.hasOwnProperty.call(...)`
+  avant que ça ne devienne un bug, car `in` remonte la chaîne de prototypes (`"toString" in {}` →
+  `true`).
+- **Un mot-clé numérique par test, pas un `it.each` fourre-tout** : la 30-aine de cas
+  (dizaines irrégulières françaises, formes composées arabes du type أحد عشر, décimales,
+  repli sur un chiffre littéral déjà transcrit) restent des tests séparés et nommés — plus lisible
+  quand l'un d'eux casse.
+- **Le montant extrait devient enfin utile** : jusqu'ici (6.3/6.4) la capture vocale se contentait
+  de fermer la feuille à la fin de l'écoute, l'extraction n'avait aucun appelant. `VoiceEntrySheet`
+  bascule maintenant vers `AddExpenseForm` en pré-remplissant `amountInput` (si un montant a été
+  détecté) et `note` (toujours, avec la dictée brute) — `AddExpenseForm` gagne un prop `prefill`
+  pour une nouvelle opération (distinct de `transaction`, qui reste réservé à l'édition).
+  L'attribution de catégorie/membre reste manuelle : la déduction automatique est la 6.6, pas
+  celle-ci.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1592/1592, 132 suites** ✅.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

@@ -16,6 +16,7 @@ import { LanguageProvider } from '../../i18n';
 import { notificationClient } from '../../notifications';
 import { ThemeProvider } from '../../theme';
 import { AddExpenseForm } from '../AddExpenseForm';
+import type { AddExpenseFormPrefill } from '../AddExpenseForm';
 
 let mockFakeDb = createFakeDatabase().db;
 
@@ -53,6 +54,16 @@ function renderEditForm(
           onCancel={onCancel}
           onDeleted={onDeleted}
         />
+      </ThemeProvider>
+    </LanguageProvider>,
+  );
+}
+
+function renderPrefillForm(prefill: AddExpenseFormPrefill, onSaved: () => void = jest.fn()) {
+  return render(
+    <LanguageProvider>
+      <ThemeProvider initialColorScheme="light">
+        <AddExpenseForm prefill={prefill} onSaved={onSaved} onCancel={jest.fn()} />
       </ThemeProvider>
     </LanguageProvider>,
   );
@@ -460,5 +471,50 @@ describe('AddExpenseForm — alertes de plafond (US-019)', () => {
 
     expect(onSaved).toHaveBeenCalledTimes(1);
     expect(notificationClient.presentNow).not.toHaveBeenCalled();
+  });
+});
+
+/** US-021a: a voice dictation hands the household off to this form with what it understood. */
+describe('AddExpenseForm — pré-remplissage depuis la dictée vocale (US-021a)', () => {
+  beforeEach(async () => {
+    mockFakeDb = createFakeDatabase().db;
+    await createCategory(mockFakeDb, { name: 'Courses', icon: 'cart', color: '#111111' });
+    await createMember(mockFakeDb, { name: 'Moi' });
+  });
+
+  it('pre-fills the amount and the note when both were understood', async () => {
+    renderPrefillForm({ amountInput: '42', note: 'Quarante-deux dirhams de café' });
+
+    expect((await screen.findByLabelText('Montant (MAD)')).props.value).toBe('42');
+    expect(screen.getByLabelText('Note (optionnel)').props.value).toBe('Quarante-deux dirhams de café');
+  });
+
+  it('pre-fills only the note when no amount was detected', async () => {
+    renderPrefillForm({ note: 'Café et croissant' });
+
+    expect((await screen.findByLabelText('Note (optionnel)')).props.value).toBe('Café et croissant');
+    expect(screen.getByLabelText('Montant (MAD)').props.value).toBe('');
+  });
+
+  it('leaves the form blank when nothing was captured', async () => {
+    renderPrefillForm({});
+
+    expect((await screen.findByLabelText('Montant (MAD)')).props.value).toBe('');
+    expect(screen.getByLabelText('Note (optionnel)').props.value).toBe('');
+  });
+
+  it('still lets the household save the pre-filled amount as-is', async () => {
+    const onSaved = jest.fn();
+    renderPrefillForm({ amountInput: '42', note: 'Quarante-deux dirhams de café' }, onSaved);
+
+    await fireEvent.press(await screen.findByText('Courses'));
+    const chips = await screen.findAllByText('Moi');
+    await fireEvent.press(chips[chips.length - 1]);
+    await fireEvent.press(screen.getByText('Enregistrer'));
+
+    expect(onSaved).toHaveBeenCalledTimes(1);
+    const [saved] = await listTransactions(mockFakeDb);
+    expect(saved.amountMinor).toBe(4200);
+    expect(saved.note).toBe('Quarante-deux dirhams de café');
   });
 });

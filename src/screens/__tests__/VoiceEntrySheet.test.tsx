@@ -93,19 +93,31 @@ function latestOnSilenceTimeout(): () => void {
 const GRANTED = { granted: true, canAskAgain: true };
 const DENIED = { granted: false, canAskAgain: true };
 
-function renderSheet(options: { plan?: Plan; onClose?: () => void; onFallbackToKeyboard?: () => void } = {}) {
+function renderSheet(
+  options: {
+    plan?: Plan;
+    onClose?: () => void;
+    onFallbackToKeyboard?: () => void;
+    onCaptured?: (prefill: { amountInput?: string; note?: string }) => void;
+  } = {},
+) {
   const onClose = options.onClose ?? jest.fn();
   const onFallbackToKeyboard = options.onFallbackToKeyboard ?? jest.fn();
+  const onCaptured = options.onCaptured ?? jest.fn();
   render(
     <LanguageProvider>
       <ThemeProvider initialColorScheme="light">
         <EntitlementsProvider plan={options.plan}>
-          <VoiceEntrySheet onClose={onClose} onFallbackToKeyboard={onFallbackToKeyboard} />
+          <VoiceEntrySheet
+            onClose={onClose}
+            onFallbackToKeyboard={onFallbackToKeyboard}
+            onCaptured={onCaptured}
+          />
         </EntitlementsProvider>
       </ThemeProvider>
     </LanguageProvider>,
   );
-  return { onClose, onFallbackToKeyboard };
+  return { onClose, onFallbackToKeyboard, onCaptured };
 }
 
 async function seedSettings(seen = false) {
@@ -247,17 +259,63 @@ describe('VoiceEntrySheet (US-020a)', () => {
     expect(onFallbackToKeyboard).toHaveBeenCalledTimes(1);
   });
 
-  it('closes the sheet when the recognizer ends on its own', async () => {
+  /** US-021a: the amount is extracted and handed to the keyboard, not silently discarded. */
+  it('hands off the extracted amount and transcript when the recognizer ends with an amount', async () => {
     mockSpeechClient.getPermissionsAsync.mockResolvedValue(GRANTED);
     await seedSettings(true);
 
-    const { onClose } = renderSheet({ plan: PRO_PLAN });
+    const { onCaptured, onClose } = renderSheet({ plan: PRO_PLAN });
+    await screen.findByText(fr.voiceCapture.listeningLabel);
+
+    const resultListener = mockSpeechClient.onResult.mock.calls[0][0];
+    act(() =>
+      resultListener({
+        isFinal: true,
+        results: [{ transcript: 'Quarante-deux dirhams de café', confidence: -1, segments: [] }],
+      }),
+    );
+    const endListener = mockSpeechClient.onEnd.mock.calls[0][0];
+    act(() => endListener());
+
+    expect(onCaptured).toHaveBeenCalledWith({
+      amountInput: '42',
+      note: 'Quarante-deux dirhams de café',
+    });
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  /** US-021a: no amount detected still hands off the transcript, so nothing said is lost. */
+  it('hands off with no amount but the transcript as the note when nothing is detected', async () => {
+    mockSpeechClient.getPermissionsAsync.mockResolvedValue(GRANTED);
+    await seedSettings(true);
+
+    const { onCaptured } = renderSheet({ plan: PRO_PLAN });
+    await screen.findByText(fr.voiceCapture.listeningLabel);
+
+    const resultListener = mockSpeechClient.onResult.mock.calls[0][0];
+    act(() =>
+      resultListener({ isFinal: true, results: [{ transcript: 'Café et croissant', confidence: -1, segments: [] }] }),
+    );
+    const endListener = mockSpeechClient.onEnd.mock.calls[0][0];
+    act(() => endListener());
+
+    expect(onCaptured).toHaveBeenCalledWith({
+      amountInput: undefined,
+      note: 'Café et croissant',
+    });
+  });
+
+  it('hands off with nothing pre-filled when the recognizer ends without ever hearing speech', async () => {
+    mockSpeechClient.getPermissionsAsync.mockResolvedValue(GRANTED);
+    await seedSettings(true);
+
+    const { onCaptured } = renderSheet({ plan: PRO_PLAN });
     await screen.findByText(fr.voiceCapture.listeningLabel);
 
     const endListener = mockSpeechClient.onEnd.mock.calls[0][0];
     act(() => endListener());
 
-    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onCaptured).toHaveBeenCalledWith({ amountInput: undefined, note: undefined });
   });
 
   it('shows a clear error and a keyboard fallback when the recognizer errors', async () => {

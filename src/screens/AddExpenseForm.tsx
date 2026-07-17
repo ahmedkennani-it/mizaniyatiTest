@@ -57,16 +57,31 @@ function currentMonthKey(): string {
   return new Date().toISOString().slice(0, 7);
 }
 
+/** Pre-fills a *new* entry from a source that already understood part of it (US-021a: a voice
+ *  dictation whose amount and/or wording were extracted before the household ever sees the form). */
+export interface AddExpenseFormPrefill {
+  amountInput?: string;
+  note?: string;
+}
+
 export interface AddExpenseFormProps {
   /** When set, the form edits this transaction instead of creating a new one. */
   transaction?: Transaction;
+  /** Ignored when `transaction` is set — editing always starts from the saved values. */
+  prefill?: AddExpenseFormPrefill;
   onSaved: () => void;
   onCancel: () => void;
   /** Required when `transaction` is set — called after a successful delete. */
   onDeleted?: () => void;
 }
 
-export function AddExpenseForm({ transaction, onSaved, onCancel, onDeleted }: AddExpenseFormProps) {
+export function AddExpenseForm({
+  transaction,
+  prefill,
+  onSaved,
+  onCancel,
+  onDeleted,
+}: AddExpenseFormProps) {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const { language } = useLanguage();
@@ -79,14 +94,16 @@ export function AddExpenseForm({ transaction, onSaved, onCancel, onDeleted }: Ad
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [type, setType] = useState<TransactionType>(transaction?.type ?? 'expense');
   const [amountInput, setAmountInput] = useState(
-    transaction ? String(toMajorUnits(transaction.amountMinor, transaction.currencyCode)) : '',
+    transaction
+      ? String(toMajorUnits(transaction.amountMinor, transaction.currencyCode))
+      : (prefill?.amountInput ?? ''),
   );
   const [categoryId, setCategoryId] = useState<string | null>(transaction?.categoryId ?? null);
   const [memberId, setMemberId] = useState<string | null>(transaction?.memberId ?? null);
   const [dateInput, setDateInput] = useState(
     transaction?.occurredAt.slice(0, 10) ?? todayIsoDate(),
   );
-  const [note, setNote] = useState(transaction?.note ?? '');
+  const [note, setNote] = useState(transaction?.note ?? prefill?.note ?? '');
   const [errors, setErrors] = useState<{
     amount?: string;
     category?: string;
