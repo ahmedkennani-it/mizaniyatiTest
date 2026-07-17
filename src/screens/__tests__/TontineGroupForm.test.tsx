@@ -1,9 +1,14 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
 
-import '../../i18n';
-import { listTontineGroups, listTontineMembers, listTontineRounds } from '../../db/repositories';
+import {
+  createHousehold,
+  listTontineGroups,
+  listTontineMembers,
+  listTontineRounds,
+} from '../../db/repositories';
 import { createFakeDatabase } from '../../db/testUtils/createFakeDatabase';
+import { LanguageProvider } from '../../i18n';
 import { ThemeProvider } from '../../theme';
 import { TontineGroupForm } from '../TontineGroupForm';
 
@@ -15,9 +20,11 @@ jest.mock('../../db/client', () => ({
 
 function renderForm(onSaved: () => void = jest.fn(), onCancel: () => void = jest.fn()) {
   return render(
-    <ThemeProvider initialColorScheme="light">
-      <TontineGroupForm onSaved={onSaved} onCancel={onCancel} />
-    </ThemeProvider>,
+    <LanguageProvider>
+      <ThemeProvider initialColorScheme="light">
+        <TontineGroupForm onSaved={onSaved} onCancel={onCancel} />
+      </ThemeProvider>
+    </LanguageProvider>,
   );
 }
 
@@ -47,7 +54,7 @@ describe('TontineGroupForm (US-024)', () => {
     await renderForm(onSaved);
 
     await fireEvent.changeText(screen.getByLabelText('Nom du groupe'), 'Tontine famille');
-    await fireEvent.changeText(screen.getByLabelText('Cagnotte par tour'), '1000');
+    await fireEvent.changeText(screen.getByLabelText('Cotisation par membre'), '1000');
     await fireEvent.changeText(screen.getByLabelText('Mois du premier tour'), '2026-07');
     await fireEvent.changeText(screen.getByLabelText('Nom du membre 1'), 'Youssef');
     await fireEvent.changeText(screen.getByLabelText('Nom du membre 2'), 'Salma');
@@ -70,6 +77,24 @@ describe('TontineGroupForm (US-024)', () => {
     expect(await listTontineRounds(mockFakeDb)).toHaveLength(2);
   });
 
+  it('creates the group in the household currency, not a hardcoded default', async () => {
+    await createHousehold(mockFakeDb, { name: 'Famille Benali', currencyCode: 'EUR' });
+    const onSaved = jest.fn();
+    await renderForm(onSaved);
+
+    await fireEvent.changeText(screen.getByLabelText('Nom du groupe'), 'Tontine famille');
+    await fireEvent.changeText(screen.getByLabelText('Cotisation par membre'), '1000');
+    await fireEvent.changeText(screen.getByLabelText('Mois du premier tour'), '2026-07');
+    await fireEvent.changeText(screen.getByLabelText('Nom du membre 1'), 'Youssef');
+    await fireEvent.changeText(screen.getByLabelText('Nom du membre 2'), 'Salma');
+    await fireEvent.press(screen.getAllByText("C'est moi")[0]);
+    await fireEvent.press(screen.getByText('Créer la tontine'));
+
+    expect(onSaved).toHaveBeenCalledTimes(1);
+    const groups = await listTontineGroups(mockFakeDb);
+    expect(groups[0]).toMatchObject({ currencyCode: 'EUR' });
+  });
+
   it('adds and removes a member field', async () => {
     await renderForm();
 
@@ -78,6 +103,55 @@ describe('TontineGroupForm (US-024)', () => {
 
     await fireEvent.press(screen.getAllByText('Retirer')[0]);
     expect(screen.queryByLabelText('Nom du membre 3')).toBeNull();
+  });
+
+  it('reorders members with the up/down controls, keeping "self" pointed at the right person', async () => {
+    await renderForm();
+
+    await fireEvent.changeText(screen.getByLabelText('Nom du membre 1'), 'Youssef');
+    await fireEvent.changeText(screen.getByLabelText('Nom du membre 2'), 'Salma');
+    await fireEvent.press(screen.getAllByText("C'est moi")[0]);
+
+    await fireEvent.press(screen.getAllByLabelText('Descendre dans l\'ordre des tours')[0]);
+
+    expect(screen.getByLabelText('Nom du membre 1').props.value).toBe('Salma');
+    expect(screen.getByLabelText('Nom du membre 2').props.value).toBe('Youssef');
+    // "self" followed Youssef to his new position rather than staying on row 1.
+    const selfChips = screen.getAllByRole('button', { name: "C'est moi" });
+    expect(selfChips[0].props.accessibilityState.selected).toBe(false);
+    expect(selfChips[1].props.accessibilityState.selected).toBe(true);
+  });
+
+  it('recalculates the pot and round count live as members and contribution change', async () => {
+    await renderForm();
+
+    await fireEvent.changeText(screen.getByLabelText('Cotisation par membre'), '1000');
+    expect(await screen.findByText('Nombre de tours : 0')).toBeTruthy();
+
+    await fireEvent.changeText(screen.getByLabelText('Nom du membre 1'), 'Youssef');
+    await fireEvent.changeText(screen.getByLabelText('Nom du membre 2'), 'Salma');
+
+    expect(await screen.findByText('Nombre de tours : 2')).toBeTruthy();
+    expect(
+      await screen.findByText(new RegExp(`Cagnotte du tour : ‎?2\\.000,00`)),
+    ).toBeTruthy();
+
+    await fireEvent.press(screen.getByText('Ajouter un membre'));
+    await fireEvent.changeText(screen.getByLabelText('Nom du membre 3'), 'Karim');
+
+    expect(await screen.findByText('Nombre de tours : 3')).toBeTruthy();
+    expect(
+      await screen.findByText(new RegExp(`Cagnotte du tour : ‎?3\\.000,00`)),
+    ).toBeTruthy();
+  });
+
+  it('shows the periodicity field with only monthly selectable today', async () => {
+    await renderForm();
+
+    expect(await screen.findByText('Mensuelle')).toBeTruthy();
+    expect(
+      await screen.findByText('Périodicité hebdomadaire : bientôt disponible.'),
+    ).toBeTruthy();
   });
 
   it('calls onCancel', async () => {

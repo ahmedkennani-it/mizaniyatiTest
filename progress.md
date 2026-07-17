@@ -116,7 +116,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | Tâche | Titre | Statut |
 | --- | --- | --- |
 | 9.1 | Vue d'ensemble d'une tontine (daret) | ✅ done |
-| 9.2 | Création et paramétrage d'une tontine | ⬜ à faire |
+| 9.2 | Création et paramétrage d'une tontine | ✅ done |
 | 9.3 | Mise en avant de mon tour | ⬜ à faire |
 | 9.4 | Suivi des paiements du tour en cours | ⬜ à faire |
 | 9.5 | Calendrier des tours | ⬜ à faire |
@@ -1170,6 +1170,53 @@ interdiction éternelle du réseau.
 - ⚠️ **Vérification navigateur LTR/RTL non effectuée** (blocage connu, `dev-browser`
   indisponible dans cet environnement — cf. section notes en bas de fichier).
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1690/1690, 138 suites** ✅.
+
+### Itération 44 — Tâche 9.2 (Création et paramétrage d'une tontine) ✅
+
+- **Audit préalable** : `TontineGroupForm` existait déjà (nom, cotisation, mois de départ,
+  membres, génération automatique du calendrier via `createTontineGroupWithMembers`). Trois
+  écarts réels avec les 4 critères d'acceptation :
+- 🐛 **Le libellé du champ mentait sur ce qu'il fallait saisir** : `contributionLabel` disait
+  « Cagnotte par tour » (le total du tour), alors que la valeur saisie est la **cotisation
+  individuelle** (le calcul `contribution × nombre de membres` produit la cagnotte, ailleurs
+  dans le code). Un organisateur suivant le libellé à la lettre aurait saisi le mauvais
+  montant. Renommé « Cotisation par membre », conforme au texte du critère (« cotisation par
+  membre »).
+- 🐛 **Devise encore codée en dur** (`DEFAULT_CURRENCY_CODE`), même bug que celui déjà corrigé
+  dans `AddExpenseForm`/`ExpenseConfirmation`/`HomeScreen` à des itérations antérieures — jamais
+  porté jusqu'à ce formulaire. Lit maintenant `households[0]?.currencyCode`, avec repli sur
+  `DEFAULT_CURRENCY_CODE` si l'onboarding n'a pas encore créé de foyer.
+- **Aperçu en direct (nouveau, critère 4)** : carte `Aperçu` recalculant la cagnotte
+  (`formatMoney(cotisation × nombre de membres valides, ...)`) et le nombre de tours à chaque
+  frappe — même schéma que le `VaultForm` de la 8.2 (aperçu dérivé, pas un second calcul
+  divergent). Le compte de membres « valides » ignore les lignes encore vides, pour ne pas
+  annoncer un tour supplémentaire avant qu'un nom soit réellement saisi.
+- **Réordonnancement (critère 2), écart assumé** : le critère dit « par glisser-déposer », mais
+  **aucune dépendance de gestes/drag n'existe dans ce projet** (`react-native-gesture-handler`,
+  `reanimated`, tout paquet « draggable » — absents de `package.json`). Ajouter un vrai glisser
+  tactile pour ce seul écran aurait exigé une nouvelle dépendance native, un travail de test
+  quasiment impossible à couvrir sous RNTL (les gestes de pan ne se simulent pas), **et** un
+  contrôle historiquement mauvais pour l'accessibilité (aucune sémantique native pour un
+  lecteur d'écran). Implémenté à la place par **deux boutons Monter/Descendre** (icônes
+  `chevron-up`/`chevron-down`, déjà non-directionnelles dans `Icon` — confirmé dans son
+  ensemble `RTL_FLIP`) par ligne de membre, avec `accessibilityState.disabled` en butée (même
+  motif que les chevrons du `MonthSelector`, 5.2) : atteint le même objectif fonctionnel
+  (définir l'ordre des tours) en restant accessible et testable. Un swap déplace aussi
+  `selfIndex` avec le membre concerné, pas avec la position.
+- 🔎 **Résolu un résidu non commité d'une session antérieure** : `Icon.tsx` portait déjà
+  `chevron-up` en attente (modification non committée trouvée en tout début de session, sans
+  appelant). Elle correspond exactement au besoin ci-dessus — récupérée et committée avec cette
+  tâche plutôt que dupliquée.
+- **Périodicité (critère 1), écart assumé** : le champ existe (`Périodicité : Mensuelle`), mais
+  **une seule valeur est réellement implémentée** — tout le moteur de tours
+  (`tontine_rounds.month`, `findCurrentRound`, `monthsUntil`, `formatMonthLabel`) suppose des
+  tours mensuels de bout en bout. Proposer un choix « Hebdomadaire » qui resterait silencieusement
+  mensuel serait la fabrication que les garde-fous interdisent. Traité comme les « packs de
+  langue »/« marchés » à venir (4.2/4.3) : mentionné (`periodicityWeeklyNote`, « bientôt
+  disponible ») sans être sélectionnable. À lever si/quand le moteur de tours est généralisé
+  au-delà du mois.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1694/1694, 138 suites** ✅.
+- ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé).
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 
