@@ -9,7 +9,12 @@ import { currencyDecimals, toMajorUnits } from '../../money';
  */
 export const MOCK_RATES_UPDATED_AT = '2026-01-01';
 
-/** Shown next to any converted amount, per the "toujours indicative" rule (US-047, US-064). */
+/**
+ * Internal label for this mock table, not rendered directly (it's French-only, and every visible
+ * string must go through i18n) — the on-screen "indicative rate, demo data, updated on {date}"
+ * note is `transfersScreen.rateSourceNote` in each locale instead, per the "toujours indicative"
+ * rule (US-047, US-064). Kept here for tooling/debug use (e.g. a future admin/QA view).
+ */
 export const MOCK_RATES_SOURCE = 'Taux fictifs (données de démonstration)';
 
 /**
@@ -52,4 +57,20 @@ export function convertAmountMinor(
   const majorInUsd = toMajorUnits(amountMinor, fromCurrencyCode) / fromRate;
   const majorInTarget = majorInUsd * toRate;
   return Math.round(majorInTarget * 10 ** currencyDecimals(toCurrencyCode));
+}
+
+/**
+ * Converts using a household-entered rate (US-047's "un taux manuel peut être saisi") instead of
+ * the mock table above. `rateMajorPerUnit` is "how many major units of `toCurrencyCode` for 1
+ * major unit of `fromCurrencyCode`" — e.g. entering `10.8` for "1 EUR = 10.8 MAD".
+ */
+export function convertAmountMinorWithRate(
+  amountMinor: number,
+  fromCurrencyCode: string,
+  toCurrencyCode: string,
+  rateMajorPerUnit: number,
+): number {
+  const majorFrom = toMajorUnits(amountMinor, fromCurrencyCode);
+  const majorTo = majorFrom * rateMajorPerUnit;
+  return Math.round(majorTo * 10 ** currencyDecimals(toCurrencyCode));
 }

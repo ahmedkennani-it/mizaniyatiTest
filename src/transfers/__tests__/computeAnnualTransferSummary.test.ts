@@ -8,6 +8,9 @@ function transfer(amountMinor: number, occurredAt: string): DiasporaTransfer {
     currencyCode: 'EUR',
     occurredAt,
     beneficiaryId: null,
+    method: 'other',
+    originAmountMinor: null,
+    rateIsManual: false,
     createdAt: occurredAt,
   };
 }

@@ -16,6 +16,27 @@ describe('diasporaTransferRepository', () => {
     expect(transfer.amountMinor).toBe(30000);
     expect(transfer.currencyCode).toBe('EUR');
     expect(transfer.beneficiaryId).toBeNull();
+    expect(transfer.method).toBe('other');
+    expect(transfer.originAmountMinor).toBeNull();
+    expect(transfer.rateIsManual).toBe(false);
+    expect(await listDiasporaTransfers(db)).toEqual([transfer]);
+  });
+
+  it('records the method, the converted contre-valeur and whether the rate was manual', async () => {
+    const { db } = createFakeDatabase();
+
+    const transfer = await createDiasporaTransfer(db, {
+      amountMinor: 10000,
+      currencyCode: 'EUR',
+      occurredAt: '2026-03-15T10:00:00.000Z',
+      method: 'wise',
+      originAmountMinor: 110000,
+      rateIsManual: true,
+    });
+
+    expect(transfer.method).toBe('wise');
+    expect(transfer.originAmountMinor).toBe(110000);
+    expect(transfer.rateIsManual).toBe(true);
     expect(await listDiasporaTransfers(db)).toEqual([transfer]);
   });
 

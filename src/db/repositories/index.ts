@@ -184,6 +184,7 @@ export type {
   TransferPatch,
   DiasporaTransfer,
   NewDiasporaTransfer,
+  DiasporaTransferMethod,
   DiasporaBeneficiary,
   NewDiasporaBeneficiary,
   DiasporaBeneficiaryPatch,

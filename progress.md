@@ -1569,6 +1569,55 @@ tâche réelle était de brancher `HomeScreen` sur cet état déjà persistant, 
 - ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé) — repli sur
   `TransfersScreen.rtl.test.tsx` comme en 11.1.
 
+### Itération 54 — Tâche 11.3 (Enregistrement d'un transfert, méthode & conversion) ✅ — phase 11 terminée
+
+- **Migration 0024** : `diaspora_transfers` gagne `method` (`wise`/`cash`/`other`, `DEFAULT 'other'`
+  pour que les lignes 0022/0023 déjà en base se rétro-remplissent proprement), `origin_amount_minor`
+  et `rate_is_manual`. **Contre-valeur snapshotée à l'enregistrement, jamais recalculée** : même
+  règle déjà appliquée aux montants de `zakat_assessments`/`tontine_rounds` — un taux qui change
+  plus tard ne doit jamais réécrire silencieusement l'historique d'un transfert déjà enregistré.
+- **`convertAmountMinorWithRate`** (nouveau, `src/lib/rates`) : conversion par un taux **saisi par le
+  foyer** plutôt que la table mockée — critère métier « un taux manuel peut être saisi ». Respecte
+  la précision décimale propre à la devise cible (testé avec le JPY, 0 décimale, pour ne pas
+  supposer 2 décimales partout).
+- **Formulaire unifié « Nouveau transfert »** remplace le petit formulaire d'envoi de la 11.2 : le
+  bénéficiaire y est désormais un **champ du formulaire** (puces, dont « Aucun bénéficiaire »), pas
+  un préalable — conforme au critère 1 qui liste bénéficiaire/montant/date/méthode comme une seule
+  saisie. Choisir un bénéficiaire aux puces préremplit toujours son montant habituel, exactement
+  comme le tap direct sur sa ligne dans la liste (même trajectoire de code, un seul chemin).
+- **Section conversion** (critère 2, seulement si la devise du foyer diffère du MAD) : bascule
+  taux automatique/manuel, aperçu **en direct** de la contre-valeur avant tout enregistrement, note
+  de source/date (`transfersScreen.rateSourceNote`, MOCK_RATES_UPDATED_AT) — remplit le critère
+  « la date/source doivent être indiquées » sans jamais afficher `MOCK_RATES_SOURCE` tel quel (cette
+  constante est en français en dur ; l'afficher aurait violé le garde-fou i18n). Son commentaire,
+  qui prétendait à tort qu'elle serait affichée, est corrigé en conséquence.
+- **Historique enrichi** (critère 3) : chaque ligne affiche désormais la méthode et le nom du
+  bénéficiaire (résolu par id, silencieusement absent si supprimé — même principe que la 11.2) en
+  sous-titre, et la contre-valeur sous le montant si elle a été calculée. Le total annuel n'a pas
+  changé de calcul : il ne lit jamais `originAmountMinor`, seulement `amountMinor` par transfert.
+- **Raccourci dashboard « Envoyer au {pays} » (critère 4)** : nouveau `originMarket()` dans
+  `src/market` (le marché dont la devise correspond à `DEFAULT_ORIGIN_CURRENCY_CODE`, donc le Maroc
+  aujourd'hui) plutôt qu'un nom de pays codé en dur — visible seulement pour un foyer Pro dont le
+  marché a le module Transferts (`marketHasModule(countryCode, 'transfers')`), jamais pour un foyer
+  marocain qui verrait un raccourci d'envoi vers son propre pays. `RootTabParamList['transfers']`
+  gagne un paramètre optionnel `openRecordForm` ; `TransfersScreen` l'écoute et bascule direct sur le
+  formulaire (puis efface le paramètre via `navigation.setParams`, même mécanique que
+  `HomeScreen`'s `navigation?.navigate('categories')` déjà en place depuis la phase 5).
+- 🐛 **Trouvé en écrivant le raccourci** : rien n'existait encore pour nommer le pays d'origine —
+  la seule donnée présente était `DEFAULT_ORIGIN_CURRENCY_CODE = 'MAD'`, un code devise, pas un nom
+  affichable. `originMarket()` le dérive du registre existant plutôt que d'ajouter une constante
+  séparée qui aurait pu diverger.
+- Tests : `mockExchangeRates.test.ts` (+2, dont la précision décimale du JPY) ;
+  `diasporaTransferRepository.test.ts` (+1, les 3 nouveaux champs round-trip) ; 8 nouveaux cas dans
+  `TransfersScreen.test.tsx` (méthode/bénéficiaire choisis, défaut « autre », conversion auto,
+  conversion manuelle, absence de section conversion en MAD, méthode+contre-valeur dans
+  l'historique, ouverture directe via `openRecordForm`) ; nouveau `HomeTransfersShortcut.test.tsx`
+  (4 cas : visible et nomme le Maroc, navigue avec le bon paramètre, masqué en Gratuit, masqué pour
+  un marché tontine sans module Transferts) ; `TransfersScreen.rtl.test.tsx` étendu au formulaire
+  unifié.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1834/1834, 149 suites** ✅.
+- ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé, cf. itération 52).
+
 ## Notes / blocages connus (hors périmètre Phase 1)
 
 - L'arbre de travail contient des changements accumulés multi-phases non

@@ -9,5 +9,6 @@ export {
   isMenaGulfMarket,
   marketHasModule,
   marketModules,
+  originMarket,
 } from './markets';
 export type { Market, MarketModule } from './markets';

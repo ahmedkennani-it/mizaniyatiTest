@@ -170,7 +170,7 @@ describe('TransfersScreen — bénéficiaires récurrents (US-046)', () => {
 
     fireEvent.press(await screen.findByText('Fatima Benali'));
 
-    expect(await screen.findByText('Envoyer à Fatima Benali')).toBeTruthy();
+    expect(await screen.findByText('Nouveau transfert')).toBeTruthy();
     expect(await screen.findByDisplayValue('300')).toBeTruthy();
   });
 
@@ -241,5 +241,134 @@ describe('TransfersScreen — bénéficiaires récurrents (US-046)', () => {
     expect(await screen.findByText('1 transfert(s) enregistré(s)')).toBeTruthy();
     const transfers = await listDiasporaTransfers(mockFakeDb);
     expect(transfers).toHaveLength(1);
+  });
+});
+
+describe('TransfersScreen — enregistrement avec méthode et conversion (US-047)', () => {
+  beforeEach(() => {
+    mockFakeDb = createFakeDatabase().db;
+  });
+
+  it('opens the record form with no beneficiary preselected from the "Enregistrer un transfert" button', async () => {
+    await renderScreen(TRANSFERS_PLAN);
+
+    fireEvent.press(await screen.findByText('Enregistrer un transfert'));
+
+    expect(await screen.findByText('Nouveau transfert')).toBeTruthy();
+    expect(await screen.findByText('Aucun bénéficiaire')).toBeTruthy();
+  });
+
+  it('records the chosen method and the beneficiary picked from the chip list', async () => {
+    const beneficiary = await createDiasporaBeneficiary(mockFakeDb, {
+      name: 'Fatima Benali',
+      relationship: 'Mère',
+      usualAmountMinor: 30000,
+      frequency: 'monthly',
+    });
+    await renderScreen(TRANSFERS_PLAN);
+
+    fireEvent.press(await screen.findByText('Enregistrer un transfert'));
+    fireEvent.press(await screen.findByText('Fatima Benali'));
+    fireEvent.press(await screen.findByText('Espèces'));
+    fireEvent.press(await screen.findByText('Enregistrer le transfert'));
+
+    const transfers = await listDiasporaTransfers(mockFakeDb);
+    expect(transfers).toHaveLength(1);
+    expect(transfers[0].method).toBe('cash');
+    expect(transfers[0].beneficiaryId).toBe(beneficiary.id);
+  });
+
+  it('defaults to "other" and no beneficiary when neither is picked', async () => {
+    await renderScreen(TRANSFERS_PLAN);
+
+    fireEvent.press(await screen.findByText('Enregistrer un transfert'));
+    fireEvent.changeText(await screen.findByLabelText('Montant'), '100');
+    fireEvent.press(await screen.findByText('Enregistrer le transfert'));
+
+    const transfers = await listDiasporaTransfers(mockFakeDb);
+    expect(transfers).toHaveLength(1);
+    expect(transfers[0].method).toBe('other');
+    expect(transfers[0].beneficiaryId).toBeNull();
+  });
+
+  it('shows and saves an automatic contre-valeur, indicating the mock rate date', async () => {
+    await createHousehold(mockFakeDb, { name: 'Famille Dubois', currencyCode: 'EUR' });
+    await renderScreen(TRANSFERS_PLAN);
+
+    fireEvent.press(await screen.findByText('Enregistrer un transfert'));
+    fireEvent.changeText(await screen.findByDisplayValue(''), '100');
+
+    expect(await screen.findByText(/données de démonstration mises à jour le/)).toBeTruthy();
+    expect(await screen.findByText(/≈ .*MAD.*contre-valeur avant enregistrement/)).toBeTruthy();
+
+    fireEvent.press(await screen.findByText('Enregistrer le transfert'));
+
+    const transfers = await listDiasporaTransfers(mockFakeDb);
+    expect(transfers).toHaveLength(1);
+    expect(transfers[0].originAmountMinor).not.toBeNull();
+    expect(transfers[0].rateIsManual).toBe(false);
+  });
+
+  it('lets a manual rate override the mock one and saves it as such', async () => {
+    await createHousehold(mockFakeDb, { name: 'Famille Dubois', currencyCode: 'EUR' });
+    await renderScreen(TRANSFERS_PLAN);
+
+    fireEvent.press(await screen.findByText('Enregistrer un transfert'));
+    fireEvent.changeText(await screen.findByDisplayValue(''), '100');
+    fireEvent.press(await screen.findByText('Taux manuel'));
+    fireEvent.changeText(await screen.findByDisplayValue(''), '11');
+
+    expect(await screen.findByText(/≈ .*1\.100,00 MAD/)).toBeTruthy();
+
+    fireEvent.press(await screen.findByText('Enregistrer le transfert'));
+
+    const transfers = await listDiasporaTransfers(mockFakeDb);
+    expect(transfers).toHaveLength(1);
+    expect(transfers[0].originAmountMinor).toBe(110000);
+    expect(transfers[0].rateIsManual).toBe(true);
+  });
+
+  it('does not show a conversion section when the household already budgets in MAD', async () => {
+    await renderScreen(TRANSFERS_PLAN);
+
+    fireEvent.press(await screen.findByText('Enregistrer un transfert'));
+
+    expect(screen.queryByText('Taux automatique')).toBeNull();
+    expect(screen.queryByText('Taux manuel')).toBeNull();
+  });
+
+  it('shows the method and contre-valeur on the recorded transfer in the history', async () => {
+    await createHousehold(mockFakeDb, { name: 'Famille Dubois', currencyCode: 'EUR' });
+    await createDiasporaTransfer(mockFakeDb, {
+      amountMinor: 10000,
+      currencyCode: 'EUR',
+      occurredAt: `${CURRENT_YEAR}-03-01T00:00:00.000Z`,
+      method: 'wise',
+      originAmountMinor: 108000,
+      rateIsManual: false,
+    });
+    await renderScreen(TRANSFERS_PLAN);
+
+    expect(await screen.findByText('Wise')).toBeTruthy();
+    expect(await screen.findByText(/≈ .*1\.080,00 MAD/)).toBeTruthy();
+  });
+
+  it('opens the record form directly when navigated to with openRecordForm', async () => {
+    const mockSetParams = jest.fn();
+    render(
+      <LanguageProvider>
+        <ThemeProvider initialColorScheme="light">
+          <EntitlementsProvider plan={TRANSFERS_PLAN}>
+            <TransfersScreen
+              navigation={{ setParams: mockSetParams } as never}
+              route={{ key: 'transfers', name: 'transfers', params: { openRecordForm: true } } as never}
+            />
+          </EntitlementsProvider>
+        </ThemeProvider>
+      </LanguageProvider>,
+    );
+
+    expect(await screen.findByText('Nouveau transfert')).toBeTruthy();
+    expect(mockSetParams).toHaveBeenCalledWith({ openRecordForm: undefined });
   });
 });

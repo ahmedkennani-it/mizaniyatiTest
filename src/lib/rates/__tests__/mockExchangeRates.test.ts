@@ -1,4 +1,4 @@
-import { convertAmountMinor, MOCK_RATES_PER_USD } from '../mockExchangeRates';
+import { convertAmountMinor, convertAmountMinorWithRate, MOCK_RATES_PER_USD } from '../mockExchangeRates';
 
 describe('convertAmountMinor', () => {
   it('returns the same amount for a same-currency conversion', () => {
@@ -22,5 +22,17 @@ describe('convertAmountMinor', () => {
     const backToEur = convertAmountMinor(toMad as number, 'MAD', 'EUR');
     expect(backToEur).not.toBeNull();
     expect(Math.abs((backToEur as number) - 10000)).toBeLessThanOrEqual(1);
+  });
+});
+
+describe('convertAmountMinorWithRate', () => {
+  it('applies a household-entered rate instead of the mock table', () => {
+    // 100.00 EUR at a manually-entered "1 EUR = 11 MAD" -> 1 100.00 MAD.
+    expect(convertAmountMinorWithRate(10000, 'EUR', 'MAD', 11)).toBe(110000);
+  });
+
+  it('respects the target currency\'s own decimal precision', () => {
+    // 100.00 EUR at "1 EUR = 0.5 JPY" (0 decimals) -> 50 JPY, not 50.00.
+    expect(convertAmountMinorWithRate(10000, 'EUR', 'JPY', 0.5)).toBe(50);
   });
 });

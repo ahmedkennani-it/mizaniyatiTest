@@ -105,7 +105,8 @@ describe('TransfersScreen under RTL and LTR (US-045)', () => {
     expect(await screen.findByText('Fatima Benali')).toBeTruthy();
 
     fireEvent.press(screen.getByText('Fatima Benali'));
-    expect(await screen.findByText('Envoyer à Fatima Benali')).toBeTruthy();
+    expect(await screen.findByText(fr.transfersScreen.recordTitle)).toBeTruthy();
+    expect(screen.getByText(fr.transfersScreen.methodWise)).toBeTruthy();
 
     fireEvent.press(screen.getByText(fr.transfersScreen.sendEditBeneficiary));
     expect(await screen.findByText(fr.beneficiaryForm.titleEdit)).toBeTruthy();

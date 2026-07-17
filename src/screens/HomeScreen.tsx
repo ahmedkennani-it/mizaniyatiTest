@@ -56,6 +56,7 @@ import { useEntitlements } from '../entitlements';
 import { useLanguage } from '../i18n';
 import { formatMonthLabel, monthKeyOf, monthKeyToDate } from '../i18n/dateFormat';
 import { forceLTR, toLocalizedDigits } from '../i18n/numberFormat';
+import { marketHasModule, originMarket } from '../market';
 import { DEFAULT_CURRENCY_CODE, formatMoney, toMajorUnits } from '../money';
 import { computeSeasonalThemeStatus, gregorianToHijri, shouldSuggestRamadanActivation } from '../seasonalThemes';
 import { useTheme } from '../theme';
@@ -453,6 +454,20 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
             setSettings(await getUserSettings(getDatabase()));
           }}
           dismissLabel={t('home.voiceDismiss')}
+        />
+      ) : null}
+
+      {/* US-047: only where the household's market actually sends money "back home" (US-013's
+          Transferts slot), and only once Pro-entitled — a free household sees the Transferts tab's
+          own upsell instead of a shortcut to a form it can't use. */}
+      {entitlements.can('transfers') &&
+      settings?.countryCode &&
+      marketHasModule(settings.countryCode, 'transfers') ? (
+        <Button
+          label={t('home.transfersShortcut', { country: t(originMarket().nameKey) })}
+          variant="secondary"
+          icon="plane"
+          onPress={() => navigation?.navigate('transfers', { openRecordForm: true })}
         />
       ) : null}
 

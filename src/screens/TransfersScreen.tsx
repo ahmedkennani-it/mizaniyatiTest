@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 
 import { BeneficiaryForm } from './BeneficiaryForm';
 import {
@@ -24,35 +25,65 @@ import {
   listDiasporaTransfers,
   listHouseholds,
 } from '../db/repositories';
-import type { DiasporaBeneficiary, DiasporaTransfer, Household } from '../db/repositories';
+import type {
+  DiasporaBeneficiary,
+  DiasporaTransfer,
+  DiasporaTransferMethod,
+  Household,
+} from '../db/repositories';
 import { useEntitlements } from '../entitlements';
 import { useLanguage } from '../i18n';
-import { convertAmountMinor, DEFAULT_ORIGIN_CURRENCY_CODE } from '../lib/rates';
+import {
+  convertAmountMinor,
+  convertAmountMinorWithRate,
+  DEFAULT_ORIGIN_CURRENCY_CODE,
+  MOCK_RATES_UPDATED_AT,
+} from '../lib/rates';
+import type { RootTabParamList } from '../navigation';
 import { DEFAULT_CURRENCY_CODE, formatMoney, parseAmountInput, toMajorUnits } from '../money';
 import { useTheme } from '../theme';
 import { computeAnnualTransferSummary, listTransferYears } from '../transfers';
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const METHODS: DiasporaTransferMethod[] = ['wise', 'cash', 'other'];
 
 function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+/** A plain ratio (e.g. "10.8"), not a currency amount — accepts `.` or `,`, rejects anything <= 0. */
+function parsePositiveRate(input: string): number | null {
+  const normalized = input.trim().replace(',', '.');
+  if (normalized === '' || Number.isNaN(Number(normalized))) {
+    return null;
+  }
+  const value = Number(normalized);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+/**
+ * React Navigation hands every tab screen its `navigation`/`route`; both are optional here so the
+ * screen still mounts on its own in tests, like every other screen in this codebase.
+ */
+export type TransfersScreenProps = Partial<
+  Pick<BottomTabScreenProps<RootTabParamList, 'transfers'>, 'navigation' | 'route'>
+>;
+
 /**
  * Diaspora transfers tab (US-045): annual total sent + count, with a picker for previous years.
- * `origin` currency is `DEFAULT_ORIGIN_CURRENCY_CODE` (a placeholder) until US-064 (phase 15) lets
- * a household configure its own — see that constant's own comment. Recurring beneficiaries
- * (US-046) let a household jump straight into a prefilled quick-send; the full "méthode +
- * conversion manuelle" recording flow (US-047) lands in the next phase-11 task and will extend
- * this same `createDiasporaTransfer` call, not replace it.
+ * Recurring beneficiaries (US-046) let a household jump into a prefilled record; the full
+ * recording form (US-047) adds method + an indicative or manual conversion, snapshotted at
+ * recording time so a later rate change never rewrites a past transfer's contre-valeur. `origin`
+ * currency is `DEFAULT_ORIGIN_CURRENCY_CODE` (a placeholder) until US-064 (phase 15) lets a
+ * household configure its own — see that constant's own comment.
  */
-export function TransfersScreen() {
+export function TransfersScreen({ navigation, route }: TransfersScreenProps = {}) {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const { language } = useLanguage();
   const entitlements = useEntitlements();
 
-  const [view, setView] = useState<'list' | 'beneficiaryForm' | 'send'>('list');
+  const [view, setView] = useState<'list' | 'beneficiaryForm' | 'recordForm'>('list');
   const [transfers, setTransfers] = useState<DiasporaTransfer[]>([]);
   const [beneficiaries, setBeneficiaries] = useState<DiasporaBeneficiary[]>([]);
   const [households, setHouseholds] = useState<Household[]>([]);
@@ -60,10 +91,18 @@ export function TransfersScreen() {
   const [selectedYear, setSelectedYear] = useState(currentYear);
 
   const [editingBeneficiary, setEditingBeneficiary] = useState<DiasporaBeneficiary | null>(null);
-  const [sendingBeneficiary, setSendingBeneficiary] = useState<DiasporaBeneficiary | null>(null);
-  const [sendAmountInput, setSendAmountInput] = useState('');
-  const [sendDateInput, setSendDateInput] = useState(todayIsoDate());
-  const [sendErrors, setSendErrors] = useState<{ amount?: string; date?: string }>({});
+
+  const [recordBeneficiaryId, setRecordBeneficiaryId] = useState<string | null>(null);
+  const [recordAmountInput, setRecordAmountInput] = useState('');
+  const [recordDateInput, setRecordDateInput] = useState(todayIsoDate());
+  const [recordMethod, setRecordMethod] = useState<DiasporaTransferMethod>('other');
+  const [recordRateMode, setRecordRateMode] = useState<'auto' | 'manual'>('auto');
+  const [recordManualRateInput, setRecordManualRateInput] = useState('');
+  const [recordErrors, setRecordErrors] = useState<{
+    amount?: string;
+    date?: string;
+    manualRate?: string;
+  }>({});
 
   const refresh = useCallback(() => {
     const db = getDatabase();
@@ -75,6 +114,23 @@ export function TransfersScreen() {
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  // The dashboard's "Envoyer au {pays}" shortcut (US-047) opens straight into the recording form
+  // rather than landing on the tab's default list.
+  useEffect(() => {
+    if (route?.params?.openRecordForm) {
+      setRecordBeneficiaryId(null);
+      setRecordAmountInput('');
+      setRecordDateInput(todayIsoDate());
+      setRecordMethod('other');
+      setRecordRateMode('auto');
+      setRecordManualRateInput('');
+      setRecordErrors({});
+      setView('recordForm');
+      navigation?.setParams({ openRecordForm: undefined });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route?.params?.openRecordForm]);
 
   if (!entitlements.can('transfers')) {
     return (
@@ -91,6 +147,12 @@ export function TransfersScreen() {
   }
 
   const currencyCode = households[0]?.currencyCode ?? DEFAULT_CURRENCY_CODE;
+  const needsConversion = currencyCode !== DEFAULT_ORIGIN_CURRENCY_CODE;
+  const beneficiaryById = new Map(beneficiaries.map((beneficiary) => [beneficiary.id, beneficiary] as const));
+
+  function methodLabel(method: DiasporaTransferMethod): string {
+    return t(`transfersScreen.method${method.charAt(0).toUpperCase()}${method.slice(1)}`);
+  }
 
   function rhythmLabel(beneficiary: DiasporaBeneficiary): string {
     if (beneficiary.frequency === 'monthly' && beneficiary.usualAmountMinor != null) {
@@ -106,46 +168,78 @@ export function TransfersScreen() {
     setView('beneficiaryForm');
   }
 
-  function openSendForm(beneficiary: DiasporaBeneficiary) {
-    setSendingBeneficiary(beneficiary);
-    setSendAmountInput(
-      beneficiary.usualAmountMinor != null
+  function openRecordForm(beneficiary: DiasporaBeneficiary | null) {
+    setRecordBeneficiaryId(beneficiary?.id ?? null);
+    setRecordAmountInput(
+      beneficiary?.usualAmountMinor != null
         ? String(toMajorUnits(beneficiary.usualAmountMinor, currencyCode))
         : '',
     );
-    setSendDateInput(todayIsoDate());
-    setSendErrors({});
-    setView('send');
+    setRecordDateInput(todayIsoDate());
+    setRecordMethod('other');
+    setRecordRateMode('auto');
+    setRecordManualRateInput('');
+    setRecordErrors({});
+    setView('recordForm');
   }
 
   function closeToList() {
     setEditingBeneficiary(null);
-    setSendingBeneficiary(null);
     setView('list');
   }
 
-  async function handleSendTransfer() {
-    if (!sendingBeneficiary) {
-      return;
-    }
-    const amountMinor = parseAmountInput(sendAmountInput, currencyCode);
-    const nextErrors: typeof sendErrors = {};
-    if (amountMinor === null) {
+  const recordAmountMinorPreview = parseAmountInput(recordAmountInput, currencyCode);
+  const recordManualRateValue = parsePositiveRate(recordManualRateInput);
+  const recordOriginMinorPreview = !needsConversion
+    ? null
+    : recordAmountMinorPreview === null
+      ? null
+      : recordRateMode === 'manual'
+        ? recordManualRateValue !== null
+          ? convertAmountMinorWithRate(
+              recordAmountMinorPreview,
+              currencyCode,
+              DEFAULT_ORIGIN_CURRENCY_CODE,
+              recordManualRateValue,
+            )
+          : null
+        : convertAmountMinor(recordAmountMinorPreview, currencyCode, DEFAULT_ORIGIN_CURRENCY_CODE);
+
+  async function handleRecordSubmit() {
+    const nextErrors: typeof recordErrors = {};
+    if (recordAmountMinorPreview === null) {
       nextErrors.amount = t('transfersScreen.errorSendAmount');
     }
-    if (!ISO_DATE_PATTERN.test(sendDateInput)) {
+    if (!ISO_DATE_PATTERN.test(recordDateInput)) {
       nextErrors.date = t('transfersScreen.errorSendDate');
     }
-    setSendErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0 || amountMinor === null) {
+    if (needsConversion && recordRateMode === 'manual' && recordManualRateValue === null) {
+      nextErrors.manualRate = t('transfersScreen.errorManualRate');
+    }
+    setRecordErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0 || recordAmountMinorPreview === null) {
       return;
     }
 
+    const originAmountMinor = !needsConversion
+      ? null
+      : recordRateMode === 'manual'
+        ? convertAmountMinorWithRate(
+            recordAmountMinorPreview,
+            currencyCode,
+            DEFAULT_ORIGIN_CURRENCY_CODE,
+            recordManualRateValue as number,
+          )
+        : convertAmountMinor(recordAmountMinorPreview, currencyCode, DEFAULT_ORIGIN_CURRENCY_CODE);
+
     await createDiasporaTransfer(getDatabase(), {
-      amountMinor,
+      amountMinor: recordAmountMinorPreview,
       currencyCode,
-      occurredAt: new Date(sendDateInput).toISOString(),
-      beneficiaryId: sendingBeneficiary.id,
+      occurredAt: new Date(recordDateInput).toISOString(),
+      beneficiaryId: recordBeneficiaryId,
+      method: recordMethod,
+      originAmountMinor,
+      rateIsManual: needsConversion && recordRateMode === 'manual',
     });
     refresh();
     closeToList();
@@ -169,41 +263,123 @@ export function TransfersScreen() {
     );
   }
 
-  if (view === 'send' && sendingBeneficiary) {
+  if (view === 'recordForm') {
+    const selectedBeneficiary = recordBeneficiaryId ? beneficiaryById.get(recordBeneficiaryId) : undefined;
+
     return (
       <AppScreen scroll bottomInset={110} contentStyle={{ gap: theme.spacing.md }}>
-        <ScreenHeader
-          title={t('transfersScreen.sendTitle', { name: sendingBeneficiary.name })}
-          onBack={closeToList}
-        />
+        <ScreenHeader title={t('transfersScreen.recordTitle')} onBack={() => setView('list')} />
+
+        <View style={{ gap: theme.spacing.xs }}>
+          <Txt size="sm" color={theme.colors.textSecondary}>
+            {t('transfersScreen.recordBeneficiaryLabel')}
+          </Txt>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.xs }}>
+            <Chip
+              label={t('transfersScreen.recordNoBeneficiary')}
+              selected={recordBeneficiaryId === null}
+              onPress={() => setRecordBeneficiaryId(null)}
+            />
+            {beneficiaries.map((beneficiary) => (
+              <Chip
+                key={beneficiary.id}
+                label={beneficiary.name}
+                selected={recordBeneficiaryId === beneficiary.id}
+                onPress={() => {
+                  setRecordBeneficiaryId(beneficiary.id);
+                  if (beneficiary.usualAmountMinor != null) {
+                    setRecordAmountInput(String(toMajorUnits(beneficiary.usualAmountMinor, currencyCode)));
+                  }
+                }}
+              />
+            ))}
+          </View>
+        </View>
 
         <TextField
           label={t('transfersScreen.sendAmountLabel')}
-          value={sendAmountInput}
-          onChangeText={setSendAmountInput}
+          value={recordAmountInput}
+          onChangeText={setRecordAmountInput}
           keyboardType="decimal-pad"
-          errorMessage={sendErrors.amount}
+          errorMessage={recordErrors.amount}
         />
 
         <TextField
           label={t('transfersScreen.sendDateLabel')}
-          value={sendDateInput}
-          onChangeText={setSendDateInput}
-          errorMessage={sendErrors.date}
+          value={recordDateInput}
+          onChangeText={setRecordDateInput}
+          errorMessage={recordErrors.date}
         />
 
+        <View style={{ gap: theme.spacing.xs }}>
+          <Txt size="sm" color={theme.colors.textSecondary}>
+            {t('transfersScreen.recordMethodLabel')}
+          </Txt>
+          <View style={{ flexDirection: 'row', gap: theme.spacing.xs }}>
+            {METHODS.map((method) => (
+              <Chip
+                key={method}
+                label={methodLabel(method)}
+                selected={recordMethod === method}
+                onPress={() => setRecordMethod(method)}
+              />
+            ))}
+          </View>
+        </View>
+
+        {needsConversion ? (
+          <Card elevated style={{ gap: theme.spacing.xs }}>
+            <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+              <Button
+                label={t('transfersScreen.rateModeAuto')}
+                variant={recordRateMode === 'auto' ? 'primary' : 'secondary'}
+                style={{ flex: 1 }}
+                onPress={() => setRecordRateMode('auto')}
+              />
+              <Button
+                label={t('transfersScreen.rateModeManual')}
+                variant={recordRateMode === 'manual' ? 'primary' : 'secondary'}
+                style={{ flex: 1 }}
+                onPress={() => setRecordRateMode('manual')}
+              />
+            </View>
+            {recordRateMode === 'manual' ? (
+              <TextField
+                label={t('transfersScreen.manualRateLabel')}
+                value={recordManualRateInput}
+                onChangeText={setRecordManualRateInput}
+                keyboardType="decimal-pad"
+                errorMessage={recordErrors.manualRate}
+              />
+            ) : (
+              <Txt size="xs" color={theme.colors.textSecondary}>
+                {t('transfersScreen.rateSourceNote', { date: MOCK_RATES_UPDATED_AT })}
+              </Txt>
+            )}
+            {recordOriginMinorPreview !== null ? (
+              <Txt weight="semibold" size="sm">
+                {t('transfersScreen.conversionPreview', {
+                  amount: formatMoney(recordOriginMinorPreview, DEFAULT_ORIGIN_CURRENCY_CODE, language),
+                })}
+              </Txt>
+            ) : null}
+          </Card>
+        ) : null}
+
         <View style={{ gap: theme.spacing.sm }}>
-          <Button label={t('transfersScreen.sendSubmit')} onPress={handleSendTransfer} />
+          <Button label={t('transfersScreen.recordSubmit')} onPress={handleRecordSubmit} />
           <Button
             label={t('transfersScreen.sendCancel')}
             variant="secondary"
-            onPress={closeToList}
+            onPress={() => setView('list')}
           />
-          <Button
-            label={t('transfersScreen.sendEditBeneficiary')}
-            variant="secondary"
-            onPress={() => openBeneficiaryForm(sendingBeneficiary)}
-          />
+          {selectedBeneficiary ? (
+            <Button
+              label={t('transfersScreen.sendEditBeneficiary')}
+              variant="secondary"
+              onPress={() => openBeneficiaryForm(selectedBeneficiary)}
+            />
+          ) : null}
         </View>
       </AppScreen>
     );
@@ -211,10 +387,9 @@ export function TransfersScreen() {
 
   const years = listTransferYears(transfers, currentYear);
   const summary = computeAnnualTransferSummary(transfers, selectedYear);
-  const approxMinor =
-    currencyCode === DEFAULT_ORIGIN_CURRENCY_CODE
-      ? null
-      : convertAmountMinor(summary.totalMinor, currencyCode, DEFAULT_ORIGIN_CURRENCY_CODE);
+  const approxMinor = !needsConversion
+    ? null
+    : convertAmountMinor(summary.totalMinor, currencyCode, DEFAULT_ORIGIN_CURRENCY_CODE);
   const yearTransfers = transfers.filter(
     (transfer) => new Date(transfer.occurredAt).getUTCFullYear() === selectedYear,
   );
@@ -224,6 +399,8 @@ export function TransfersScreen() {
       <ScreenHeader title={t('transfersScreen.title')} />
 
       <AlertBanner tone="info" icon="shield-check" message={t('transfersScreen.disclaimer')} />
+
+      <Button label={t('transfersScreen.recordButton')} onPress={() => openRecordForm(null)} />
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.xs }}>
         {years.map((year) => (
@@ -277,7 +454,7 @@ export function TransfersScreen() {
               title={beneficiary.name}
               subtitle={`${beneficiary.relationship} · ${rhythmLabel(beneficiary)}`}
               chevron
-              onPress={() => openSendForm(beneficiary)}
+              onPress={() => openRecordForm(beneficiary)}
             />
           ))
         )}
@@ -298,7 +475,30 @@ export function TransfersScreen() {
               icon="plane"
               accent="blue"
               title={transfer.occurredAt.slice(0, 10)}
-              value={formatMoney(transfer.amountMinor, transfer.currencyCode, language)}
+              subtitle={[
+                methodLabel(transfer.method),
+                transfer.beneficiaryId ? beneficiaryById.get(transfer.beneficiaryId)?.name : null,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+              trailing={
+                <View style={{ alignItems: 'flex-end', gap: 2 }}>
+                  <Txt weight="semibold" size="sm">
+                    {formatMoney(transfer.amountMinor, transfer.currencyCode, language)}
+                  </Txt>
+                  {transfer.originAmountMinor !== null ? (
+                    <Txt size="xs" color={theme.colors.textSecondary}>
+                      {t('transfersScreen.approxLabel', {
+                        amount: formatMoney(
+                          transfer.originAmountMinor,
+                          DEFAULT_ORIGIN_CURRENCY_CODE,
+                          language,
+                        ),
+                      })}
+                    </Txt>
+                  ) : null}
+                </View>
+              }
             />
           ))
         )}

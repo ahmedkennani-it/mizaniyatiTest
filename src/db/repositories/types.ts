@@ -433,6 +433,8 @@ export interface ZakatAssessmentPaidPatch {
  * `ZakatAssessment`. Not to be confused with `Transfer`, an unrelated feature (a "virement"
  * between two members *within* the same household).
  */
+export type DiasporaTransferMethod = 'wise' | 'cash' | 'other';
+
 export interface DiasporaTransfer {
   id: string;
   amountMinor: number;
@@ -445,6 +447,17 @@ export interface DiasporaTransfer {
    * touched, per "sans perdre l'historique".
    */
   beneficiaryId: string | null;
+  /** How the money was actually sent (US-047). Defaults to `'other'` for pre-US-047 rows. */
+  method: DiasporaTransferMethod;
+  /**
+   * The converted amount in `DEFAULT_ORIGIN_CURRENCY_CODE`, snapshotted at recording time
+   * (US-047) — never recomputed from a later rate, so a rate change afterwards never rewrites a
+   * past transfer's contre-valeur. `null` when the household's own currency already *is* the
+   * origin currency (no conversion needed) or pre-US-047.
+   */
+  originAmountMinor: number | null;
+  /** Whether `originAmountMinor` came from a household-entered rate rather than the mock table. */
+  rateIsManual: boolean;
   createdAt: string;
 }
 
@@ -453,6 +466,9 @@ export interface NewDiasporaTransfer {
   currencyCode: string;
   occurredAt: string;
   beneficiaryId?: string | null;
+  method?: DiasporaTransferMethod;
+  originAmountMinor?: number | null;
+  rateIsManual?: boolean;
 }
 
 export type DiasporaBeneficiaryFrequency = 'monthly' | 'occasional';

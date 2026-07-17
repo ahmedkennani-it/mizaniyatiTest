@@ -17,7 +17,9 @@ export type RootTabParamList = {
   home: undefined;
   categories: undefined;
   tontine: undefined;
-  transfers: undefined;
+  /** `openRecordForm` (US-047): the dashboard's "Envoyer au {pays}" shortcut jumps straight to the
+   *  new-transfer form instead of landing on the tab's default list. */
+  transfers: { openRecordForm?: boolean } | undefined;
   profile: undefined;
 };
 

@@ -4,4 +4,5 @@ export {
   MOCK_RATES_SOURCE,
   MOCK_RATES_UPDATED_AT,
   convertAmountMinor,
+  convertAmountMinorWithRate,
 } from './mockExchangeRates';
