@@ -673,3 +673,108 @@ describe('AddExpenseForm — attribution à un membre (US-018)', () => {
     expect(saved.memberId).toBe(youssef.id);
   });
 });
+
+/** US-019: choosing the operation's date. */
+describe('AddExpenseForm — choix de la date (US-019)', () => {
+  function isoDate(date: Date): string {
+    return date.toISOString().slice(0, 10);
+  }
+  function todayIso(): string {
+    return isoDate(new Date());
+  }
+  /** Day 1 of the calendar month before this one, built from local date parts directly — routing
+   *  this through `Date`/`toISOString()` (UTC) can shift the day when the local offset is
+   *  positive, same trap `calendarGrid.ts` avoids by working in UTC end-to-end instead of mixing. */
+  function previousMonthIso(): string {
+    const now = new Date();
+    const year = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+    const month = now.getMonth() === 0 ? 12 : now.getMonth();
+    return `${year}-${String(month).padStart(2, '0')}-01`;
+  }
+  function tomorrowIso(): string {
+    return isoDate(new Date(Date.now() + 24 * 60 * 60 * 1000));
+  }
+
+  beforeEach(async () => {
+    mockFakeDb = createFakeDatabase().db;
+    await createCategory(mockFakeDb, { name: 'Courses', icon: 'cart', color: '#111111' });
+    await createMember(mockFakeDb, { name: 'Moi' });
+  });
+
+  it('defaults to today', async () => {
+    await renderForm();
+    await screen.findByText('Courses');
+
+    expect(screen.getByLabelText('Date').props.value).toBe(todayIso());
+  });
+
+  it('opens a picker when the date field is focused', async () => {
+    await renderForm();
+    await screen.findByText('Courses');
+
+    await fireEvent(screen.getByLabelText('Date'), 'focus');
+
+    expect(await screen.findByLabelText(todayIso())).toBeTruthy();
+  });
+
+  it('sets the date and closes the picker once a day is tapped', async () => {
+    await renderForm();
+    await screen.findByText('Courses');
+    await fireEvent(screen.getByLabelText('Date'), 'focus');
+    const pastDay = previousMonthIso();
+    // The picker opens on the current month — the target day only exists after navigating back.
+    await fireEvent.press(await screen.findByLabelText('Mois précédent'));
+
+    await fireEvent.press(await screen.findByLabelText(pastDay));
+
+    expect(screen.getByLabelText('Date').props.value).toBe(pastDay);
+    expect(screen.queryByLabelText(pastDay)).toBeNull();
+  });
+
+  it('shows a reminder when the chosen date falls in a previous month', async () => {
+    await renderForm();
+    await screen.findByText('Courses');
+    await fireEvent(screen.getByLabelText('Date'), 'focus');
+    await fireEvent.press(await screen.findByLabelText('Mois précédent'));
+
+    await fireEvent.press(await screen.findByLabelText(previousMonthIso()));
+
+    expect(await screen.findByText(/sera comptée dans/)).toBeTruthy();
+  });
+
+  it('shows no reminder for today’s date', async () => {
+    await renderForm();
+    await screen.findByText('Courses');
+
+    expect(screen.queryByText(/sera comptée dans/)).toBeNull();
+  });
+
+  it('rejects a future date typed by hand instead of picked', async () => {
+    await renderForm();
+    await screen.findByText('Courses');
+    await fireEvent.press(screen.getByText('Courses'));
+    await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '42');
+    await fireEvent.changeText(screen.getByLabelText('Date'), tomorrowIso());
+
+    await fireEvent.press(screen.getByText('Enregistrer'));
+
+    expect(await screen.findByText('La date ne peut pas être dans le futur.')).toBeTruthy();
+    expect(await listTransactions(mockFakeDb)).toHaveLength(0);
+  });
+
+  it('counts a past-month operation in that month once saved', async () => {
+    const onSaved = jest.fn();
+    await renderForm(onSaved);
+    await screen.findByText('Courses');
+    await fireEvent.press(screen.getByText('Courses'));
+    await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '42');
+    const pastDay = previousMonthIso();
+    await fireEvent.changeText(screen.getByLabelText('Date'), pastDay);
+
+    await fireEvent.press(screen.getByText('Enregistrer'));
+
+    expect(onSaved).toHaveBeenCalledTimes(1);
+    const [saved] = await listTransactions(mockFakeDb);
+    expect(saved.occurredAt.slice(0, 10)).toBe(pastDay);
+  });
+});

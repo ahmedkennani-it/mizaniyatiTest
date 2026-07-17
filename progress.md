@@ -88,7 +88,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 6.8 | Saisie d'un revenu | ✅ done |
 | 6.9 | Modification et suppression | ⚠️ `done: false` — 3/4 critères, bloqué sur « membre Lecture seule » |
 | 6.10 | Attribution à un membre | ✅ done |
-| 6.11 | Choix de la date | ⏳ |
+| 6.11 | Choix de la date | ✅ done |
 
 ## Journal
 
@@ -993,6 +993,28 @@ interdiction éternelle du réseau.
   membre qui n'existait déjà plus (la sélection étant automatique dès le chargement) — le press
   était redondant avant même ce changement, seulement rendu visible maintenant.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1637/1637, 135 suites** ✅.
+
+### Itération 40 — Tâche 6.11 (Choix de la date de l'opération) ✅ — phase 6 close (hormis 6.9)
+- **`src/calendar/calendarGrid.ts` (nouveau, pur)** + **`DatePicker` (nouveau composant)** :
+  même logique que le pavé numérique (6.1) — un contrôle construit et testable plutôt qu'un
+  widget natif différent par plateforme. Le calcul du quadrillage (semaines, jours du mois,
+  positionnement du 1er sur son vrai jour de semaine) est entièrement pur et testé en isolation
+  avant même d'exister comme composant.
+- **Jours futurs désactivés dans la grille, pas seulement rejetés après coup** : même principe
+  que le bouton Enregistrer désactivé à zéro (6.1) — la réponse à « puis-je choisir ce jour ? »
+  est connue avant l'appui. La validation dans `handleSubmit` reste en filet de sécurité pour la
+  saisie manuelle au clavier physique (le champ reste éditable en parallèle du sélecteur, comme
+  `NumericKeypad`/`amountInput`).
+- **Le champ Date déclenche le sélecteur via son `onFocus` natif** plutôt qu'un état ouvert/fermé
+  géré par un `Pressable` séparé : taper le champ le focus déjà nativement, ce qui EST « je tape
+  le champ » du critère, sans dupliquer la logique de focus.
+- 🐛 **Piège de test, pas de bug produit** : le premier jet de `previousMonthIso()` (aide de test)
+  construisait un `Date` local puis appelait `.toISOString()` — sur ce fuseau (UTC+1), minuit
+  local le 1er du mois se convertit en 23h UTC la veille, décalant la date d'un jour. Corrigé en
+  construisant la chaîne ISO directement depuis les composants de date locaux, sans passer par
+  une conversion UTC — exactement le piège que `calendarGrid.ts` évite déjà en restant en UTC de
+  bout en bout plutôt que de mélanger les deux.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1665/1665, 137 suites** ✅.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

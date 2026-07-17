@@ -111,6 +111,8 @@ export const ar: TranslationSchema = {
     errorCategory: 'اختر فئة.',
     errorMember: 'اختر عضوًا.',
     errorDate: 'أدخل تاريخًا صحيحًا (سنة-شهر-يوم).',
+    errorDateFuture: 'لا يمكن أن يكون التاريخ في المستقبل.',
+    pastMonthReminder: 'سيتم احتساب هذه العملية ضمن شهر {{month}}.',
   },
   voiceCapture: {
     title: 'الإدخال الصوتي',

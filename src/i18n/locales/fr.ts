@@ -115,6 +115,8 @@ export const fr = {
     errorCategory: 'Choisissez une catégorie.',
     errorMember: 'Choisissez un membre.',
     errorDate: 'Saisissez une date valide (AAAA-MM-JJ).',
+    errorDateFuture: 'La date ne peut pas être dans le futur.',
+    pastMonthReminder: 'Cette opération sera comptée dans {{month}}.',
   },
   voiceCapture: {
     title: 'Saisie vocale',

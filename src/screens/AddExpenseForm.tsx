@@ -9,6 +9,7 @@ import {
   Card,
   CategoryChipV,
   Chip,
+  DatePicker,
   MemberChip,
   NumericKeypad,
   ScreenHeader,
@@ -37,6 +38,7 @@ import type {
   TransactionType,
 } from '../db/repositories';
 import { useLanguage } from '../i18n';
+import { formatMonthLabel } from '../i18n/dateFormat';
 import { DEFAULT_CURRENCY_CODE, formatMoney, parseAmountInput, toMajorUnits } from '../money';
 import { notificationClient, shouldSendBudgetAlert } from '../notifications';
 import { nextMonthStart } from '../recurring';
@@ -124,6 +126,7 @@ export function AddExpenseForm({
     date?: string;
   }>({});
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   // An edited transaction keeps the currency it was recorded in; a new one takes the household's.
   const currencyCode =
@@ -227,6 +230,10 @@ export function AddExpenseForm({
     }
     if (!ISO_DATE_PATTERN.test(dateInput)) {
       nextErrors.date = t('expenseForm.errorDate');
+    } else if (dateInput > todayIsoDate()) {
+      // US-019: "une date future est refusée" — the picker already disables these days, this
+      // only guards the hardware-keyboard/screen-reader fallback path that can still type one in.
+      nextErrors.date = t('expenseForm.errorDateFuture');
     }
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0 || amountMinor === null || !categoryId || !memberId) {
@@ -437,12 +444,40 @@ export function AddExpenseForm({
         </View>
       ) : null}
 
-      <TextField
-        label={t('expenseForm.dateLabel')}
-        value={dateInput}
-        onChangeText={setDateInput}
-        errorMessage={errors.date}
-      />
+      <View style={{ gap: theme.spacing.xs }}>
+        <TextField
+          label={t('expenseForm.dateLabel')}
+          value={dateInput}
+          onChangeText={setDateInput}
+          // Tapping the field focuses it natively — that's "je tape le champ Date" (US-019). It
+          // stays editable underneath so a hardware keyboard or a paste still work, same reasoning
+          // as the amount field alongside `NumericKeypad`.
+          onFocus={() => setShowDatePicker(true)}
+          errorMessage={errors.date}
+        />
+        {showDatePicker ? (
+          <Card elevated>
+            <DatePicker
+              value={ISO_DATE_PATTERN.test(dateInput) ? dateInput : todayIsoDate()}
+              maxDate={todayIsoDate()}
+              onChange={(date) => {
+                setDateInput(date);
+                setErrors((previous) => ({ ...previous, date: undefined }));
+                setShowDatePicker(false);
+              }}
+            />
+          </Card>
+        ) : null}
+        {/* US-019: a past-month date still lands in that month's totals — said here so it isn't
+            a surprise the household only discovers once they check the dashboard. */}
+        {ISO_DATE_PATTERN.test(dateInput) && dateInput.slice(0, 7) !== currentMonthKey() ? (
+          <Txt size="xs" color={theme.colors.textSecondary}>
+            {t('expenseForm.pastMonthReminder', {
+              month: formatMonthLabel(dateInput.slice(0, 7), language),
+            })}
+          </Txt>
+        ) : null}
+      </View>
 
       <TextField
         label={t('expenseForm.notePlaceholder')}

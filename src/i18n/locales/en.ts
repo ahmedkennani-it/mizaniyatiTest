@@ -111,6 +111,8 @@ export const en: TranslationSchema = {
     errorCategory: 'Choose a category.',
     errorMember: 'Choose a member.',
     errorDate: 'Enter a valid date (YYYY-MM-DD).',
+    errorDateFuture: 'The date cannot be in the future.',
+    pastMonthReminder: 'This operation will be counted in {{month}}.',
   },
   voiceCapture: {
     title: 'Voice entry',

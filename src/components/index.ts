@@ -18,6 +18,8 @@ export { CategoryChipV } from './CategoryChipV';
 export type { CategoryChipVProps } from './CategoryChipV';
 export { Chip } from './Chip';
 export type { ChipProps } from './Chip';
+export { DatePicker } from './DatePicker';
+export type { DatePickerProps } from './DatePicker';
 export { DonutBreakdown } from './DonutBreakdown';
 export type { DonutBreakdownProps, DonutSegment } from './DonutBreakdown';
 export { GoalCard } from './GoalCard';
