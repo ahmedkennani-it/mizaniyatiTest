@@ -79,7 +79,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | Tâche | Titre | Statut |
 | --- | --- | --- |
 | 6.1 | Saisie rapide au pavé numérique | ✅ done |
-| 6.2 | Sélection de catégorie par chips | ⏳ |
+| 6.2 | Sélection de catégorie par chips | ✅ done |
 | 6.3 | Capture audio et état d'écoute (Pro) | ⏳ |
 | 6.4 | Transcription vocale multilingue (Pro) | ⏳ |
 | 6.5 | Extraction du montant depuis la dictée (Pro) | ⏳ |
@@ -772,6 +772,20 @@ interdiction éternelle du réseau.
   transforme pas pour Jest (Metro, si). Le module n'est donc pas exercé par la suite ;
   `typecheck` valide ses imports et l'export réel prouve son chargement.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1486/1486, 125 suites** ✅.
+
+### Itération 31 — Tâche 6.2 (Sélection de catégorie par chips) ✅
+- Le code de cette tâche existait déjà dans l'arbre (chips `CategoryChipV` triées par
+  `rankCategoriesByFrequency`, sélection unique, action « Plus »), livré et testé dans le
+  commit précédent mais **jamais marqué `done` ni journalisé** — écart de process plutôt
+  que de code. Les 4 critères fonctionnels d'US-017 sont couverts par
+  `AddExpenseForm.test.tsx` (« chips de catégories (US-017) ») : ordre par usage sur 30
+  jours, sélection exclusive, apparition de « Plus » seulement si la liste rapide ne
+  contient pas déjà tout, et retour à la bande une fois un choix fait dans la liste
+  complète.
+- 🧹 Nettoyage au passage : un fichier `.swp` (résidu d'édition Vim) avait été committé
+  par erreur dans `src/components/` — supprimé, et `*.swp`/`*.swo`/`*.swn` ajoutés au
+  `.gitignore` pour empêcher la récidive.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1502/1502, 126 suites** ✅.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 
