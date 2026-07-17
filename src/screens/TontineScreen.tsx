@@ -27,6 +27,7 @@ import {
 import type { TontineGroup, TontineMember, TontinePayment, TontineRound } from '../db/repositories';
 import { useEntitlements } from '../entitlements';
 import { useLanguage } from '../i18n';
+import { formatMonthLabel } from '../i18n/dateFormat';
 import { formatMoney } from '../money';
 import { useTheme } from '../theme';
 import { computeRoundStatus, findCurrentRound, findMyRound, monthsUntil } from '../tontine';
@@ -140,6 +141,10 @@ export function TontineScreen() {
 
       <AlertBanner tone="info" icon="shield-check" message={t('tontineScreen.disclaimer')} />
 
+      <Txt size="sm" color={theme.colors.textSecondary}>
+        {t('tontineScreen.memberCountLabel', { count: groupMembers.length })}
+      </Txt>
+
       {roundStatus ? (
         <Card elevated style={{ gap: theme.spacing.sm }}>
           <View
@@ -158,9 +163,10 @@ export function TontineScreen() {
             />
           </View>
           <Txt weight="bold" size="sm">
-            {t('tontineScreen.roundLabel', {
+            {t('tontineScreen.roundLabelWithMonth', {
               current: roundStatus.round.roundNumber,
               total: groupRounds.length,
+              month: formatMonthLabel(roundStatus.round.month, language),
             })}
           </Txt>
           <Txt size="sm">
@@ -210,7 +216,7 @@ export function TontineScreen() {
             {myMonthsUntil > 0
               ? t('tontineScreen.myRoundUpcoming', {
                   round: myRound.roundNumber,
-                  month: myRound.month,
+                  month: formatMonthLabel(myRound.month, language),
                   amount: potLabel,
                 })
               : myMonthsUntil === 0
@@ -220,7 +226,7 @@ export function TontineScreen() {
                   })
                 : t('tontineScreen.myRoundPast', {
                     round: myRound.roundNumber,
-                    month: myRound.month,
+                    month: formatMonthLabel(myRound.month, language),
                   })}
           </Txt>
         ) : (
@@ -242,7 +248,11 @@ export function TontineScreen() {
               key={round.id}
               icon={isCurrent ? 'handshake' : 'users'}
               accent={isCurrent ? 'teal' : 'purple'}
-              title={`${t('tontineScreen.roundLabel', { current: round.roundNumber, total: groupRounds.length })} · ${round.month}`}
+              title={t('tontineScreen.roundLabelWithMonth', {
+                current: round.roundNumber,
+                total: groupRounds.length,
+                month: formatMonthLabel(round.month, language),
+              })}
               subtitle={`${beneficiary?.name ?? ''}${beneficiary?.isSelf ? t('tontineScreen.calendarMineTag') : ''}`}
             />
           );

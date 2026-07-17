@@ -330,6 +330,8 @@ export const ar: TranslationSchema = {
     emptyState: 'لا توجد دارة بعد.',
     currentRoundTitle: 'الجولة الحالية',
     roundLabel: 'الجولة {{current}} من {{total}}',
+    roundLabelWithMonth: 'الجولة {{current}} من {{total}} · {{month}}',
+    memberCountLabel: '{{count}} أعضاء',
     potLabel: 'مبلغ الجولة',
     beneficiaryLabel: 'المستفيد: {{name}}',
     paidCountLabel: '{{paid}}/{{total}} دفع',

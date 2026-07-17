@@ -20,6 +20,8 @@ import { LanguageProvider } from '../../i18n';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { ThemeProvider } from '../../theme';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
+import { formatMonthLabel } from '../../i18n/dateFormat';
+// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { createTontineGroupWithMembers } from '../../tontine';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { TontineScreen } from '../TontineScreen';
@@ -84,8 +86,12 @@ describe('TontineScreen (US-024)', () => {
 
     await renderScreen(TONTINE_PLAN);
 
+    const thisMonth = new Date().toISOString().slice(0, 7);
     expect(await screen.findByText('Tontine famille')).toBeTruthy();
-    expect(await screen.findByText('Tour 1 sur 2')).toBeTruthy();
+    expect(await screen.findByText('2 membres')).toBeTruthy();
+    expect(
+      await screen.findAllByText(`Tour 1 sur 2 · ${formatMonthLabel(thisMonth, 'fr')}`),
+    ).not.toHaveLength(0);
     expect(await screen.findByText(/Bénéficiaire : Youssef/)).toBeTruthy();
     expect(await screen.findByText(/C'est ton tour ce mois-ci/)).toBeTruthy();
   });

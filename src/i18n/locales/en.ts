@@ -332,6 +332,8 @@ export const en: TranslationSchema = {
     emptyState: 'No tontine yet.',
     currentRoundTitle: 'Current round',
     roundLabel: 'Round {{current}} of {{total}}',
+    roundLabelWithMonth: 'Round {{current}} of {{total}} · {{month}}',
+    memberCountLabel: '{{count}} members',
     potLabel: 'Round pot',
     beneficiaryLabel: 'Beneficiary: {{name}}',
     paidCountLabel: '{{paid}}/{{total}} paid',

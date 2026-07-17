@@ -337,6 +337,8 @@ export const fr = {
     emptyState: 'Aucune tontine pour le moment.',
     currentRoundTitle: 'Tour courant',
     roundLabel: 'Tour {{current}} sur {{total}}',
+    roundLabelWithMonth: 'Tour {{current}} sur {{total}} · {{month}}',
+    memberCountLabel: '{{count}} membres',
     potLabel: 'Cagnotte du tour',
     beneficiaryLabel: 'Bénéficiaire : {{name}}',
     paidCountLabel: '{{paid}}/{{total}} payé',

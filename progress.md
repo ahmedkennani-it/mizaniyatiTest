@@ -111,6 +111,16 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 8.3 | Détail d'un objectif avec versement suggéré | ✅ done |
 | 8.4 | Versements sur un objectif et historique | ✅ done |
 
+## État des tâches Phase 9 (Tontine / daret) — 1/5
+
+| Tâche | Titre | Statut |
+| --- | --- | --- |
+| 9.1 | Vue d'ensemble d'une tontine (daret) | ✅ done |
+| 9.2 | Création et paramétrage d'une tontine | ⬜ à faire |
+| 9.3 | Mise en avant de mon tour | ⬜ à faire |
+| 9.4 | Suivi des paiements du tour en cours | ⬜ à faire |
+| 9.5 | Calendrier des tours | ⬜ à faire |
+
 ## Journal
 
 ### Itération 1 — Tâche 1.1 (Scaffold Expo + TypeScript) ✅
@@ -1135,6 +1145,31 @@ interdiction éternelle du réseau.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1690/1690, 138 suites** ✅.
 - Aucune violation des garde-fous : toujours aucune API bancaire, toutes les valeurs passent par
   `formatMoney`/i18n, aucune chaîne en dur ajoutée.
+
+### Itération 43 — Tâche 9.1 (Vue d'ensemble d'une tontine) ✅ — phase 9 amorcée
+
+- **Audit préalable** : `TontineScreen` existait déjà en quasi-totalité (US-024, itérations
+  antérieures) — cagnotte, tour courant, mon tour, calendrier, rappel, upsell Pro, état vide.
+  Deux écarts réels avec les critères d'acceptation de la 9.1 :
+  1. **Nombre de membres jamais affiché** : ajouté sous l'en-tête (`memberCountLabel`,
+     nouvelle clé), visible dès qu'un groupe existe — c'est une propriété du groupe, pas du
+     tour courant, donc affichée indépendamment de `roundStatus`.
+  2. **Le libellé « Tour X sur N » n'incluait jamais le mois**, alors que le critère écrit
+     « Tour X sur N - {mois} » noir sur blanc. Nouvelle clé `roundLabelWithMonth` (ar/fr/en),
+     utilisée dans la carte du tour courant **et** dans le calendrier (qui, avant, concaténait
+     le mois brut `round.month`, ex. `2026-08`, plutôt que de le formater).
+- 🐛 **Trouvé au passage, corrigé** : `myRoundUpcoming`/`myRoundPast` interpolaient aussi
+  `round.month` en brut (`YYYY-MM`) directement dans le texte visible — violation discrète de
+  la règle « tout format passe par le helper centralisé ». Les deux passent maintenant par
+  `formatMonthLabel(month, language)`, comme le reste de l'app (`dateFormat.ts`, réutilisé
+  depuis la 6.11/7.x).
+- Piège de test : la carte du tour courant et la ligne du calendrier affichent désormais **le
+  même texte** pour le tour en cours (`Tour 1 sur 2 · juillet 2026`) → `findByText` remontait
+  « multiple elements ». Remplacé par `findAllByText(...).not.toHaveLength(0)`, dans l'esprit
+  du garde-fou déjà posé en 5.3 pour un problème de duplication de texte similaire.
+- ⚠️ **Vérification navigateur LTR/RTL non effectuée** (blocage connu, `dev-browser`
+  indisponible dans cet environnement — cf. section notes en bas de fichier).
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1690/1690, 138 suites** ✅.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 
