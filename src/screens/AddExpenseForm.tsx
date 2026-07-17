@@ -76,8 +76,9 @@ export interface AddExpenseFormProps {
    *  editing, since editing closes straight back without a confirmation screen. */
   onSaved: (created?: Transaction) => void;
   onCancel: () => void;
-  /** Required when `transaction` is set — called after a successful delete. */
-  onDeleted?: () => void;
+  /** Required when `transaction` is set — called with the now-deleted transaction, so the caller
+   *  can offer to restore it (US-024's 5s "Annuler" window). */
+  onDeleted?: (deleted: Transaction) => void;
 }
 
 export function AddExpenseForm({
@@ -282,7 +283,7 @@ export function AddExpenseForm({
       return;
     }
     await deleteTransaction(getDatabase(), transaction.id);
-    onDeleted?.();
+    onDeleted?.(transaction);
   }
 
   const title = isEditing

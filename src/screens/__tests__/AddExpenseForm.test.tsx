@@ -378,6 +378,8 @@ describe('AddExpenseForm — édition (US-016)', () => {
     await fireEvent.press(await screen.findByText('Oui, supprimer'));
 
     expect(onDeleted).toHaveBeenCalledTimes(1);
+    // US-024: the caller gets the deleted transaction back, so it can offer to restore it.
+    expect(onDeleted).toHaveBeenCalledWith(expect.objectContaining({ id: existing.id }));
     expect(await listTransactions(mockFakeDb)).toHaveLength(0);
   });
 });

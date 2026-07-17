@@ -86,7 +86,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 6.6 | Déduction catégorie/libellé et confirmation (Pro) | ✅ done |
 | 6.7 | Confirmation d'ajout | ✅ done |
 | 6.8 | Saisie d'un revenu | ✅ done |
-| 6.9 | Modification et suppression | ⏳ |
+| 6.9 | Modification et suppression | ⚠️ `done: false` — 3/4 critères, bloqué sur « membre Lecture seule » |
 | 6.10 | Attribution à un membre | ⏳ |
 | 6.11 | Choix de la date | ⏳ |
 
@@ -943,6 +943,36 @@ interdiction éternelle du réseau.
 - Mode `prompt` choisi (pas `auto`) : le critère dit « proposé », pas « ajouté automatiquement » —
   le foyer confirme chaque mois plutôt que de voir une transaction apparaître seule.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1624/1624, 134 suites** ✅.
+
+### Itération 38 — Tâche 6.9 (Modification/suppression) ⚠️ laissée `done: false`
+- **3 critères sur 4** livrés :
+  1. Modifier montant/catégorie/membre/date/libellé — déjà couvert par `AddExpenseForm` en mode
+     édition (tâches antérieures), rien à ajouter.
+  2. **Nouveau : fenêtre « Annuler » de 5 s après suppression.** La confirmation avant suppression
+     existait déjà ; ce qui manquait est la seconde moitié du critère. Choix : suppression
+     immédiate (pas de suppression différée) + `UndoBanner` (nouveau composant) flottant pendant
+     5 s qui **recrée** la transaction si on appuie sur Annuler. Une transaction différée aurait
+     laissé l'opération visible pendant 5 s de plus après un « supprimer » explicite — contraire à
+     ce qu'on vient de demander. Le minuteur vit dans `ExpenseEntryProvider` (pas dans
+     `AddExpenseForm`, qui se ferme avant que les 5 s ne s'écoulent) pour survivre à la fermeture
+     de la feuille de saisie.
+  3. Solde/catégories/anneau recalculés — déjà vrai pour le dashboard (`dataVersion`). 🐛
+     **`CategoriesScreen` ne s'abonnait pas à `dataVersion`** : modifier la catégorie d'une
+     opération depuis `AddExpenseForm` pendant que l'onglet Catégories restait monté ne
+     rafraîchissait ses totaux qu'au remount suivant. Corrigé au passage — c'est littéralement ce
+     que ce critère demande.
+- **Critère 4 laissé `done: false` — « membre en Lecture seule » n'a rien à vérifier contre** :
+  le rôle `viewer` existe déjà dans le modèle de données et l'UI d'attribution (`MemberForm`,
+  `MembersScreen`), et un helper `canEdit(role)` existe déjà dans `src/household/` — mais
+  **inutilisé nulle part**, et pour cause : rien dans l'app n'identifie « quel membre du foyer
+  utilise ce téléphone en ce moment ». Cette app est mono-appareil, sans session ni compte
+  partagé (`docs` : le rôle « n'a de portée réelle qu'une fois un compte cloud partagé
+  disponible, US-039/US-040 »). Inventer un sélecteur « qui es-tu ? » ici créerait une fausse
+  notion de contrôle d'accès qui ne protégerait rien — la tâche **13.4 « Rôles et permissions des
+  membres »** (US-052, plan Pro, encore `done: false`) est explicitement celle qui doit définir
+  et faire respecter cette distinction, une fois l'invitation multi-appareil en place. Documenté
+  ici plutôt que masqué ; repris quand la 13.4 (ou ce qu'elle requiert) arrivera.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1630/1630, 135 suites** ✅.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

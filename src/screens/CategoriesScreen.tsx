@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { CategoryForm } from './CategoryForm';
+import { useExpenseEntry } from './ExpenseEntryProvider';
 import { computeCategoryBudgetStatus } from '../categories';
 import { categoryAccent, categoryIconName } from '../categories/categoryVisual';
 import {
@@ -33,6 +34,7 @@ export function CategoriesScreen() {
   const { theme } = useTheme();
   const { language } = useLanguage();
   const entitlements = useEntitlements();
+  const { dataVersion } = useExpenseEntry();
 
   const [view, setView] = useState<'list' | 'form'>('list');
   const [categories, setCategories] = useState<Category[]>([]);
@@ -47,9 +49,11 @@ export function CategoriesScreen() {
     listCategoryBudgets(db).then(setBudgets);
   }, []);
 
+  // US-024: an edit/delete from the entry form bumps `dataVersion` — this screen's own totals
+  // (budget status, over-cap banner) must reflect it without waiting for a remount.
   useEffect(() => {
     refresh();
-  }, [refresh]);
+  }, [refresh, dataVersion]);
 
   const num = useCallback(
     (minor: number) =>

@@ -110,6 +110,7 @@ export const fr = {
     deleteConfirmMessage: 'Supprimer définitivement cette opération ?',
     deleteConfirmYes: 'Oui, supprimer',
     deleteConfirmCancel: 'Ne pas supprimer',
+    deletedUndoMessage: 'Opération supprimée.',
     errorAmount: 'Saisissez un montant valide, supérieur à zéro.',
     errorCategory: 'Choisissez une catégorie.',
     errorMember: 'Choisissez un membre.',

@@ -1,16 +1,27 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { AddExpenseForm } from './AddExpenseForm';
 import type { AddExpenseFormPrefill } from './AddExpenseForm';
 import { ExpenseConfirmation } from './ExpenseConfirmation';
 import type { ExpenseConfirmationOverBudget } from './ExpenseConfirmation';
 import { VoiceEntrySheet } from './VoiceEntrySheet';
+import { UndoBanner } from '../components';
 import { computeCategoryBudgetStatus } from '../categories';
 import { getDatabase } from '../db/client';
-import { listCategories, listCategoryBudgets, listMembers, listTransactions } from '../db/repositories';
+import {
+  createTransaction,
+  listCategories,
+  listCategoryBudgets,
+  listMembers,
+  listTransactions,
+} from '../db/repositories';
 import type { Transaction } from '../db/repositories';
 import { computeMonthlyBalance } from '../transactions';
+
+/** US-024: how long "Annuler" stays offered after a deletion. */
+const UNDO_DELETE_WINDOW_MS = 5000;
 
 interface ExpenseEntryContextValue {
   /** Opens the entry sheet — pass a transaction to edit it, omit to add a new one. */
@@ -46,12 +57,23 @@ interface SavedSummary {
 }
 
 export function ExpenseEntryProvider({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<Mode>('closed');
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [prefill, setPrefill] = useState<AddExpenseFormPrefill | undefined>(undefined);
   const [remainingBalanceMinor, setRemainingBalanceMinor] = useState(0);
   const [savedSummary, setSavedSummary] = useState<SavedSummary | null>(null);
   const [dataVersion, setDataVersion] = useState(0);
+  const [pendingUndo, setPendingUndo] = useState<Transaction | null>(null);
+  const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearUndoTimer = useCallback(() => {
+    if (undoTimerRef.current) {
+      clearTimeout(undoTimerRef.current);
+      undoTimerRef.current = null;
+    }
+  }, []);
+  useEffect(() => clearUndoTimer, [clearUndoTimer]);
 
   const openEntry = useCallback((transaction?: Transaction) => {
     setEditing(transaction ?? null);
@@ -105,6 +127,40 @@ export function ExpenseEntryProvider({ children }: { children: React.ReactNode }
     setMode('confirmation');
   }, []);
 
+  /** US-024: the deletion already happened — this only offers 5s to bring it back. */
+  const handleDeleted = useCallback(
+    (deleted: Transaction) => {
+      setDataVersion((v) => v + 1);
+      close();
+      clearUndoTimer();
+      setPendingUndo(deleted);
+      undoTimerRef.current = setTimeout(() => {
+        setPendingUndo(null);
+        undoTimerRef.current = null;
+      }, UNDO_DELETE_WINDOW_MS);
+    },
+    [close, clearUndoTimer],
+  );
+
+  const handleUndoDelete = useCallback(async () => {
+    if (!pendingUndo) {
+      return;
+    }
+    clearUndoTimer();
+    const restored = pendingUndo;
+    setPendingUndo(null);
+    await createTransaction(getDatabase(), {
+      type: restored.type,
+      amountMinor: restored.amountMinor,
+      currencyCode: restored.currencyCode,
+      categoryId: restored.categoryId,
+      memberId: restored.memberId,
+      occurredAt: restored.occurredAt,
+      note: restored.note ?? undefined,
+    });
+    setDataVersion((v) => v + 1);
+  }, [pendingUndo, clearUndoTimer]);
+
   const value = useMemo<ExpenseEntryContextValue>(
     () => ({ openEntry, openVoiceEntry, dataVersion }),
     [openEntry, openVoiceEntry, dataVersion],
@@ -129,10 +185,7 @@ export function ExpenseEntryProvider({ children }: { children: React.ReactNode }
                   }
                 }}
                 onCancel={close}
-                onDeleted={() => {
-                  setDataVersion((v) => v + 1);
-                  close();
-                }}
+                onDeleted={handleDeleted}
               />
             ) : mode === 'voice' ? (
               <VoiceEntrySheet
@@ -167,6 +220,15 @@ export function ExpenseEntryProvider({ children }: { children: React.ReactNode }
             ) : null}
           </View>
         ) : null}
+        {pendingUndo ? (
+          <View style={styles.undoBannerWrap} pointerEvents="box-none">
+            <UndoBanner
+              message={t('expenseForm.deletedUndoMessage')}
+              actionLabel={t('expenseForm.cancel')}
+              onAction={handleUndoDelete}
+            />
+          </View>
+        ) : null}
       </View>
     </ExpenseEntryContext.Provider>
   );
@@ -183,5 +245,11 @@ export function useExpenseEntry(): ExpenseEntryContextValue {
 const styles = StyleSheet.create({
   fill: {
     flex: 1,
+  },
+  undoBannerWrap: {
+    position: 'absolute',
+    start: 16,
+    end: 16,
+    bottom: 100,
   },
 });

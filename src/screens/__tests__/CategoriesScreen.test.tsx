@@ -26,6 +26,8 @@ import { LanguageProvider } from '../../i18n';
 import { ThemeProvider } from '../../theme';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { CategoriesScreen } from '../CategoriesScreen';
+// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
+import { ExpenseEntryProvider } from '../ExpenseEntryProvider';
 
 const TWO_CATEGORY_PLAN: Plan = {
   id: 'two-category-test-plan',
@@ -39,7 +41,9 @@ function renderScreen(plan?: Plan) {
     <LanguageProvider>
       <ThemeProvider initialColorScheme="light">
         <EntitlementsProvider plan={plan}>
-          <CategoriesScreen />
+          <ExpenseEntryProvider>
+            <CategoriesScreen />
+          </ExpenseEntryProvider>
         </EntitlementsProvider>
       </ThemeProvider>
     </LanguageProvider>,

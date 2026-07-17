@@ -106,6 +106,7 @@ export const en: TranslationSchema = {
     deleteConfirmMessage: 'Permanently delete this transaction?',
     deleteConfirmYes: 'Yes, delete',
     deleteConfirmCancel: "Don't delete",
+    deletedUndoMessage: 'Transaction deleted.',
     errorAmount: 'Enter a valid amount greater than zero.',
     errorCategory: 'Choose a category.',
     errorMember: 'Choose a member.',

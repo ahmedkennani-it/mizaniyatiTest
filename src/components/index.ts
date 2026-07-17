@@ -50,6 +50,8 @@ export { TransactionRow } from './TransactionRow';
 export type { TransactionRowProps } from './TransactionRow';
 export { TrustChip } from './TrustChip';
 export type { TrustChipProps } from './TrustChip';
+export { UndoBanner } from './UndoBanner';
+export type { UndoBannerProps } from './UndoBanner';
 export { Txt } from './Txt';
 export type { TxtProps } from './Txt';
 export { VoicePromoCard } from './VoicePromoCard';

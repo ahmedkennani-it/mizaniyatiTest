@@ -106,6 +106,7 @@ export const ar: TranslationSchema = {
     deleteConfirmMessage: 'هل تريد حذف هذه العملية نهائيًا؟',
     deleteConfirmYes: 'نعم، احذف',
     deleteConfirmCancel: 'عدم الحذف',
+    deletedUndoMessage: 'تم حذف العملية.',
     errorAmount: 'أدخل مبلغًا صحيحًا أكبر من صفر.',
     errorCategory: 'اختر فئة.',
     errorMember: 'اختر عضوًا.',
