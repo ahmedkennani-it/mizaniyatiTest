@@ -8,7 +8,9 @@ import {
   Button,
   Card,
   Chip,
+  IconTile,
   ListRow,
+  Pill,
   ScreenHeader,
   SectionHeader,
   TextField,
@@ -18,10 +20,11 @@ import { getDatabase } from '../db/client';
 import {
   createZakatAssessment,
   getZakatConfig,
+  listHouseholds,
   listZakatAssessments,
   updateZakatConfig,
 } from '../db/repositories';
-import type { ZakatAssessment, ZakatConfig, ZakatNisabBasis } from '../db/repositories';
+import type { Household, ZakatAssessment, ZakatConfig, ZakatNisabBasis } from '../db/repositories';
 import { useEntitlements } from '../entitlements';
 import { useLanguage } from '../i18n';
 import { DEFAULT_CURRENCY_CODE, formatMoney, parseNonNegativeAmountInput } from '../money';
@@ -40,6 +43,7 @@ export function ZakatScreen({ onBack }: ZakatScreenProps) {
 
   const [config, setConfig] = useState<ZakatConfig | null>(null);
   const [assessments, setAssessments] = useState<ZakatAssessment[]>([]);
+  const [households, setHouseholds] = useState<Household[]>([]);
 
   const [madhhabInput, setMadhhabInput] = useState('');
   const [priceInput, setPriceInput] = useState('');
@@ -64,6 +68,7 @@ export function ZakatScreen({ onBack }: ZakatScreenProps) {
       );
     });
     listZakatAssessments(db).then(setAssessments);
+    listHouseholds(db).then(setHouseholds);
   }, []);
 
   useEffect(() => {
@@ -88,6 +93,9 @@ export function ZakatScreen({ onBack }: ZakatScreenProps) {
     return null;
   }
   const currentConfig = config;
+  // The household's own currency, not the launch market's — a France household computes its
+  // nisab and zakat in EUR, not MAD.
+  const currencyCode = households[0]?.currencyCode ?? DEFAULT_CURRENCY_CODE;
 
   async function setNisabBasis(basis: ZakatNisabBasis) {
     const updated = await updateZakatConfig(getDatabase(), { nisabBasis: basis });
@@ -104,7 +112,7 @@ export function ZakatScreen({ onBack }: ZakatScreenProps) {
   }
 
   async function handleUpdateConfig() {
-    const priceMinor = parseNonNegativeAmountInput(priceInput, DEFAULT_CURRENCY_CODE);
+    const priceMinor = parseNonNegativeAmountInput(priceInput, currencyCode);
     const updated = await updateZakatConfig(getDatabase(), {
       madhhab: madhhabInput.trim(),
       ...(currentConfig.nisabBasis === 'gold'
@@ -114,11 +122,10 @@ export function ZakatScreen({ onBack }: ZakatScreenProps) {
     setConfig(updated);
   }
 
-  const cashMinor = parseNonNegativeAmountInput(cashInput, DEFAULT_CURRENCY_CODE) ?? 0;
-  const goldSilverMinor = parseNonNegativeAmountInput(goldSilverInput, DEFAULT_CURRENCY_CODE) ?? 0;
-  const investmentsMinor =
-    parseNonNegativeAmountInput(investmentsInput, DEFAULT_CURRENCY_CODE) ?? 0;
-  const debtsMinor = parseNonNegativeAmountInput(debtsInput, DEFAULT_CURRENCY_CODE) ?? 0;
+  const cashMinor = parseNonNegativeAmountInput(cashInput, currencyCode) ?? 0;
+  const goldSilverMinor = parseNonNegativeAmountInput(goldSilverInput, currencyCode) ?? 0;
+  const investmentsMinor = parseNonNegativeAmountInput(investmentsInput, currencyCode) ?? 0;
+  const debtsMinor = parseNonNegativeAmountInput(debtsInput, currencyCode) ?? 0;
 
   const nisabMinor = computeNisabMinor(
     config.nisabBasis,
@@ -209,7 +216,7 @@ export function ZakatScreen({ onBack }: ZakatScreenProps) {
           </Txt>
         ) : (
           <Txt weight="bold" size="lg">
-            {formatMoney(nisabMinor, DEFAULT_CURRENCY_CODE, language)}
+            {formatMoney(nisabMinor, currencyCode, language)}
           </Txt>
         )}
       </Card>
@@ -248,27 +255,30 @@ export function ZakatScreen({ onBack }: ZakatScreenProps) {
         />
       </Card>
 
-      <Card elevated style={{ gap: theme.spacing.sm }}>
-        <Txt weight="semibold" size="md">
-          {t('zakatScreen.resultTitle')}
+      <Card
+        elevated
+        style={{ gap: theme.spacing.xs, alignItems: 'center', paddingVertical: theme.spacing.lg }}
+      >
+        <IconTile icon="hand-heart" accent="gold" />
+        <Txt size="sm" color={theme.colors.textSecondary}>
+          {t('zakatScreen.dueLabel')}
+        </Txt>
+        <Txt weight="extrabold" size="xxl">
+          {formatMoney(result.dueMinor, currencyCode, language)}
         </Txt>
         <Txt size="sm">
-          {t('zakatScreen.baseLabel')}:{' '}
-          {formatMoney(result.baseMinor, DEFAULT_CURRENCY_CODE, language)}
-        </Txt>
-        <Txt weight="bold" size="md">
-          {t('zakatScreen.dueLabel')}:{' '}
-          {formatMoney(result.dueMinor, DEFAULT_CURRENCY_CODE, language)}
+          {t('zakatScreen.baseLabel')}: {formatMoney(result.baseMinor, currencyCode, language)}
         </Txt>
         {nisabMinor !== null ? (
-          <Txt
-            size="sm"
-            color={result.aboveNisab ? theme.colors.primary : theme.colors.textSecondary}
-          >
-            {result.aboveNisab
-              ? t('zakatScreen.aboveNisabMessage')
-              : t('zakatScreen.belowNisabMessage')}
-          </Txt>
+          <Pill
+            label={
+              result.aboveNisab
+                ? t('zakatScreen.aboveNisabMessage')
+                : t('zakatScreen.belowNisabMessage')
+            }
+            background={result.aboveNisab ? theme.accents.gold.wash : theme.colors.surfaceAlt}
+            color={result.aboveNisab ? theme.accents.gold.ink : theme.colors.textSecondary}
+          />
         ) : null}
         <Button label={t('zakatScreen.saveButton')} onPress={handleSaveAssessment} />
       </Card>
@@ -288,7 +298,7 @@ export function ZakatScreen({ onBack }: ZakatScreenProps) {
               icon="hand-heart"
               accent="gold"
               title={assessment.createdAt.slice(0, 10)}
-              value={formatMoney(assessment.dueMinor, DEFAULT_CURRENCY_CODE, language)}
+              value={formatMoney(assessment.dueMinor, currencyCode, language)}
             />
           ))
         )}

@@ -10,7 +10,7 @@ jest.mock('../../db/client', () => ({
 }));
 
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
-import { listZakatAssessments } from '../../db/repositories';
+import { createHousehold, listZakatAssessments } from '../../db/repositories';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { EntitlementsProvider } from '../../entitlements';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
@@ -94,6 +94,23 @@ describe('ZakatScreen (US-025)', () => {
     await fireEvent.changeText(screen.getByLabelText('Dettes à déduire'), '500');
 
     expect(await screen.findByText(/Base zakatable: .?0,00 MAD/)).toBeTruthy();
+  });
+
+  it('computes and displays everything in the household currency, not a hardcoded default', async () => {
+    await createHousehold(mockFakeDb, { name: 'Famille Dubois', currencyCode: 'EUR' });
+    await renderScreen(jest.fn(), ZAKAT_PLAN);
+
+    await fireEvent.changeText(await screen.findByLabelText("Prix de l'or (par gramme)"), '100');
+    await fireEvent.press(screen.getByText('Mettre à jour la configuration'));
+    // Nisab = 100 * 85 = 8 500 EUR — the fr-MA formatter renders EUR with its own € symbol.
+    expect(await screen.findByText(/8.500,00 €|8 500,00 €/)).toBeTruthy();
+
+    await fireEvent.changeText(screen.getByLabelText('Liquidités & comptes'), '10000');
+    await fireEvent.changeText(screen.getByLabelText('Dettes à déduire'), '1000');
+
+    // base = 9000 EUR, due = 225 EUR — never MAD.
+    expect(await screen.findByText(/225,00 €/)).toBeTruthy();
+    expect(screen.queryByText(/MAD/)).toBeNull();
   });
 
   it('saves an assessment to history', async () => {

@@ -126,7 +126,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | Tâche | Titre | Statut |
 | --- | --- | --- |
 | 10.1 | Mode Ramadan (thème saisonnier) | ✅ done |
-| 10.2 | Calculateur de Zakat | ⬜ à faire |
+| 10.2 | Calculateur de Zakat | ✅ done |
 | 10.3 | Catégorie Zakat & dons avec plafond | ⬜ à faire |
 | 10.4 | Enregistrement et planification du don de Zakat | ⬜ à faire |
 
@@ -1385,6 +1385,35 @@ tâche réelle était de brancher `HomeScreen` sur cet état déjà persistant, 
   tests existants.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1733/1733, 140 suites** ✅. Bundle web
   vérifié via `npx expo export --platform web` (2609 modules, aucune erreur).
+- ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé).
+
+### Itération 49 — Tâche 10.2 (Calculateur de Zakat) ✅
+
+- **Audit préalable** : `ZakatScreen`, `computeNisabMinor`, `computeZakatAssessment` existaient
+  déjà et couvraient déjà 4 des 6 critères (saisie des 4 catégories d'avoirs, base en direct,
+  taux 2,5 %, statuts au-dessus/en dessous du nisab). Deux écarts réels :
+- 🐛 **Devise encore codée en dur sur tout l'écran** (`DEFAULT_CURRENCY_CODE`/MAD) : le nisab, la
+  base, le montant dû, l'historique et même l'analyse des montants saisis (`parseNonNegativeAmountInput`,
+  sensible au nombre de décimales de la devise) ignoraient la devise réelle du foyer — même classe
+  de bug déjà corrigée sur `AddExpenseForm`/`TontineGroupForm`/etc., jamais portée jusqu'ici. Un
+  foyer en France aurait vu son nisab en dirhams. Lit maintenant `households[0]?.currencyCode`.
+  Repli laissé sur le préremplissage du prix par gramme (`priceInput`, `/100` fixe) : le corriger
+  exigeait de faire dépendre `refresh` (mémoïsé à vide) de `currencyCode`, qu'il alimente lui-même
+  via `setHouseholds` — un risque réel de boucle de rendu pour un gain marginal (le préremplissage
+  d'un champ de saisie, pas un montant affiché) ; laissé tel quel plutôt que risqué.
+- 🐛 **Critère « hero » non respecté à la lettre** : le résultat (base/dû/statut) vivait dans une
+  `Card` plate au même niveau visuel que la configuration — pas de dégradé pertinent dans la
+  palette existante pour un vrai hero à la `BalanceHeroCard` (aucune notion de « progression »
+  naturelle ici, contrairement au solde du mois). Repris à l'identique du traitement déjà choisi
+  par `RamadanScreen` pour son propre budget restant (`IconTile` + montant en `size="xxl"` dans une
+  `Card` centrée) plutôt que d'inventer un nouveau dégradé — le statut passe d'un texte coloré à un
+  `Pill` (même doc-comment du composant : « tontine paid/pending status » l'anticipait déjà pour ce
+  genre de badge).
+- Tests : nouveau cas dédié à la devise du foyer (EUR, avec le piège déjà rencontré en 8.4 — le
+  formateur `fr` rend l'EUR par son symbole `€`, pas par les lettres ISO, contrairement au MAD qui
+  n'a pas de symbole étroit en CLDR fr et retombe sur les lettres). Les 7 tests existants
+  passent inchangés (le format « Base zakatable : {montant} » de la carte est resté identique).
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1734/1734, 140 suites** ✅.
 - ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé).
 
 ## Notes / blocages connus (hors périmètre Phase 1)
