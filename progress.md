@@ -85,7 +85,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 6.5 | Extraction du montant depuis la dictée (Pro) | ✅ done |
 | 6.6 | Déduction catégorie/libellé et confirmation (Pro) | ✅ done |
 | 6.7 | Confirmation d'ajout | ✅ done |
-| 6.8 | Saisie d'un revenu | ⏳ |
+| 6.8 | Saisie d'un revenu | ✅ done |
 | 6.9 | Modification et suppression | ⏳ |
 | 6.10 | Attribution à un membre | ⏳ |
 | 6.11 | Choix de la date | ⏳ |
@@ -923,6 +923,26 @@ interdiction éternelle du réseau.
   supplémentaire côté écran appelant. Une édition ne remonte toujours rien (`onSaved()` sans
   argument) puisqu'elle ferme directement sans passer par la confirmation.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1615/1615, 133 suites** ✅.
+
+### Itération 37 — Tâche 6.8 (Saisie d'un revenu) ✅
+- **Découverte en amont** : 2 des 3 critères étaient déjà satisfaits sans rien coder — le bascule
+  Dépense/Revenu existe depuis une tâche antérieure (`AddExpenseForm`), et le solde/la ligne de
+  transaction traitent déjà le revenu en positif (`computeMonthlyBalance`, `TransactionRow`). Un
+  moteur de règles récurrentes complet (`src/recurring/`, `RecurringRuleForm`,
+  `RecurringRulesScreen`) existait aussi déjà, accessible depuis Profil — mais **jamais relié** à
+  l'écran de saisie ponctuelle. C'est ce lien qui manquait, pas le moteur.
+- **Case « Rendre ce revenu mensuel »** dans `AddExpenseForm`, visible uniquement pour un nouveau
+  revenu (`type === 'income' && !isEditing`) — pas en édition, où une règle est sa propre chose
+  indépendante (gérée depuis `RecurringRulesScreen`), pas un sous-produit d'une modification.
+- 🐛 **Évité avant d'écrire le code, pas corrigé après coup** : créer la règle avec `startDate` au
+  jour de l'opération l'aurait rendue **due immédiatement** pour ce même mois — proposant un
+  doublon de l'opération qu'on vient de saisir à la main. `nextMonthStart` (nouveau, testé
+  isolément avec le passage d'année en décembre) démarre la règle le 1er du mois suivant, ce qui
+  correspond au texte exact du critère (« proposé le mois suivant »), sans avoir besoin de toucher
+  `lastRunDate` (que `createRecurringRule` ne permet pas de définir à la création).
+- Mode `prompt` choisi (pas `auto`) : le critère dit « proposé », pas « ajouté automatiquement » —
+  le foyer confirme chaque mois plutôt que de voir une transaction apparaître seule.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1624/1624, 134 suites** ✅.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

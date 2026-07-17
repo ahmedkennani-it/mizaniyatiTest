@@ -24,6 +24,7 @@ import {
   getNotificationSettings,
   updateCategoryBudget,
   createTransaction,
+  createRecurringRule,
   updateTransaction,
   deleteTransaction,
 } from '../db/repositories';
@@ -37,6 +38,7 @@ import type {
 import { useLanguage } from '../i18n';
 import { DEFAULT_CURRENCY_CODE, formatMoney, parseAmountInput, toMajorUnits } from '../money';
 import { notificationClient, shouldSendBudgetAlert } from '../notifications';
+import { nextMonthStart } from '../recurring';
 import { useTheme } from '../theme';
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -96,6 +98,10 @@ export function AddExpenseForm({
   const [households, setHouseholds] = useState<Household[]>([]);
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [type, setType] = useState<TransactionType>(transaction?.type ?? 'expense');
+  // US-023: only offered for a brand-new income — an edited transaction already happened, and a
+  // recurring rule is its own standing thing afterwards (`RecurringRulesScreen`), not something an
+  // edit should spawn a second one of.
+  const [markAsMonthly, setMarkAsMonthly] = useState(false);
   const [amountInput, setAmountInput] = useState(
     transaction
       ? String(toMajorUnits(transaction.amountMinor, transaction.currencyCode))
@@ -248,6 +254,22 @@ export function AddExpenseForm({
         occurredAt,
         note: trimmedNote,
       });
+      if (type === 'income' && markAsMonthly) {
+        // Starts next month, not this one: this transaction already covers the month it was
+        // entered in, so proposing it again immediately would be a duplicate, not a reminder.
+        await createRecurringRule(getDatabase(), {
+          type: 'income',
+          amountMinor,
+          currencyCode,
+          categoryId,
+          memberId,
+          frequency: 'monthly',
+          dayOfMonth: Number(dateInput.slice(8, 10)),
+          startDate: nextMonthStart(dateInput),
+          mode: 'prompt',
+          note: trimmedNote ?? null,
+        });
+      }
     }
     if (type === 'expense') {
       await maybeSendBudgetAlert(categoryId);
@@ -291,6 +313,20 @@ export function AddExpenseForm({
             onPress={() => setType('income')}
           />
         </View>
+        {type === 'income' && !isEditing ? (
+          <View style={[styles.chipRow, { gap: theme.spacing.xs, alignItems: 'center' }]}>
+            <Chip
+              label={t('expenseForm.markAsMonthly')}
+              selected={markAsMonthly}
+              onPress={() => setMarkAsMonthly((previous) => !previous)}
+            />
+            {markAsMonthly ? (
+              <Txt size="xs" color={theme.colors.textSecondary}>
+                {t('expenseForm.markAsMonthlyHint')}
+              </Txt>
+            ) : null}
+          </View>
+        ) : null}
       </View>
 
       <View style={{ gap: theme.spacing.sm }}>

@@ -5,6 +5,9 @@ import {
   createCategory,
   createMember,
   createTransaction,
+  listCategories,
+  listMembers,
+  listRecurringRules,
   listTransactions,
   setBudgetAlertsEnabled,
   updateCategoryBudget,
@@ -516,5 +519,90 @@ describe('AddExpenseForm — pré-remplissage depuis la dictée vocale (US-021a)
     const [saved] = await listTransactions(mockFakeDb);
     expect(saved.amountMinor).toBe(4200);
     expect(saved.note).toBe('Quarante-deux dirhams de café');
+  });
+});
+
+/** US-023: recording income, and optionally turning it into a monthly recurring proposal. */
+describe('AddExpenseForm — revenu mensuel (US-023)', () => {
+  beforeEach(async () => {
+    mockFakeDb = createFakeDatabase().db;
+    await createCategory(mockFakeDb, { name: 'Salaire', icon: 'receipt', color: '#111111' });
+    await createMember(mockFakeDb, { name: 'Moi' });
+  });
+
+  it('does not offer "rendre mensuel" for an expense', async () => {
+    await renderForm();
+    await screen.findByText('Salaire');
+
+    expect(screen.queryByText('Rendre ce revenu mensuel')).toBeNull();
+  });
+
+  it('offers "rendre mensuel" once Revenu is selected, off by default', async () => {
+    await renderForm();
+    await screen.findByText('Salaire');
+
+    await fireEvent.press(screen.getByText('Revenu'));
+
+    const toggle = await screen.findByText('Rendre ce revenu mensuel');
+    expect(toggle).toBeTruthy();
+    expect(screen.queryByText(/proposé automatiquement/)).toBeNull();
+  });
+
+  it('saves a plain income with no recurring rule when left unchecked', async () => {
+    await renderForm();
+    await screen.findByText('Salaire');
+    await fireEvent.press(screen.getByText('Revenu'));
+    await fireEvent.press(screen.getByText('Salaire'));
+    await fireEvent.press(screen.getByText('Moi'));
+    await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '5000');
+
+    await fireEvent.press(screen.getByText('Enregistrer'));
+
+    expect(await listRecurringRules(mockFakeDb)).toHaveLength(0);
+  });
+
+  it('creates a recurring rule starting next month when checked', async () => {
+    await renderForm();
+    await screen.findByText('Salaire');
+    await fireEvent.press(screen.getByText('Revenu'));
+    await fireEvent.press(screen.getByText('Salaire'));
+    await fireEvent.press(screen.getByText('Moi'));
+    await fireEvent.changeText(screen.getByLabelText('Montant (MAD)'), '5000');
+    await fireEvent.changeText(screen.getByLabelText('Date'), '2026-07-16');
+    await fireEvent.press(await screen.findByText('Rendre ce revenu mensuel'));
+
+    await fireEvent.press(screen.getByText('Enregistrer'));
+
+    const [rule] = await listRecurringRules(mockFakeDb);
+    expect(rule).toMatchObject({
+      type: 'income',
+      amountMinor: 500000,
+      frequency: 'monthly',
+      dayOfMonth: 16,
+      startDate: '2026-08-01',
+      mode: 'prompt',
+    });
+  });
+
+  it('offers no "rendre mensuel" toggle while editing, and creates no rule on save', async () => {
+    const [salaire] = await listCategories(mockFakeDb);
+    const [moi] = await listMembers(mockFakeDb);
+    const existing = await createTransaction(mockFakeDb, {
+      type: 'income',
+      amountMinor: 500000,
+      currencyCode: 'MAD',
+      categoryId: salaire.id,
+      memberId: moi.id,
+      occurredAt: '2026-07-16T10:00:00.000Z',
+    });
+
+    await renderEditForm(existing);
+    await screen.findByText('Modifier le revenu');
+
+    expect(screen.queryByText('Rendre ce revenu mensuel')).toBeNull();
+
+    await fireEvent.press(screen.getByText('Enregistrer'));
+
+    expect(await listRecurringRules(mockFakeDb)).toHaveLength(0);
   });
 });

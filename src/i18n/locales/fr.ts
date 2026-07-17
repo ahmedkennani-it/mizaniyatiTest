@@ -91,6 +91,8 @@ export const fr = {
     typeLabel: 'Type',
     typeExpense: 'Dépense',
     typeIncome: 'Revenu',
+    markAsMonthly: 'Rendre ce revenu mensuel',
+    markAsMonthlyHint: 'Il te sera proposé automatiquement chaque mois, à confirmer.',
     amountLabel: 'Montant',
     amountLabelWithCurrency: 'Montant ({{currency}})',
     amountPlaceholder: '0.00',

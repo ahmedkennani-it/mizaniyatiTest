@@ -87,6 +87,8 @@ export const ar: TranslationSchema = {
     typeLabel: 'النوع',
     typeExpense: 'مصروف',
     typeIncome: 'دخل',
+    markAsMonthly: 'اجعل هذا الدخل شهريًا',
+    markAsMonthlyHint: 'سيُقترح عليك تلقائيًا كل شهر، للتأكيد.',
     amountLabel: 'المبلغ',
     amountLabelWithCurrency: 'المبلغ ({{currency}})',
     amountPlaceholder: '0.00',

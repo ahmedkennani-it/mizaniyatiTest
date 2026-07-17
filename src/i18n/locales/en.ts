@@ -87,6 +87,8 @@ export const en: TranslationSchema = {
     typeLabel: 'Type',
     typeExpense: 'Expense',
     typeIncome: 'Income',
+    markAsMonthly: 'Make this income monthly',
+    markAsMonthlyHint: "It'll be proposed automatically every month, to confirm.",
     amountLabel: 'Amount',
     amountLabelWithCurrency: 'Amount ({{currency}})',
     amountPlaceholder: '0.00',
