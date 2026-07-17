@@ -113,12 +113,56 @@ describe('TontineScreen (US-024)', () => {
     await renderScreen(TONTINE_PLAN);
     await screen.findByText('Tontine famille');
 
-    const markPaidButtons = await screen.findAllByText('Marquer payé');
-    await fireEvent.press(markPaidButtons[0]);
+    const pendingRows = await screen.findAllByText('En attente');
+    await fireEvent.press(pendingRows[0]);
 
     const payments = await listTontinePayments(mockFakeDb);
     expect(payments.filter((p) => p.status === 'paid')).toHaveLength(1);
     expect(await screen.findByText('1/2 payé')).toBeTruthy();
+    expect(await screen.findAllByText('Payé')).not.toHaveLength(0);
+  });
+
+  it('shows each member with an amount and a paid/pending status, and badges the beneficiary', async () => {
+    await createTontineGroupWithMembers(mockFakeDb, {
+      name: 'Tontine famille',
+      contributionPerRoundMinor: 100000,
+      currencyCode: 'MAD',
+      startMonth: new Date().toISOString().slice(0, 7),
+      memberNames: ['Youssef', 'Salma'],
+      selfIndex: 0,
+    });
+
+    await renderScreen(TONTINE_PLAN);
+    await screen.findByText('Tontine famille');
+
+    expect(await screen.findAllByText(formatMoney(100000, 'MAD', 'fr'))).toHaveLength(2);
+    expect(await screen.findByText('Bénéficiaire - reçoit ce tour')).toBeTruthy();
+    expect(await screen.findAllByText('En attente')).toHaveLength(2);
+  });
+
+  it('closes a round once every member has paid, showing it as closed', async () => {
+    await createTontineGroupWithMembers(mockFakeDb, {
+      name: 'Tontine famille',
+      contributionPerRoundMinor: 100000,
+      currencyCode: 'MAD',
+      startMonth: new Date().toISOString().slice(0, 7),
+      memberNames: ['Youssef', 'Salma'],
+      selfIndex: 0,
+    });
+
+    await renderScreen(TONTINE_PLAN);
+    await screen.findByText('Tontine famille');
+
+    expect(screen.queryByText('Clôturer le tour')).toBeNull();
+
+    const pendingRows = await screen.findAllByText('En attente');
+    await fireEvent.press(pendingRows[0]);
+    await fireEvent.press(await screen.findByText('En attente'));
+
+    await fireEvent.press(await screen.findByText('Clôturer le tour'));
+
+    expect(await screen.findByText('Tour clôturé')).toBeTruthy();
+    expect(screen.queryByText('Clôturer le tour')).toBeNull();
   });
 
   it('highlights an upcoming personal round with month, round number and amount', async () => {

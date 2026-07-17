@@ -118,7 +118,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 9.1 | Vue d'ensemble d'une tontine (daret) | ✅ done |
 | 9.2 | Création et paramétrage d'une tontine | ✅ done |
 | 9.3 | Mise en avant de mon tour | ✅ done |
-| 9.4 | Suivi des paiements du tour en cours | ⬜ à faire |
+| 9.4 | Suivi des paiements du tour en cours | ✅ done |
 | 9.5 | Calendrier des tours | ⬜ à faire |
 
 ## Journal
@@ -1249,6 +1249,47 @@ interdiction éternelle du réseau.
   `nextMonthKey`/`previousMonthKey`) plutôt que des séparateurs tapés à la main — dans l'esprit
   du garde-fou déjà posé en 1.6/8.4 sur les caractères invisibles de `formatMoney`.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1696/1696, 138 suites** ✅.
+- ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé).
+
+### Itération 46 — Tâche 9.4 (Suivi des paiements du tour en cours) ✅
+
+- **Audit préalable** : le compteur « X/N payé » et le toggle payé/en attente existaient déjà et
+  se mettaient déjà à jour immédiatement (critères 1 et 4). Trois écarts réels :
+- 🐛 **Aucun montant par membre affiché** : la ligne membre ne montrait qu'un verbe d'action
+  (« Marquer payé »/« Marquer en attente »), jamais ce que ce membre doit ce tour-ci — alors que
+  le critère 2 exige explicitement avatar + nom + **montant** + statut. Chaque ligne est
+  reconstruite (`Card` + `Pressable`, plus `ListRow` qui n'a qu'un seul slot `trailing` — pas
+  assez pour montant **et** statut **et**, sur une ligne, un badge) : `formatMoney` de la
+  cotisation par membre (`group.contributionPerRoundMinor`, pas la cagnotte totale) au-dessus
+  d'un `Pill` de statut.
+- 🐛 **Le statut affiché était un verbe d'action, pas un état** : le critère demande la paire
+  littérale « Payé / En attente ». Séparé de l'action (le tap sur la ligne bascule toujours le
+  statut, geste inchangé) : nouvelles clés `statusPaid`/`statusPending`, `markPaid`/`markPending`
+  supprimées (plus aucun appelant).
+- 🐛 **Le bénéficiaire n'était identifié que par une ligne de texte au-dessus de la liste**
+  (« Bénéficiaire : Youssef »), jamais par un badge **sur sa ligne** comme l'exige le critère 3.
+  Nouveau `Pill` doré (`theme.accents.gold`, jusqu'ici inutilisé sur cet écran — le distingue du
+  teal déjà pris par « payé » et du violet des autres membres) avec le texte exact du critère
+  (« Bénéficiaire - reçoit ce tour »).
+- **Clôture du tour (critère 5), nouvelle capacité côté données** : migration **0019**
+  (`tontine_rounds.closed_at`, nullable) + `updateTontineRound` (repository jusqu'ici
+  create/read/list seulement — le commentaire disant « jamais modifié après coup » est corrigé
+  en conséquence). Bouton « Clôturer le tour » affiché seulement quand `paidCount === totalCount`
+  et le tour n'est pas déjà clôturé ; une fois clôturé, un badge « Tour clôturé » le remplace.
+- ⚠️ **Écart assumé sur « le tour suivant devient courant »** : `findCurrentRound` reste basé sur
+  le mois calendaire (comportement déjà livré et testé en 9.1/9.3/9.5-adjacent) plutôt que sur la
+  clôture — changer cette base aurait fait diverger la définition de « courant » entre cette
+  tâche et les trois précédentes qui s'appuient dessus (9.1 « Tour X sur N - mois », 9.3
+  « à venir/en cours/passé » via `monthsUntil`), pour un cas que le modèle de données ne permet
+  d'ailleurs pas de tester : chaque membre ne bénéficie que d'**un seul** tour par cycle, donc le
+  tour suivant devient de toute façon courant dès que son mois calendaire arrive, avec ou sans
+  clôture manuelle. La clôture est donc un acte de tenue de registre honnête (« ce tour est
+  réglé ») plutôt qu'un second mécanisme d'avancement redondant avec le premier.
+- Tests : nouveau cas pour montant + statut + badge bénéficiaire sur chaque ligne, nouveau cas
+  pour la clôture (bouton absent tant que tout n'est pas payé, apparaît une fois les deux membres
+  marqués payés, disparaît au profit du badge après clôture), plus un test repository dédié à
+  `updateTontineRound` (`closedAt` nul à la création, mis à jour une fois).
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1700/1700, 138 suites** ✅.
 - ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé).
 
 ## Notes / blocages connus (hors périmètre Phase 1)

@@ -15,6 +15,7 @@ import {
   createTontineRound,
   getTontineRoundById,
   listTontineRounds,
+  updateTontineRound,
 } from '../tontineRoundRepository';
 import {
   createTontinePayment,
@@ -189,6 +190,25 @@ describe('tontineRoundRepository', () => {
     });
 
     expect((await listTontineRounds(db)).map((r) => r.id)).toEqual([first.id, second.id]);
+  });
+
+  it('starts unclosed and can be closed once (US-039)', async () => {
+    const { db } = createFakeDatabase();
+    const { group, member } = await seedGroupAndMember(db);
+    const round = await createTontineRound(db, {
+      groupId: group.id,
+      roundNumber: 1,
+      month: '2026-07',
+      beneficiaryMemberId: member.id,
+    });
+    expect(round.closedAt).toBeNull();
+
+    const closed = await updateTontineRound(db, round.id, { closedAt: '2026-07-28T00:00:00.000Z' });
+
+    expect(closed.closedAt).toBe('2026-07-28T00:00:00.000Z');
+    expect(await getTontineRoundById(db, round.id)).toMatchObject({
+      closedAt: '2026-07-28T00:00:00.000Z',
+    });
   });
 });
 

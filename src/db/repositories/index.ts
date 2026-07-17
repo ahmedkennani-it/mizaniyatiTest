@@ -56,6 +56,7 @@ export {
   createTontineRound,
   getTontineRoundById,
   listTontineRounds,
+  updateTontineRound,
 } from './tontineRoundRepository';
 export {
   createTontinePayment,
@@ -135,6 +136,7 @@ export type {
   NewTontineMember,
   TontineRound,
   NewTontineRound,
+  TontineRoundPatch,
   TontinePayment,
   NewTontinePayment,
   TontinePaymentPatch,

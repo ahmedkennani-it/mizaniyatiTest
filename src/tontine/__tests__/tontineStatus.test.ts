@@ -21,6 +21,7 @@ function makeRound(overrides: Partial<TontineRound> = {}): TontineRound {
     roundNumber: 1,
     month: '2026-07',
     beneficiaryMemberId: 'member-1',
+    closedAt: null,
     createdAt: '2026-07-01T00:00:00.000Z',
     updatedAt: '2026-07-01T00:00:00.000Z',
     ...overrides,

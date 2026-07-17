@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { TontineGroupForm } from './TontineGroupForm';
@@ -23,6 +23,7 @@ import {
   listTontineRounds,
   updateTontineGroup,
   updateTontinePayment,
+  updateTontineRound,
 } from '../db/repositories';
 import type { TontineGroup, TontineMember, TontinePayment, TontineRound } from '../db/repositories';
 import { useEntitlements } from '../entitlements';
@@ -101,6 +102,11 @@ export function TontineScreen() {
   async function toggleReminder() {
     if (!group) return;
     await updateTontineGroup(getDatabase(), group.id, { reminderEnabled: !group.reminderEnabled });
+    refresh();
+  }
+
+  async function closeRound(roundId: string) {
+    await updateTontineRound(getDatabase(), roundId, { closedAt: new Date().toISOString() });
     refresh();
   }
 
@@ -221,31 +227,63 @@ export function TontineScreen() {
           <View style={{ gap: theme.spacing.sm, marginTop: theme.spacing.xs }}>
             {roundStatus.memberStatuses.map(({ member, payment }) => {
               const isPaid = payment?.status === 'paid';
+              const isBeneficiary = member.id === roundStatus.round.beneficiaryMemberId;
               return (
-                <ListRow
+                <Pressable
                   key={member.id}
-                  leading={
+                  accessibilityRole="button"
+                  onPress={() => payment && togglePayment(payment)}
+                >
+                  <Card
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}
+                  >
                     <Avatar
                       name={member.name}
                       size={38}
                       accent={member.isSelf ? 'teal' : 'purple'}
                     />
-                  }
-                  title={`${member.name}${member.isSelf ? t('tontineScreen.calendarMineTag') : ''}`}
-                  trailing={
-                    <Txt
-                      weight="bold"
-                      size="sm"
-                      color={isPaid ? theme.colors.success : theme.colors.primary}
-                    >
-                      {isPaid ? t('tontineScreen.markPending') : t('tontineScreen.markPaid')}
-                    </Txt>
-                  }
-                  onPress={() => payment && togglePayment(payment)}
-                />
+                    <View style={{ flex: 1, gap: theme.spacing.xs }}>
+                      <Txt weight="semibold" size="sm">
+                        {`${member.name}${member.isSelf ? t('tontineScreen.calendarMineTag') : ''}`}
+                      </Txt>
+                      {isBeneficiary ? (
+                        <Pill
+                          label={t('tontineScreen.beneficiaryBadge')}
+                          background={theme.accents.gold.wash}
+                          color={theme.accents.gold.ink}
+                        />
+                      ) : null}
+                    </View>
+                    <View style={{ alignItems: 'flex-end', gap: theme.spacing.xs }}>
+                      <Txt size="sm">
+                        {formatMoney(group.contributionPerRoundMinor, group.currencyCode, language)}
+                      </Txt>
+                      <Pill
+                        label={
+                          isPaid ? t('tontineScreen.statusPaid') : t('tontineScreen.statusPending')
+                        }
+                        background={isPaid ? theme.accents.teal.wash : theme.colors.surfaceAlt}
+                        color={isPaid ? theme.accents.teal.ink : theme.colors.textSecondary}
+                      />
+                    </View>
+                  </Card>
+                </Pressable>
               );
             })}
           </View>
+
+          {roundStatus.round.closedAt ? (
+            <Pill
+              label={t('tontineScreen.roundClosedLabel')}
+              background={theme.accents.teal.wash}
+              color={theme.accents.teal.ink}
+            />
+          ) : roundStatus.paidCount === roundStatus.totalCount ? (
+            <Button
+              label={t('tontineScreen.closeRoundButton')}
+              onPress={() => closeRound(roundStatus.round.id)}
+            />
+          ) : null}
         </Card>
       ) : null}
 

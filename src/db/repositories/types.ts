@@ -308,7 +308,12 @@ export interface NewTontineMember {
   isSelf?: boolean;
 }
 
-/** One payout round of a `TontineGroup` — generated once at group creation, never edited after. */
+/**
+ * One payout round of a `TontineGroup` — generated once at group creation and never edited,
+ * except for `closedAt`: set once the organizer explicitly closes the round after every member
+ * has paid (US-039). Closure is bookkeeping only — it never changes which round is "current"
+ * (`findCurrentRound` stays month-based).
+ */
 export interface TontineRound {
   id: string;
   groupId: string;
@@ -316,6 +321,8 @@ export interface TontineRound {
   /** ISO `YYYY-MM`. */
   month: string;
   beneficiaryMemberId: string;
+  /** ISO timestamp once the organizer closes the round, `null` while still open. */
+  closedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -325,6 +332,10 @@ export interface NewTontineRound {
   roundNumber: number;
   month: string;
   beneficiaryMemberId: string;
+}
+
+export interface TontineRoundPatch {
+  closedAt?: string | null;
 }
 
 export type TontinePaymentStatus = 'paid' | 'pending';

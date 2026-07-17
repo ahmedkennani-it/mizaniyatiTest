@@ -17,6 +17,7 @@ import { householdDebtTransferMigration } from './0015_household_debt_transfer';
 import { privacyAcceptanceMigration } from './0016_privacy_acceptance';
 import { voicePromoMigration } from './0017_voice_promo';
 import { micPermissionExplainerMigration } from './0018_mic_permission_explainer';
+import { tontineRoundClosureMigration } from './0019_tontine_round_closure';
 
 /**
  * Ordered registry of schema migrations. Add new entries with a strictly increasing
@@ -42,4 +43,5 @@ export const migrations: Migration[] = [
   privacyAcceptanceMigration,
   voicePromoMigration,
   micPermissionExplainerMigration,
+  tontineRoundClosureMigration,
 ];
