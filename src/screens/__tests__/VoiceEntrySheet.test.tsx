@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
 import { createFakeDatabase } from '../../db/testUtils/createFakeDatabase';
@@ -38,7 +38,15 @@ jest.mock('../../voice', () => {
 });
 
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
-import { getUserSettings, saveLanguageCountry, markMicPermissionExplainerSeen } from '../../db/repositories';
+import {
+  createCategory,
+  createMember,
+  createHousehold,
+  getUserSettings,
+  listTransactions,
+  saveLanguageCountry,
+  markMicPermissionExplainerSeen,
+} from '../../db/repositories';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { EntitlementsProvider, PRO_PLAN } from '../../entitlements';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
@@ -98,12 +106,14 @@ function renderSheet(
     plan?: Plan;
     onClose?: () => void;
     onFallbackToKeyboard?: () => void;
-    onCaptured?: (prefill: { amountInput?: string; note?: string }) => void;
+    onCaptured?: (prefill: { amountInput?: string; note?: string; categoryId?: string }) => void;
+    onSavedFromReview?: () => void;
   } = {},
 ) {
   const onClose = options.onClose ?? jest.fn();
   const onFallbackToKeyboard = options.onFallbackToKeyboard ?? jest.fn();
   const onCaptured = options.onCaptured ?? jest.fn();
+  const onSavedFromReview = options.onSavedFromReview ?? jest.fn();
   render(
     <LanguageProvider>
       <ThemeProvider initialColorScheme="light">
@@ -112,12 +122,13 @@ function renderSheet(
             onClose={onClose}
             onFallbackToKeyboard={onFallbackToKeyboard}
             onCaptured={onCaptured}
+            onSavedFromReview={onSavedFromReview}
           />
         </EntitlementsProvider>
       </ThemeProvider>
     </LanguageProvider>,
   );
-  return { onClose, onFallbackToKeyboard, onCaptured };
+  return { onClose, onFallbackToKeyboard, onCaptured, onSavedFromReview };
 }
 
 async function seedSettings(seen = false) {
@@ -260,28 +271,118 @@ describe('VoiceEntrySheet (US-020a)', () => {
   });
 
   /** US-021a: the amount is extracted and handed to the keyboard, not silently discarded. */
-  it('hands off the extracted amount and transcript when the recognizer ends with an amount', async () => {
-    mockSpeechClient.getPermissionsAsync.mockResolvedValue(GRANTED);
-    await seedSettings(true);
+  /** US-021b: an amount ending the dictation goes to a review proposal, not straight to `onCaptured`. */
+  describe('review proposal (US-021b)', () => {
+    async function seedReview() {
+      await seedSettings(true);
+      await createHousehold(mockFakeDb, { name: 'Ma famille', currencyCode: 'MAD' });
+      await createCategory(mockFakeDb, { name: 'Restaurants', icon: 'utensils', color: '#EA580C' });
+      await createCategory(mockFakeDb, { name: 'Transport', icon: 'car', color: '#2563EB' });
+      await createMember(mockFakeDb, { name: 'Moi' });
+    }
 
-    const { onCaptured, onClose } = renderSheet({ plan: PRO_PLAN });
-    await screen.findByText(fr.voiceCapture.listeningLabel);
+    async function endWithTranscript(transcript: string) {
+      const resultListener = mockSpeechClient.onResult.mock.calls[0][0];
+      act(() => resultListener({ isFinal: true, results: [{ transcript, confidence: -1, segments: [] }] }));
+      const endListener = mockSpeechClient.onEnd.mock.calls[0][0];
+      act(() => endListener());
+    }
 
-    const resultListener = mockSpeechClient.onResult.mock.calls[0][0];
-    act(() =>
-      resultListener({
-        isFinal: true,
-        results: [{ transcript: 'Quarante-deux dirhams de café', confidence: -1, segments: [] }],
-      }),
-    );
-    const endListener = mockSpeechClient.onEnd.mock.calls[0][0];
-    act(() => endListener());
+    /** The category list and the auto-selection both load asynchronously after `end` fires —
+     *  wait for the suggested chip to actually be selected, not just present, before moving on. */
+    async function waitForCategorySelected(label: string) {
+      await waitFor(() => {
+        expect(screen.getByLabelText(label).props.accessibilityState.selected).toBe(true);
+      });
+    }
 
-    expect(onCaptured).toHaveBeenCalledWith({
-      amountInput: '42',
-      note: 'Quarante-deux dirhams de café',
+    it('proposes the deduced amount, label and category, marked as auto-detected', async () => {
+      mockSpeechClient.getPermissionsAsync.mockResolvedValue(GRANTED);
+      await seedReview();
+
+      const { onCaptured, onClose } = renderSheet({ plan: PRO_PLAN });
+      await screen.findByText(fr.voiceCapture.listeningLabel);
+      await endWithTranscript('Quarante-deux dirhams de café ce matin');
+
+      expect(await screen.findByText('Café')).toBeTruthy();
+      expect(screen.getByText(fr.voiceCapture.autoDetectedBadge)).toBeTruthy();
+      await waitForCategorySelected('Restaurants');
+      expect(onCaptured).not.toHaveBeenCalled();
+      expect(onClose).not.toHaveBeenCalled();
     });
-    expect(onClose).not.toHaveBeenCalled();
+
+    it('confirms the review and saves the transaction', async () => {
+      mockSpeechClient.getPermissionsAsync.mockResolvedValue(GRANTED);
+      await seedReview();
+
+      const { onSavedFromReview } = renderSheet({ plan: PRO_PLAN });
+      await screen.findByText(fr.voiceCapture.listeningLabel);
+      await endWithTranscript('Quarante-deux dirhams de café ce matin');
+      await screen.findByText('Café');
+      await waitForCategorySelected('Restaurants');
+
+      await fireEvent.press(screen.getByText(fr.voiceCapture.confirmButton));
+
+      expect(onSavedFromReview).toHaveBeenCalledTimes(1);
+      const [saved] = await listTransactions(mockFakeDb);
+      expect(saved.amountMinor).toBe(4200);
+      expect(saved.note).toBe('Café');
+    });
+
+    it('lets the household change the suggested category, clearing the auto-detected mention', async () => {
+      mockSpeechClient.getPermissionsAsync.mockResolvedValue(GRANTED);
+      await seedReview();
+
+      renderSheet({ plan: PRO_PLAN });
+      await screen.findByText(fr.voiceCapture.listeningLabel);
+      await endWithTranscript('Quarante-deux dirhams de café ce matin');
+      await screen.findByText('Café');
+      await waitForCategorySelected('Restaurants');
+
+      await fireEvent.press(screen.getByLabelText('Transport'));
+
+      expect(screen.queryByText(fr.voiceCapture.autoDetectedBadge)).toBeNull();
+      expect(screen.getByLabelText('Transport').props.accessibilityState.selected).toBe(true);
+      expect(screen.getByLabelText('Restaurants').props.accessibilityState.selected).toBe(false);
+    });
+
+    it('cancels the review without saving, handing back to the keyboard pre-filled', async () => {
+      mockSpeechClient.getPermissionsAsync.mockResolvedValue(GRANTED);
+      await seedReview();
+
+      const { onCaptured } = renderSheet({ plan: PRO_PLAN });
+      await screen.findByText(fr.voiceCapture.listeningLabel);
+      await endWithTranscript('Quarante-deux dirhams de café ce matin');
+      await screen.findByText('Café');
+      await waitForCategorySelected('Restaurants');
+
+      await fireEvent.press(screen.getByText(fr.voiceCapture.cancelButton));
+
+      expect(onCaptured).toHaveBeenCalledWith({
+        amountInput: '42',
+        note: 'Café',
+        categoryId: expect.any(String),
+      });
+      expect(await listTransactions(mockFakeDb)).toHaveLength(0);
+    });
+
+    it('does not let Confirm save without a matching category to propose', async () => {
+      mockSpeechClient.getPermissionsAsync.mockResolvedValue(GRANTED);
+      // No category has the "car" icon this time — nothing to auto-select.
+      await seedSettings(true);
+      await createHousehold(mockFakeDb, { name: 'Ma famille', currencyCode: 'MAD' });
+      await createCategory(mockFakeDb, { name: 'Restaurants', icon: 'utensils', color: '#EA580C' });
+      await createMember(mockFakeDb, { name: 'Moi' });
+
+      const { onSavedFromReview } = renderSheet({ plan: PRO_PLAN });
+      await screen.findByText(fr.voiceCapture.listeningLabel);
+      await endWithTranscript('Cinquante dirhams de taxi');
+      await screen.findByText('Taxi');
+
+      await fireEvent.press(screen.getByText(fr.voiceCapture.confirmButton));
+
+      expect(onSavedFromReview).not.toHaveBeenCalled();
+    });
   });
 
   /** US-021a: no amount detected still hands off the transcript, so nothing said is lost. */

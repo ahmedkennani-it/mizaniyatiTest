@@ -133,6 +133,9 @@ export const fr = {
     retry: 'Réessayer',
     upsellMessage: 'La saisie vocale fait partie du forfait Pro.',
     upsellCta: 'Passez à un forfait supérieur pour dicter vos dépenses.',
+    labelFieldLabel: 'Libellé',
+    autoDetectedBadge: 'Détecté automatiquement',
+    confirmButton: 'Confirmer',
   },
   confirmation: {
     title: 'Opération enregistrée !',

@@ -2,15 +2,26 @@ import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { AppScreen, Button, Card, Chip, ScreenHeader, Txt, VoiceWaveform } from '../components';
+import { AppScreen, Button, Card, CategoryChipV, Chip, ScreenHeader, Txt, VoiceWaveform } from '../components';
+import { categoryIconName } from '../categories';
 import { getDatabase } from '../db/client';
-import { getUserSettings, markMicPermissionExplainerSeen } from '../db/repositories';
+import {
+  createTransaction,
+  getUserSettings,
+  listCategories,
+  listHouseholds,
+  listMembers,
+  markMicPermissionExplainerSeen,
+} from '../db/repositories';
+import type { Category, Household } from '../db/repositories';
 import { useEntitlements } from '../entitlements';
 import { LANGUAGE_OPTIONS, useLanguage } from '../i18n';
 import type { SupportedLanguage } from '../i18n';
+import { DEFAULT_CURRENCY_CODE, formatMoney, parseAmountInput } from '../money';
 import { useTheme } from '../theme';
 import {
   createSilenceWatcher,
+  deduceCategoryAndLabel,
   extractAmountFromDictation,
   normalizeVolumeLevel,
   recognitionLocale,
@@ -24,24 +35,30 @@ export interface VoiceEntrySheetProps {
   /** Permission refused, or the household would rather type — always reachable (US-020a). */
   onFallbackToKeyboard: () => void;
   /**
-   * The recognizer stopped with *something* said (US-021a). Always fires instead of `onClose` once
-   * listening has genuinely started — with the amount pre-filled when one was understood, and
-   * always with the raw transcript as the note, so nothing the household said is lost even when no
-   * amount was found.
+   * The recognizer stopped with an amount but the household chose not to confirm the auto-detected
+   * proposal (US-021b), or stopped with no amount at all (US-021a). Either way nothing was saved —
+   * the household finishes by hand, with whatever was understood pre-filled.
    */
   onCaptured: (prefill: AddExpenseFormPrefill) => void;
+  /** The review proposal (US-021b) was confirmed and saved. */
+  onSavedFromReview: () => void | Promise<void>;
 }
 
-type Stage = 'loading' | 'explainer' | 'denied' | 'listening' | 'error';
+type Stage = 'loading' | 'explainer' | 'denied' | 'listening' | 'error' | 'review';
 
 /**
  * The voice-capture screen: contextual mic explainer on first-ever use (US-020a), then the
  * permission prompt, then a listening state with a sound-reactive waveform that auto-stops after
- * 5s of silence, showing the live transcript as it comes in (US-020b). Once the recognizer stops,
- * the amount is extracted from the transcript (US-021a) and handed off to the keyboard form to
- * finish — category/member assignment and confirmation are built on top of this in US-021b/US-012.
+ * 5s of silence, showing the live transcript as it comes in (US-020b). Once the recognizer stops
+ * with an amount, the label/category are deduced from the transcript (US-021b) and offered for a
+ * one-tap confirmation; with no amount, it hands off to the keyboard instead (US-021a).
  */
-export function VoiceEntrySheet({ onClose, onFallbackToKeyboard, onCaptured }: VoiceEntrySheetProps) {
+export function VoiceEntrySheet({
+  onClose,
+  onFallbackToKeyboard,
+  onCaptured,
+  onSavedFromReview,
+}: VoiceEntrySheetProps) {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const { language } = useLanguage();
@@ -56,6 +73,15 @@ export function VoiceEntrySheet({ onClose, onFallbackToKeyboard, onCaptured }: V
   // result, so `transcript` (state) can't be a dependency — this ref is what lets it read the
   // latest value anyway.
   const transcriptRef = useRef('');
+
+  const [reviewCategories, setReviewCategories] = useState<Category[]>([]);
+  const [reviewHouseholds, setReviewHouseholds] = useState<Household[]>([]);
+  const [capturedAmountInput, setCapturedAmountInput] = useState('');
+  const [capturedNote, setCapturedNote] = useState('');
+  const [deducedCategoryIcon, setDeducedCategoryIcon] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [categoryAutoDetected, setCategoryAutoDetected] = useState(false);
 
   const canUseVoice = entitlements.can('voice');
 
@@ -115,10 +141,21 @@ export function VoiceEntrySheet({ onClose, onFallbackToKeyboard, onCaptured }: V
       watcher.stop();
       const finalTranscript = transcriptRef.current;
       const amount = extractAmountFromDictation(finalTranscript, recognitionLanguage);
-      onCaptured({
-        amountInput: amount !== null ? String(amount) : undefined,
-        note: finalTranscript || undefined,
-      });
+      if (amount === null) {
+        // US-021a: nothing to confirm without an amount — straight to the keyboard, whatever else
+        // was said kept as the note.
+        onCaptured({ note: finalTranscript || undefined });
+        return;
+      }
+      // US-021b: an amount was understood, so there's something worth reviewing before it saves —
+      // the label/category deduction and the category list load once the review stage mounts.
+      const deduced = deduceCategoryAndLabel(finalTranscript, recognitionLanguage);
+      setCapturedAmountInput(String(amount));
+      setCapturedNote(deduced?.label ?? finalTranscript);
+      setDeducedCategoryIcon(deduced?.categoryIcon ?? null);
+      setSelectedCategoryId(null);
+      setCategoryAutoDetected(deduced !== null);
+      setStage('review');
     });
     const unsubscribeError = speechRecognitionClient.onError(() => {
       watcher.stop();
@@ -139,6 +176,50 @@ export function VoiceEntrySheet({ onClose, onFallbackToKeyboard, onCaptured }: V
     };
     // Switching the dictation language mid-listen restarts capture with the new locale.
   }, [stage, recognitionLanguage, onCaptured]);
+
+  useEffect(() => {
+    if (stage !== 'review') {
+      return;
+    }
+    const db = getDatabase();
+    listCategories(db).then(setReviewCategories);
+    listHouseholds(db).then(setReviewHouseholds);
+    // No member picker here on purpose — assigning to a specific member is US-018's job (task
+    // 6.10), not this one's; the first member is a working default until that lands.
+    listMembers(db).then((loaded) => {
+      setSelectedMemberId((current) => current ?? loaded[0]?.id ?? null);
+    });
+  }, [stage]);
+
+  useEffect(() => {
+    if (stage !== 'review' || !deducedCategoryIcon || selectedCategoryId) {
+      return;
+    }
+    const match = reviewCategories.find((category) => category.icon === deducedCategoryIcon);
+    if (match) {
+      setSelectedCategoryId(match.id);
+    }
+  }, [stage, reviewCategories, deducedCategoryIcon, selectedCategoryId]);
+
+  const reviewCurrencyCode = reviewHouseholds[0]?.currencyCode ?? DEFAULT_CURRENCY_CODE;
+  const reviewAmountMinor = parseAmountInput(capturedAmountInput, reviewCurrencyCode);
+  const canConfirmReview = reviewAmountMinor !== null && selectedCategoryId !== null && selectedMemberId !== null;
+
+  async function handleConfirmReview() {
+    if (!canConfirmReview || reviewAmountMinor === null || !selectedCategoryId || !selectedMemberId) {
+      return;
+    }
+    await createTransaction(getDatabase(), {
+      type: 'expense',
+      amountMinor: reviewAmountMinor,
+      currencyCode: reviewCurrencyCode,
+      categoryId: selectedCategoryId,
+      memberId: selectedMemberId,
+      occurredAt: new Date().toISOString(),
+      note: capturedNote || undefined,
+    });
+    await onSavedFromReview();
+  }
 
   if (!canUseVoice) {
     return (
@@ -244,6 +325,65 @@ export function VoiceEntrySheet({ onClose, onFallbackToKeyboard, onCaptured }: V
               speechRecognitionClient.abort();
               onClose();
             }}
+          />
+        </Card>
+      ) : null}
+
+      {stage === 'review' ? (
+        <Card elevated style={{ gap: theme.spacing.md }}>
+          <Txt weight="bold" size="xl" style={{ textAlign: 'center' }}>
+            {formatMoney(reviewAmountMinor ?? 0, reviewCurrencyCode, language)}
+          </Txt>
+
+          <View style={{ gap: theme.spacing.xs }}>
+            <Txt size="sm" color={theme.colors.textSecondary}>
+              {t('voiceCapture.labelFieldLabel')}
+            </Txt>
+            <Txt size="md">{capturedNote || '—'}</Txt>
+          </View>
+
+          <View style={{ gap: theme.spacing.xs }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs }}>
+              <Txt size="sm" color={theme.colors.textSecondary}>
+                {t('expenseForm.categoryLabel')}
+              </Txt>
+              {categoryAutoDetected ? (
+                <Txt size="xs" weight="semibold" color={theme.colors.primary}>
+                  {t('voiceCapture.autoDetectedBadge')}
+                </Txt>
+              ) : null}
+            </View>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.xs }}>
+              {reviewCategories.map((category) => (
+                <CategoryChipV
+                  key={category.id}
+                  icon={categoryIconName(category.icon)}
+                  label={category.name}
+                  selected={category.id === selectedCategoryId}
+                  onPress={() => {
+                    setSelectedCategoryId(category.id);
+                    setCategoryAutoDetected(false);
+                  }}
+                />
+              ))}
+            </View>
+          </View>
+
+          <Button
+            label={t('voiceCapture.confirmButton')}
+            onPress={handleConfirmReview}
+            disabled={!canConfirmReview}
+          />
+          <Button
+            label={t('voiceCapture.cancelButton')}
+            variant="secondary"
+            onPress={() =>
+              onCaptured({
+                amountInput: capturedAmountInput || undefined,
+                note: capturedNote || undefined,
+                categoryId: selectedCategoryId ?? undefined,
+              })
+            }
           />
         </Card>
       ) : null}

@@ -127,6 +127,9 @@ export const ar: TranslationSchema = {
     retry: 'إعادة المحاولة',
     upsellMessage: 'الإدخال الصوتي جزء من الخطة الاحترافية.',
     upsellCta: 'قم بالترقية للحصول على خطة أعلى لإملاء نفقاتك.',
+    labelFieldLabel: 'الوصف',
+    autoDetectedBadge: 'اكتُشف تلقائيًا',
+    confirmButton: 'تأكيد',
   },
   confirmation: {
     title: 'تم حفظ العملية!',

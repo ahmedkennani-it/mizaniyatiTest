@@ -128,6 +128,9 @@ export const en: TranslationSchema = {
     retry: 'Retry',
     upsellMessage: 'Voice entry is part of the Pro plan.',
     upsellCta: 'Upgrade to a higher plan to dictate your expenses.',
+    labelFieldLabel: 'Label',
+    autoDetectedBadge: 'Automatically detected',
+    confirmButton: 'Confirm',
   },
   confirmation: {
     title: 'Transaction saved!',

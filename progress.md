@@ -83,7 +83,7 @@ Porte qualité au 2026-07-16 : `npm run typecheck` ✅ · `npm run lint` ✅ ·
 | 6.3 | Capture audio et état d'écoute (Pro) | ✅ done |
 | 6.4 | Transcription vocale multilingue (Pro) | ✅ done |
 | 6.5 | Extraction du montant depuis la dictée (Pro) | ✅ done |
-| 6.6 | Déduction catégorie/libellé et confirmation (Pro) | ⏳ |
+| 6.6 | Déduction catégorie/libellé et confirmation (Pro) | ✅ done |
 | 6.7 | Confirmation d'ajout | ⏳ |
 | 6.8 | Saisie d'un revenu | ⏳ |
 | 6.9 | Modification et suppression | ⏳ |
@@ -869,6 +869,39 @@ interdiction éternelle du réseau.
   L'attribution de catégorie/membre reste manuelle : la déduction automatique est la 6.6, pas
   celle-ci.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1592/1592, 132 suites** ✅.
+
+### Itération 35 — Tâche 6.6 (Déduction catégorie/libellé et confirmation) ✅
+- **Écart assumé avec le libellé du critère** : le critère cite « catégorie Repas », mais les
+  catégories par défaut de ce projet (2.x, déjà livrées et testées) s'appellent « Restaurants »,
+  pas « Repas ». Le rapprochement se fait par **icône** de catégorie (`utensils`), pas par nom —
+  ce qui est plus robuste (fonctionne quel que soit le nom que le foyer a donné/gardé à sa
+  catégorie) — donc « Repas » dans le critère est lu comme illustratif du *type* de catégorie
+  attendu, pas comme une exigence de renommer la catégorie existante. Documenté ici plutôt que
+  laissé implicite.
+- **`src/voice/dictationKeywords/{fr,en,ar}.ts` + `deduceCategoryAndLabel.ts`** : même schéma que
+  l'extraction de montant (6.5) — un lexique borné et assumé comme tel par langue (`{keyword,
+  label, categoryIcon}`), pas un dictionnaire exhaustif. Le montant, le nom de la devise et les
+  mots de temps (« ce matin ») n'ont besoin d'aucun traitement particulier pour être ignorés :
+  n'étant pas des mots-clés reconnus, ils ne sont simplement jamais candidats.
+- **Nouvel étage `review` dans `VoiceEntrySheet`** : quand l'écoute se termine avec un montant,
+  au lieu de basculer directement vers le clavier (6.5), le foyer voit maintenant la proposition
+  (montant, libellé, catégorie suggérée avec la mention « Détecté automatiquement ») avant
+  d'enregistrer. La catégorie reste modifiable (n'importe quel autre chip) — la sélectionner à la
+  main retire la mention, puisque ce n'est plus une détection. Sans montant, le comportement de la
+  6.5 (bascule directe clavier) est inchangé.
+- **Confirmer enregistre directement** (pas de passage par `AddExpenseForm`) ; **Annuler** repasse
+  par `onCaptured` — même chemin que « aucun montant détecté » de la 6.5, avec en prime la
+  catégorie choisie transmise au clavier pour ne pas la faire re-choisir. `AddExpenseForm` gagne
+  donc un `prefill.categoryId` en plus de `amountInput`/`note`.
+- **Pas de sélecteur de membre sur cet écran, volontairement** : le premier membre du foyer est
+  utilisé par défaut. L'attribution explicite à un membre est la 6.10 (US-018), pas celle-ci —
+  commenté dans le code pour que ça ne passe pas pour un oubli.
+- 🐛 **Piège de test évité, pas un bug produit** : `screen.findByText('Café')` apparaît dès l'entrée
+  dans l'étage `review`, **avant** que la liste des catégories (chargée en async) et la
+  sélection automatique n'aient fini de se résoudre. Un test qui vérifiait la sélection juste après
+  ce texte était donc en course avec l'effet — remplacé par un `waitFor` qui attend la sélection
+  elle-même, pas seulement la présence du chip.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1612/1612, 133 suites** ✅.
 
 ## Notes / blocages connus (hors périmètre Phase 1)
 

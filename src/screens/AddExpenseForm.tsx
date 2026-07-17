@@ -62,6 +62,7 @@ function currentMonthKey(): string {
 export interface AddExpenseFormPrefill {
   amountInput?: string;
   note?: string;
+  categoryId?: string;
 }
 
 export interface AddExpenseFormProps {
@@ -98,7 +99,9 @@ export function AddExpenseForm({
       ? String(toMajorUnits(transaction.amountMinor, transaction.currencyCode))
       : (prefill?.amountInput ?? ''),
   );
-  const [categoryId, setCategoryId] = useState<string | null>(transaction?.categoryId ?? null);
+  const [categoryId, setCategoryId] = useState<string | null>(
+    transaction?.categoryId ?? prefill?.categoryId ?? null,
+  );
   const [memberId, setMemberId] = useState<string | null>(transaction?.memberId ?? null);
   const [dateInput, setDateInput] = useState(
     transaction?.occurredAt.slice(0, 10) ?? todayIsoDate(),

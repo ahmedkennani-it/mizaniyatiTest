@@ -4,6 +4,8 @@ export type { SilenceWatcher } from './silenceWatcher';
 export { SILENCE_LEVEL_THRESHOLD, normalizeVolumeLevel } from './volumeLevel';
 export { recognitionLocale } from './recognitionLocale';
 export { extractAmountFromDictation } from './extractAmountFromDictation';
+export { deduceCategoryAndLabel } from './deduceCategoryAndLabel';
+export type { DeducedCategoryAndLabel } from './deduceCategoryAndLabel';
 export { speechRecognitionClient } from './speechRecognitionClient';
 export type {
   SpeechPermissionStatus,

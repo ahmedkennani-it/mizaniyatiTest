@@ -58,6 +58,15 @@ export function ExpenseEntryProvider({ children }: { children: React.ReactNode }
     setMode('closed');
   }, []);
 
+  /** Shared by the keyboard form and the voice review — a *new* expense always shows the "reste
+   *  du mois" confirmation (US-012); only an edit closes straight back. */
+  const handleNewExpenseSaved = useCallback(async () => {
+    const loaded = await listTransactions(getDatabase());
+    setDataVersion((v) => v + 1);
+    setRemainingBalanceMinor(computeMonthlyBalance(loaded, currentMonthKey()));
+    setMode('confirmation');
+  }, []);
+
   const value = useMemo<ExpenseEntryContextValue>(
     () => ({ openEntry, openVoiceEntry, dataVersion }),
     [openEntry, openVoiceEntry, dataVersion],
@@ -74,13 +83,11 @@ export function ExpenseEntryProvider({ children }: { children: React.ReactNode }
                 transaction={editing ?? undefined}
                 prefill={prefill}
                 onSaved={async () => {
-                  const loaded = await listTransactions(getDatabase());
-                  setDataVersion((v) => v + 1);
                   if (editing) {
+                    setDataVersion((v) => v + 1);
                     close();
                   } else {
-                    setRemainingBalanceMinor(computeMonthlyBalance(loaded, currentMonthKey()));
-                    setMode('confirmation');
+                    await handleNewExpenseSaved();
                   }
                 }}
                 onCancel={close}
@@ -102,6 +109,7 @@ export function ExpenseEntryProvider({ children }: { children: React.ReactNode }
                   setPrefill(captured);
                   setMode('form');
                 }}
+                onSavedFromReview={handleNewExpenseSaved}
               />
             ) : (
               <ExpenseConfirmation
