@@ -10,13 +10,13 @@ jest.mock('../../db/client', () => ({
 }));
 
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
-import '../../i18n';
-// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { createMember, removeMember } from '../../db/repositories';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { EntitlementsProvider, PRO_PLAN } from '../../entitlements';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import type { Plan } from '../../entitlements';
+// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
+import { LanguageProvider } from '../../i18n';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { SubscriptionProvider } from '../../subscriptions';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
@@ -26,13 +26,15 @@ import { MembersScreen } from '../MembersScreen';
 
 function renderScreen(onBack: () => void = jest.fn(), plan?: Plan) {
   return render(
-    <ThemeProvider initialColorScheme="light">
-      <EntitlementsProvider plan={plan}>
-        <SubscriptionProvider>
-          <MembersScreen onBack={onBack} />
-        </SubscriptionProvider>
-      </EntitlementsProvider>
-    </ThemeProvider>,
+    <LanguageProvider>
+      <ThemeProvider initialColorScheme="light">
+        <EntitlementsProvider plan={plan}>
+          <SubscriptionProvider>
+            <MembersScreen onBack={onBack} />
+          </SubscriptionProvider>
+        </EntitlementsProvider>
+      </ThemeProvider>
+    </LanguageProvider>,
   );
 }
 

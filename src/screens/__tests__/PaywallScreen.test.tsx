@@ -9,10 +9,21 @@ jest.mock('../../db/client', () => ({
   getDatabase: () => mockFakeDb,
 }));
 
+const actualPurchases: typeof import('../../purchases') = jest.requireActual('../../purchases');
+const mockPurchasePro = jest.fn<ReturnType<typeof actualPurchases.purchasePro>, Parameters<typeof actualPurchases.purchasePro>>(
+  actualPurchases.purchasePro,
+);
+jest.mock('../../purchases', () => ({
+  ...jest.requireActual('../../purchases'),
+  purchasePro: (...args: Parameters<typeof actualPurchases.purchasePro>) => mockPurchasePro(...args),
+}));
+
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
-import '../../i18n';
+import { createHousehold, getSubscription, upsertSubscription } from '../../db/repositories';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
-import { upsertSubscription } from '../../db/repositories';
+import { LanguageProvider } from '../../i18n';
+// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
+import { PurchaseCancelledError, PurchaseNetworkError } from '../../purchases';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { ThemeProvider } from '../../theme';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
@@ -25,11 +36,13 @@ function renderScreen(
   highlightKey?: React.ComponentProps<typeof PaywallScreen>['highlightKey'],
 ) {
   return render(
-    <ThemeProvider initialColorScheme="light">
-      <SubscriptionProvider>
-        <PaywallScreen onBack={onBack} highlightKey={highlightKey} />
-      </SubscriptionProvider>
-    </ThemeProvider>,
+    <LanguageProvider>
+      <ThemeProvider initialColorScheme="light">
+        <SubscriptionProvider>
+          <PaywallScreen onBack={onBack} highlightKey={highlightKey} />
+        </SubscriptionProvider>
+      </ThemeProvider>
+    </LanguageProvider>,
   );
 }
 
@@ -129,5 +142,126 @@ describe('PaywallScreen (US-029)', () => {
     await fireEvent.press(screen.getByLabelText('Retour'));
 
     expect(onBack).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('PaywallScreen — tarification et achat (US-066a/US-066b)', () => {
+  beforeEach(() => {
+    mockFakeDb = createFakeDatabase().db;
+    mockPurchasePro.mockClear();
+  });
+
+  it('shows both products with the launch market’s MAD prices and the annual discount badge', async () => {
+    await renderScreen();
+
+    expect(await screen.findByText(/39,00 MAD.*mois/)).toBeTruthy();
+    expect(await screen.findByText(/279,00 MAD.*an/)).toBeTruthy();
+    expect(await screen.findByText('-40%')).toBeTruthy();
+  });
+
+  it('pre-selects the annual product', async () => {
+    await renderScreen();
+
+    const annualOption = await screen.findByTestId('paywall-product-annual');
+    expect(annualOption.props.accessibilityState).toMatchObject({ selected: true });
+    const monthlyOption = await screen.findByTestId('paywall-product-monthly');
+    expect(monthlyOption.props.accessibilityState).toMatchObject({ selected: false });
+  });
+
+  it('lets the household switch to the monthly product', async () => {
+    await renderScreen();
+    await screen.findByTestId('paywall-product-monthly');
+
+    fireEvent.press(screen.getByTestId('paywall-product-monthly'));
+
+    expect(screen.getByTestId('paywall-product-monthly').props.accessibilityState).toMatchObject({
+      selected: true,
+    });
+    expect(screen.getByTestId('paywall-product-annual').props.accessibilityState).toMatchObject({
+      selected: false,
+    });
+  });
+
+  it('shows prices in the household’s own currency on a non-Moroccan market', async () => {
+    await createHousehold(mockFakeDb, { name: 'Famille Dubois', currencyCode: 'EUR' });
+    await renderScreen();
+
+    expect(await screen.findByText(/€.*mois/)).toBeTruthy();
+  });
+
+  it('purchases the selected product and unlocks Pro immediately', async () => {
+    await renderScreen();
+    await screen.findByText(/39,00 MAD.*mois/);
+
+    fireEvent.press(screen.getByText("S'abonner"));
+
+    expect(await screen.findByText('Vous êtes sur le forfait Pro.')).toBeTruthy();
+    const subscription = await getSubscription(mockFakeDb);
+    expect(subscription?.status).toBe('active');
+    expect(subscription?.productId).toBe('annual');
+  });
+
+  it('purchases the monthly product when it is the one selected', async () => {
+    await renderScreen();
+    await screen.findByText(/39,00 MAD.*mois/);
+    fireEvent.press(screen.getByText('Mensuel'));
+
+    fireEvent.press(screen.getByText("S'abonner"));
+
+    await screen.findByText('Vous êtes sur le forfait Pro.');
+    const subscription = await getSubscription(mockFakeDb);
+    expect(subscription?.productId).toBe('monthly');
+  });
+
+  it('hides the pricing section once the household is already Pro', async () => {
+    await upsertSubscription(mockFakeDb, { planId: 'pro', status: 'active', productId: 'annual' });
+
+    await renderScreen();
+
+    await screen.findByText('Vous êtes sur le forfait Pro.');
+    expect(screen.queryByText("S'abonner")).toBeNull();
+  });
+
+  /**
+   * US-066a's "erreurs d'achat gérées sans crash" — a real store call can be cancelled by the
+   * household or fail for lack of connection; the UI must show a message, not crash, and must not
+   * leave a partial/corrupt subscription behind.
+   */
+  it('shows a friendly message and stays on Free when the purchase is cancelled, without crashing', async () => {
+    mockPurchasePro.mockRejectedValueOnce(new PurchaseCancelledError());
+    await renderScreen();
+    await screen.findByText(/39,00 MAD.*mois/);
+
+    fireEvent.press(screen.getByText("S'abonner"));
+
+    expect(await screen.findByText("Achat annulé. Vous n'avez pas été débité.")).toBeTruthy();
+    expect(await screen.findByText('Vous êtes sur le forfait Gratuit.')).toBeTruthy();
+    expect(await getSubscription(mockFakeDb)).toBeNull();
+  });
+
+  it('shows a friendly message and stays on Free on a simulated network failure, without crashing', async () => {
+    mockPurchasePro.mockRejectedValueOnce(new PurchaseNetworkError());
+    await renderScreen();
+    await screen.findByText(/39,00 MAD.*mois/);
+
+    fireEvent.press(screen.getByText("S'abonner"));
+
+    expect(
+      await screen.findByText("Échec de l'achat, vérifiez votre connexion et réessayez."),
+    ).toBeTruthy();
+    expect(await getSubscription(mockFakeDb)).toBeNull();
+  });
+
+  it('lets a household retry successfully after a failed attempt', async () => {
+    mockPurchasePro.mockRejectedValueOnce(new PurchaseNetworkError());
+    await renderScreen();
+    await screen.findByText(/39,00 MAD.*mois/);
+    fireEvent.press(screen.getByText("S'abonner"));
+    await screen.findByText("Échec de l'achat, vérifiez votre connexion et réessayez.");
+
+    fireEvent.press(screen.getByText("S'abonner"));
+
+    expect(await screen.findByText('Vous êtes sur le forfait Pro.')).toBeTruthy();
+    expect(mockPurchasePro).toHaveBeenCalledTimes(2);
   });
 });

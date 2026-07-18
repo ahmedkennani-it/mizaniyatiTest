@@ -1970,6 +1970,38 @@ entièrement couverte.
   round-trip de `productId`).
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **2040/2040, 165 suites** ✅.
 
+### Itération 61 — Tâche 16.3 (Formules tarifaires sur le paywall) ✅
+
+- Nouveau `src/purchases/pricing.ts` : `priceFor(productId, currencyCode)` convertit le prix
+  liste MAD (39/mois, 279/an) via **la même table de taux mock** que l'écran Transferts
+  (`convertAmountMinor`), plutôt qu'une grille tarifaire séparée à maintenir en double — repli sur
+  le prix MAD si la devise n'est pas couverte, pour ne jamais afficher un prix vide.
+  `annualDiscountPercent()` calcule le badge (-40%) à partir des seuls prix MAD de base, en dehors
+  de toute devise, pour éviter que l'arrondi par devise fasse dériver le badge d'un marché à
+  l'autre.
+- `PaywallScreen` gagne une carte « Choisissez votre formule » (visible seulement hors Pro,
+  masquée dès l'achat comme le bouton d'essai) : deux options pressables (Mensuel/Annuel),
+  l'Annuel pré-sélectionné et badgé, prix formatés via `formatMoney` dans la devise du foyer
+  (`listHouseholds(db)[0]?.currencyCode`, même source que `TransfersScreen`/`ProfileScreen` — pas
+  la devise « pays d'origine » de la 15.2, qui est un concept diaspora différent). Le bouton
+  « S'abonner » appelle `purchasePro` (16.2) puis `refresh()` du contexte d'abonnement ;
+  `try/catch` affiche un `AlertBanner` distinct pour l'annulation et l'échec réseau plutôt que de
+  laisser planter l'écran — c'est ici que le critère « erreurs gérées sans crash » de la 16.2 est
+  enfin démontré bout-en-bout, comme annoncé dans le journal de l'itération précédente.
+- 🐛 **Régression détectée et corrigée avant commit** : `MembersScreen.test.tsx` (paywall atteint
+  à la limite de membres) ne fournissait pas de `LanguageProvider` — invisible tant que
+  `PaywallScreen` n'appelait pas `useLanguage()` (nécessaire ici pour `formatMoney`), révélé par ce
+  câblage, même classe de bug que le flake `RecurringRuleForm.test.tsx` de la phase 14.
+  `CategoriesScreen.test.tsx` avait déjà ce wrapper et n'a rien montré.
+- Tests : `purchases/__tests__/pricing.test.ts` (5) ; `PaywallScreen.test.tsx` (+10 : prix MAD +
+  badge, pré-sélection annuelle, bascule mensuel, devise EUR sur marché non-marocain, achat
+  annuel/mensuel qui débloque Pro immédiatement, section masquée une fois Pro, message
+  d'annulation et d'échec réseau sans plantage — mock ciblé sur `purchasePro` seul via
+  `jest.requireActual` pour garder le reste du module réel, `mockClear()` en `beforeEach` pour ne
+  pas fausser un `toHaveBeenCalledTimes` inter-tests — et une reprise réussie après échec).
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **2056/2056, 166 suites** ✅.
+- ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé).
+
 ## Notes / blocages connus (hors périmètre Phase 1)
 
 - L'arbre de travail contient des changements accumulés multi-phases non

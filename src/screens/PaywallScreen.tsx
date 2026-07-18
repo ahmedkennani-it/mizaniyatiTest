@@ -1,8 +1,21 @@
-import { View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Pressable, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { AppScreen, Button, Card, Pill, ScreenHeader, TrustChip, Txt } from '../components';
+import { AlertBanner, AppScreen, Button, Card, Pill, ScreenHeader, TrustChip, Txt } from '../components';
+import { getDatabase } from '../db/client';
+import { listHouseholds } from '../db/repositories';
+import type { Household } from '../db/repositories';
+import { useLanguage } from '../i18n';
+import { formatMoney, DEFAULT_CURRENCY_CODE } from '../money';
 import { FREE_PLAN, PRO_PLAN } from '../entitlements';
+import {
+  PurchaseCancelledError,
+  annualDiscountPercent,
+  priceFor,
+  purchasePro,
+} from '../purchases';
+import type { PurchaseProductId } from '../purchases';
 import { useSubscription } from '../subscriptions';
 import { useTheme } from '../theme';
 
@@ -47,10 +60,39 @@ interface ComparisonRow {
 export function PaywallScreen({ onBack, highlightKey }: PaywallScreenProps) {
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const { plan, subscription, trialAlreadyUsed, startTrial } = useSubscription();
+  const { language } = useLanguage();
+  const { plan, subscription, trialAlreadyUsed, startTrial, refresh } = useSubscription();
+
+  const [households, setHouseholds] = useState<Household[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<PurchaseProductId>('annual');
+  const [purchasing, setPurchasing] = useState(false);
+  const [purchaseError, setPurchaseError] = useState<string | null>(null);
+
+  useEffect(() => {
+    listHouseholds(getDatabase()).then(setHouseholds);
+  }, []);
 
   const isPro = plan.id === PRO_PLAN.id;
   const isTrialing = isPro && subscription?.status === 'trial';
+  const currencyCode = households[0]?.currencyCode ?? DEFAULT_CURRENCY_CODE;
+  const discountPercent = annualDiscountPercent();
+
+  async function handlePurchase() {
+    setPurchaseError(null);
+    setPurchasing(true);
+    try {
+      await purchasePro(getDatabase(), selectedProduct);
+      await refresh();
+    } catch (error) {
+      setPurchaseError(
+        error instanceof PurchaseCancelledError
+          ? t('paywallScreen.purchaseCancelledError')
+          : t('paywallScreen.purchaseNetworkError'),
+      );
+    } finally {
+      setPurchasing(false);
+    }
+  }
 
   function statusLabel(): string {
     if (isTrialing && subscription?.trialEndsAt) {
@@ -139,6 +181,70 @@ export function PaywallScreen({ onBack, highlightKey }: PaywallScreenProps) {
           </Txt>
         ) : null}
       </Card>
+
+      {!isPro ? (
+        <Card elevated style={{ gap: theme.spacing.sm }}>
+          <Txt weight="semibold" size="md">
+            {t('paywallScreen.pricingTitle')}
+          </Txt>
+
+          <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+            {(['monthly', 'annual'] as PurchaseProductId[]).map((productId) => {
+              const price = priceFor(productId, currencyCode);
+              const isSelected = selectedProduct === productId;
+              return (
+                <Pressable
+                  key={productId}
+                  testID={`paywall-product-${productId}`}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isSelected }}
+                  onPress={() => setSelectedProduct(productId)}
+                  style={{
+                    flex: 1,
+                    gap: 2,
+                    padding: theme.spacing.sm,
+                    borderRadius: theme.radius.md,
+                    borderWidth: 2,
+                    borderColor: isSelected ? theme.colors.primary : theme.colors.border,
+                    backgroundColor: isSelected ? theme.accents.teal.wash : theme.colors.surface,
+                  }}
+                >
+                  {productId === 'annual' ? (
+                    <Pill
+                      label={t('paywallScreen.annualDiscountBadge', { percent: discountPercent })}
+                      background={theme.accents.gold.wash}
+                      color={theme.accents.gold.ink}
+                      style={{ alignSelf: 'flex-start' }}
+                    />
+                  ) : null}
+                  <Txt weight="semibold" size="sm">
+                    {productId === 'annual'
+                      ? t('paywallScreen.annualProductLabel')
+                      : t('paywallScreen.monthlyProductLabel')}
+                  </Txt>
+                  <Txt size="sm" color={theme.colors.textSecondary}>
+                    {productId === 'annual'
+                      ? t('paywallScreen.annualPriceLabel', {
+                          amount: formatMoney(price.amountMinor, price.currencyCode, language),
+                        })
+                      : t('paywallScreen.monthlyPriceLabel', {
+                          amount: formatMoney(price.amountMinor, price.currencyCode, language),
+                        })}
+                  </Txt>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {purchaseError ? <AlertBanner tone="warning" icon="alert-triangle" message={purchaseError} /> : null}
+
+          <Button
+            label={t('paywallScreen.purchaseButton')}
+            onPress={handlePurchase}
+            disabled={purchasing}
+          />
+        </Card>
+      ) : null}
 
       <Card elevated style={{ gap: theme.spacing.sm }}>
         <Txt weight="semibold" size="md">
