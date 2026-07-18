@@ -1,23 +1,26 @@
 import type { SqlDatabase } from '../types';
-import type { NewSubscription, Subscription, SubscriptionStatus } from './types';
+import type { NewSubscription, Subscription, SubscriptionProductId, SubscriptionStatus } from './types';
 
 const SUBSCRIPTION_ID = 'default';
 
 interface SubscriptionRow {
   plan_id: string;
   status: string;
+  product_id: string | null;
   trial_ends_at: string | null;
   renews_at: string | null;
   created_at: string;
   updated_at: string;
 }
 
-const SELECT_COLUMNS = 'plan_id, status, trial_ends_at, renews_at, created_at, updated_at';
+const SELECT_COLUMNS =
+  'plan_id, status, product_id, trial_ends_at, renews_at, created_at, updated_at';
 
 function fromRow(row: SubscriptionRow): Subscription {
   return {
     planId: row.plan_id,
     status: row.status as SubscriptionStatus,
+    productId: row.product_id as SubscriptionProductId | null,
     trialEndsAt: row.trial_ends_at,
     renewsAt: row.renews_at,
     createdAt: row.created_at,
@@ -44,6 +47,7 @@ export async function upsertSubscription(
   const updated: Subscription = {
     planId: input.planId,
     status: input.status,
+    productId: input.productId ?? null,
     trialEndsAt: input.trialEndsAt ?? null,
     renewsAt: input.renewsAt ?? null,
     createdAt: existing?.createdAt ?? now,
@@ -51,10 +55,11 @@ export async function upsertSubscription(
   };
   if (existing) {
     await db.runAsync(
-      'UPDATE subscriptions SET plan_id = ?, status = ?, trial_ends_at = ?, renews_at = ?, updated_at = ? WHERE id = ?;',
+      'UPDATE subscriptions SET plan_id = ?, status = ?, product_id = ?, trial_ends_at = ?, renews_at = ?, updated_at = ? WHERE id = ?;',
       [
         updated.planId,
         updated.status,
+        updated.productId,
         updated.trialEndsAt,
         updated.renewsAt,
         updated.updatedAt,
@@ -63,11 +68,12 @@ export async function upsertSubscription(
     );
   } else {
     await db.runAsync(
-      'INSERT INTO subscriptions (id, plan_id, status, trial_ends_at, renews_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?);',
+      'INSERT INTO subscriptions (id, plan_id, status, product_id, trial_ends_at, renews_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?);',
       [
         SUBSCRIPTION_ID,
         updated.planId,
         updated.status,
+        updated.productId,
         updated.trialEndsAt,
         updated.renewsAt,
         updated.createdAt,

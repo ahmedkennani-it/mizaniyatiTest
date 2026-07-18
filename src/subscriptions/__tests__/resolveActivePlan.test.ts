@@ -8,6 +8,7 @@ function makeSubscription(overrides: Partial<Subscription> = {}): Subscription {
   return {
     planId: 'pro',
     status: 'trial',
+    productId: null,
     trialEndsAt: null,
     renewsAt: null,
     createdAt: '2026-07-01T00:00:00.000Z',

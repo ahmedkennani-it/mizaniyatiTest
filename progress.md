@@ -1936,6 +1936,40 @@ entièrement couverte.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **2020/2020, 163 suites** ✅.
 - ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé).
 
+### Itération 60 — Tâche 16.2 (Intégration mock des achats in-app) ✅
+
+- Rien n'existait encore pour un achat réel — seul l'essai gratuit (`startTrial`) touchait déjà
+  `subscriptions`. Nouveau module `src/purchases/` : `products.ts` déclare les deux produits
+  (`monthly`/`annual`, US-066a/b) via `fetchAvailableProducts()` **async** pour imiter la forme
+  d'un vrai SDK de store (`Purchases.getOfferings()`) sans jamais quitter l'appareil — conforme au
+  garde-fou `CLAUDE.md` : aucune vraie clé RevenueCat/App Store/Play, l'achat reste un mock local.
+  `mockPurchaseFlow.ts` : `purchasePro(db, productId, outcome?)` déverrouille Pro localement
+  (`upsertSubscription({status:'active', productId, renewsAt})`) ; `outcome` (`'cancelled'` /
+  `'network_error'`) permet aux tests d'exercer les deux échecs qu'un vrai store peut renvoyer
+  (`PurchaseCancelledError`/`PurchaseNetworkError`, typées) sans qu'un appelant en production ait
+  jamais à le passer — un mock n'a rien de réel contre quoi échouer tout seul.
+  `restorePurchases(db)` relit l'abonnement local et rapporte s'il est toujours valide.
+- Nouvelle colonne `subscriptions.product_id` (migration `0029`, `NULL` sur les lignes d'essai)
+  pour que l'écran de gestion d'abonnement (16.6) puisse un jour afficher « Abonnement annuel »
+  plutôt que juste « Pro ».
+- ⚠️ **Limite assumée, documentée honnêtement** : « Restaurer les achats fonctionne sur un nouvel
+  appareil » ne peut pas être vérifié à la lettre ici — cette app n'a ni compte ni serveur, donc le
+  seul « reçu » qu'un mock local peut jamais retrouver est celui déjà présent dans la base SQLite
+  de **cet** appareil. Un vrai transfert d'achat vers un appareil neuf passerait par la sauvegarde
+  chiffrée de la Phase 17, pas par ce mock — `restorePurchases` fait honnêtement ce qu'un mock
+  sans backend peut faire (relire l'état local et confirmer sa validité), documenté dans le code et
+  ici plutôt que présenté comme une vraie restauration multi-appareil.
+- ⚠️ **Aucun bouton d'achat câblé pour l'instant** : `purchasePro`/`restorePurchases` sont
+  entièrement testés à la couche service, mais aucun écran ne les appelle encore — la tarification
+  affichée et les boutons eux-mêmes sont explicitement la tâche 16.3, où le critère « erreurs
+  gérées sans crash » sera démontré bout-en-bout (un `try/catch` UI affichant un message plutôt que
+  de planter).
+- Tests : `purchases/__tests__/products.test.ts` (4), `purchases/__tests__/mockPurchaseFlow.test.ts`
+  (11 : succès, durées mensuelle/annuelle, écrasement d'un essai en cours, deux échecs simulés sans
+  toucher à l'état, restauration trouvée/absente/expirée) ; `subscriptionRepository.test.ts` (+2,
+  round-trip de `productId`).
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **2040/2040, 165 suites** ✅.
+
 ## Notes / blocages connus (hors périmètre Phase 1)
 
 - L'arbre de travail contient des changements accumulés multi-phases non

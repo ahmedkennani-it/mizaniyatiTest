@@ -555,6 +555,9 @@ export interface SeasonalThemePatch {
 
 export type SubscriptionStatus = 'trial' | 'active' | 'expired';
 
+/** Which of the two products (US-066a/US-066b) a purchase was for — `null` for a trial row. */
+export type SubscriptionProductId = 'monthly' | 'annual';
+
 /**
  * Single fixed-`id='default'` row (US-029, `docs/specs/plans-abonnements.md`) — mirrors
  * `zakat_config`'s one-row convention. **No row at all means the household is on the free
@@ -565,6 +568,8 @@ export type SubscriptionStatus = 'trial' | 'active' | 'expired';
 export interface Subscription {
   planId: string;
   status: SubscriptionStatus;
+  /** Which product was purchased (US-066a) — `null` for a trial row or a pre-US-066a purchase. */
+  productId: SubscriptionProductId | null;
   /** ISO 8601 UTC — set for `status: 'trial'`, `null` otherwise. */
   trialEndsAt: string | null;
   /** ISO 8601 UTC — set for `status: 'active'` (a real recurring purchase), `null` otherwise. */
@@ -576,6 +581,7 @@ export interface Subscription {
 export interface NewSubscription {
   planId: string;
   status: SubscriptionStatus;
+  productId?: SubscriptionProductId | null;
   trialEndsAt?: string | null;
   renewsAt?: string | null;
 }

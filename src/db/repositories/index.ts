@@ -174,6 +174,7 @@ export type {
   Subscription,
   NewSubscription,
   SubscriptionStatus,
+  SubscriptionProductId,
   UserSettings,
   NewUserSettings,
   OnboardingStep,

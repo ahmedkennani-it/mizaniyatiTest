@@ -37,4 +37,31 @@ describe('subscriptionRepository', () => {
     expect(second.createdAt).toBe(first.createdAt);
     expect(await getSubscription(db)).toEqual(second);
   });
+
+  /** US-066a: which product (monthly/annual) a real purchase was for, distinct from a trial row. */
+  it('defaults productId to null for a trial row', async () => {
+    const { db } = createFakeDatabase();
+
+    const subscription = await upsertSubscription(db, {
+      planId: 'pro',
+      status: 'trial',
+      trialEndsAt: '2026-07-23T00:00:00.000Z',
+    });
+
+    expect(subscription.productId).toBeNull();
+  });
+
+  it('records the purchased product and reads it back', async () => {
+    const { db } = createFakeDatabase();
+
+    const subscription = await upsertSubscription(db, {
+      planId: 'pro',
+      status: 'active',
+      productId: 'annual',
+      renewsAt: '2027-07-23T00:00:00.000Z',
+    });
+
+    expect(subscription.productId).toBe('annual');
+    expect(await getSubscription(db)).toEqual(subscription);
+  });
 });
