@@ -20,11 +20,14 @@ import { SubscriptionProvider } from '../../subscriptions';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { PaywallScreen } from '../PaywallScreen';
 
-function renderScreen(onBack: () => void = jest.fn()) {
+function renderScreen(
+  onBack: () => void = jest.fn(),
+  highlightKey?: React.ComponentProps<typeof PaywallScreen>['highlightKey'],
+) {
   return render(
     <ThemeProvider initialColorScheme="light">
       <SubscriptionProvider>
-        <PaywallScreen onBack={onBack} />
+        <PaywallScreen onBack={onBack} highlightKey={highlightKey} />
       </SubscriptionProvider>
     </ThemeProvider>,
   );
@@ -46,9 +49,25 @@ describe('PaywallScreen (US-029)', () => {
     await renderScreen();
 
     await screen.findByText('Gratuit vs Pro');
-    expect(screen.getByText('Tontine')).toBeTruthy();
+    expect(screen.getByText('Tontine & dettes')).toBeTruthy();
+    expect(screen.getByText('Zakat & mode Ramadan')).toBeTruthy();
+    expect(screen.getByText('Suivi dépenses & revenus')).toBeTruthy();
     expect(screen.getAllByText('Illimité').length).toBeGreaterThan(0);
     expect(screen.getByText('3')).toBeTruthy(); // FREE_PLAN's categories.max
+  });
+
+  it('always reminds of the zero bank connection promise', async () => {
+    await renderScreen();
+
+    expect(await screen.findByText('Toujours zéro connexion bancaire')).toBeTruthy();
+  });
+
+  /** US-065's baseline row: core tracking is never gated, on either plan. */
+  it('shows expense & income tracking as included on both plans', async () => {
+    await renderScreen();
+
+    await screen.findByText('Suivi dépenses & revenus');
+    expect(screen.getAllByText('✓').length).toBeGreaterThanOrEqual(2);
   });
 
   it('starts a trial and shows the trial-active status with an expiry date', async () => {
@@ -76,6 +95,31 @@ describe('PaywallScreen (US-029)', () => {
       ),
     ).toBeTruthy();
     expect(screen.queryByText("Commencer l'essai gratuit de 14 jours")).toBeNull();
+  });
+
+  /** US-065's 4th criterion: opening the paywall from a hit limit highlights that row. */
+  it('highlights the row matching the trigger that opened the paywall', async () => {
+    await renderScreen(jest.fn(), 'categories.max');
+
+    const highlighted = await screen.findByTestId('paywall-row-categories.max');
+    expect(highlighted.props.style).toMatchObject({ borderWidth: 2 });
+
+    const other = await screen.findByTestId('paywall-row-members.max');
+    expect(other.props.style).not.toMatchObject({ borderWidth: 2 });
+  });
+
+  it('highlights the combined row for either of its two entitlement keys', async () => {
+    await renderScreen(jest.fn(), 'debts');
+
+    const highlighted = await screen.findByTestId('paywall-row-tontine');
+    expect(highlighted.props.style).toMatchObject({ borderWidth: 2 });
+  });
+
+  it('highlights nothing when opened with no trigger', async () => {
+    await renderScreen();
+
+    const row = await screen.findByTestId('paywall-row-categories.max');
+    expect(row.props.style).not.toMatchObject({ borderWidth: 2 });
   });
 
   it('calls onBack when the back control is pressed', async () => {

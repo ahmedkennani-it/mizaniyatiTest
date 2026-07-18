@@ -80,7 +80,7 @@ export function CategoriesScreen() {
   }, []);
 
   if (view === 'paywall') {
-    return <PaywallScreen onBack={() => setView('list')} />;
+    return <PaywallScreen onBack={() => setView('list')} highlightKey="categories.max" />;
   }
 
   if (view === 'detail' && detailCategory) {

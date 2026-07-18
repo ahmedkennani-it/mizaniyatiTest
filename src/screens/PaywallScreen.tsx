@@ -1,13 +1,28 @@
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { AppScreen, Button, Card, Pill, ScreenHeader, Txt } from '../components';
+import { AppScreen, Button, Card, Pill, ScreenHeader, TrustChip, Txt } from '../components';
 import { FREE_PLAN, PRO_PLAN } from '../entitlements';
 import { useSubscription } from '../subscriptions';
 import { useTheme } from '../theme';
 
+/**
+ * A trigger that sent the household here (a limit hit, a locked feature tapped) — the matching
+ * comparison row is highlighted (US-065's "la ligne correspondante est mise en évidence"). `null`
+ * covers every row key that combines several entitlements (`tontine`+`debts`, `zakat`+`ramadan`).
+ */
+export type PaywallHighlightKey =
+  | 'categories.max'
+  | 'members.max'
+  | 'voice'
+  | 'tontine'
+  | 'debts'
+  | 'zakat'
+  | 'ramadan';
+
 export interface PaywallScreenProps {
   onBack: () => void;
+  highlightKey?: PaywallHighlightKey;
 }
 
 function planLimit(planId: 'free' | 'pro', key: string): number {
@@ -20,7 +35,16 @@ function planFeature(planId: 'free' | 'pro', key: string): boolean {
   return plan.entitlements.find((entitlement) => entitlement.key === key)?.booleanValue ?? false;
 }
 
-export function PaywallScreen({ onBack }: PaywallScreenProps) {
+interface ComparisonRow {
+  /** One or more `PaywallHighlightKey`s this row represents — `highlightKey` matches any of them. */
+  matchKeys: PaywallHighlightKey[];
+  label: string;
+  free: string;
+  pro: string;
+  proIsBetter: boolean;
+}
+
+export function PaywallScreen({ onBack, highlightKey }: PaywallScreenProps) {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const { plan, subscription, trialAlreadyUsed, startTrial } = useSubscription();
@@ -41,11 +65,53 @@ export function PaywallScreen({ onBack }: PaywallScreenProps) {
     return t('paywallScreen.statusFreeLabel');
   }
 
-  const featureRows: { label: string; key: string }[] = [
-    { label: t('paywallScreen.voiceRowLabel'), key: 'voice' },
-    { label: t('paywallScreen.tontineRowLabel'), key: 'tontine' },
-    { label: t('paywallScreen.zakatRowLabel'), key: 'zakat' },
-    { label: t('paywallScreen.ramadanRowLabel'), key: 'ramadan' },
+  const check = t('paywallScreen.checkMark');
+  const dash = t('paywallScreen.dashMark');
+  const unlimited = t('paywallScreen.unlimitedLabel');
+
+  const rows: ComparisonRow[] = [
+    {
+      matchKeys: [],
+      label: t('paywallScreen.trackingRowLabel'),
+      free: check,
+      pro: check,
+      proIsBetter: false,
+    },
+    {
+      matchKeys: ['categories.max'],
+      label: t('paywallScreen.categoriesRowLabel'),
+      free: String(planLimit('free', 'categories.max')),
+      pro: unlimited,
+      proIsBetter: true,
+    },
+    {
+      matchKeys: ['members.max'],
+      label: t('paywallScreen.membersRowLabel'),
+      free: String(planLimit('free', 'members.max')),
+      pro: unlimited,
+      proIsBetter: true,
+    },
+    {
+      matchKeys: ['voice'],
+      label: t('paywallScreen.voiceRowLabel'),
+      free: planFeature('free', 'voice') ? check : dash,
+      pro: planFeature('pro', 'voice') ? check : dash,
+      proIsBetter: true,
+    },
+    {
+      matchKeys: ['tontine', 'debts'],
+      label: t('paywallScreen.tontineDebtsRowLabel'),
+      free: planFeature('free', 'tontine') && planFeature('free', 'debts') ? check : dash,
+      pro: planFeature('pro', 'tontine') && planFeature('pro', 'debts') ? check : dash,
+      proIsBetter: true,
+    },
+    {
+      matchKeys: ['zakat', 'ramadan'],
+      label: t('paywallScreen.zakatRamadanRowLabel'),
+      free: planFeature('free', 'zakat') && planFeature('free', 'ramadan') ? check : dash,
+      pro: planFeature('pro', 'zakat') && planFeature('pro', 'ramadan') ? check : dash,
+      proIsBetter: true,
+    },
   ];
 
   return (
@@ -54,6 +120,7 @@ export function PaywallScreen({ onBack }: PaywallScreenProps) {
       <Txt size="sm" color={theme.colors.textSecondary}>
         {t('paywallScreen.subtitle')}
       </Txt>
+      <TrustChip label={t('paywallScreen.noBankBadge')} />
 
       <Card elevated style={{ gap: theme.spacing.sm }}>
         <Pill
@@ -98,64 +165,38 @@ export function PaywallScreen({ onBack }: PaywallScreenProps) {
           </Txt>
         </View>
 
-        <View style={{ flexDirection: 'row' }}>
-          <Txt size="sm" style={{ flex: 2 }}>
-            {t('paywallScreen.categoriesRowLabel')}
-          </Txt>
-          <Txt size="sm" style={{ flex: 1, textAlign: 'center' }}>
-            {planLimit('free', 'categories.max')}
-          </Txt>
-          <Txt
-            size="sm"
-            weight="semibold"
-            color={theme.colors.primary}
-            style={{ flex: 1, textAlign: 'center' }}
-          >
-            {t('paywallScreen.unlimitedLabel')}
-          </Txt>
-        </View>
-
-        <View style={{ flexDirection: 'row' }}>
-          <Txt size="sm" style={{ flex: 2 }}>
-            {t('paywallScreen.membersRowLabel')}
-          </Txt>
-          <Txt size="sm" style={{ flex: 1, textAlign: 'center' }}>
-            {planLimit('free', 'members.max')}
-          </Txt>
-          <Txt
-            size="sm"
-            weight="semibold"
-            color={theme.colors.primary}
-            style={{ flex: 1, textAlign: 'center' }}
-          >
-            {t('paywallScreen.unlimitedLabel')}
-          </Txt>
-        </View>
-
-        {featureRows.map((row) => (
-          <View key={row.key} style={{ flexDirection: 'row' }}>
-            <Txt size="sm" style={{ flex: 2 }}>
-              {row.label}
-            </Txt>
-            <Txt
-              size="sm"
-              style={{ flex: 1, textAlign: 'center' }}
-              color={theme.colors.textSecondary}
+        {rows.map((row) => {
+          const isHighlighted = highlightKey !== undefined && row.matchKeys.includes(highlightKey);
+          return (
+            <View
+              key={row.label}
+              testID={`paywall-row-${row.matchKeys[0] ?? 'tracking'}`}
+              style={{
+                flexDirection: 'row',
+                borderRadius: theme.radius.sm,
+                padding: theme.spacing.xs,
+                borderWidth: isHighlighted ? 2 : 0,
+                borderColor: isHighlighted ? theme.colors.primary : 'transparent',
+                backgroundColor: isHighlighted ? theme.accents.teal.wash : 'transparent',
+              }}
             >
-              {planFeature('free', row.key) ? '✓' : '—'}
-            </Txt>
-            <Txt
-              size="sm"
-              weight="semibold"
-              style={{ flex: 1, textAlign: 'center' }}
-              color={
-                planFeature('pro', row.key) ? theme.colors.primary : theme.colors.textSecondary
-              }
-            >
-              {planFeature('pro', row.key) ? '✓' : '—'}
-            </Txt>
-          </View>
-        ))}
+              <Txt size="sm" weight={isHighlighted ? 'semibold' : 'regular'} style={{ flex: 2 }}>
+                {row.label}
+              </Txt>
+              <Txt size="sm" style={{ flex: 1, textAlign: 'center' }} color={theme.colors.textSecondary}>
+                {row.free}
+              </Txt>
+              <Txt
+                size="sm"
+                weight="semibold"
+                style={{ flex: 1, textAlign: 'center' }}
+                color={row.proIsBetter ? theme.colors.primary : theme.colors.textSecondary}
+              >
+                {row.pro}
+              </Txt>
+            </View>
+          );
+        })}
       </Card>
     </AppScreen>
   );

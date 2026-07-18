@@ -71,7 +71,7 @@ export function MembersScreen({ onBack }: MembersScreenProps) {
   }
 
   if (view === 'paywall') {
-    return <PaywallScreen onBack={() => setView('list')} />;
+    return <PaywallScreen onBack={() => setView('list')} highlightKey="members.max" />;
   }
 
   if (view === 'form') {

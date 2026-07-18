@@ -1907,6 +1907,35 @@ entièrement couverte.
 - ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé) — repli sur les
   suites `.rtl.test.tsx` comme pour chaque écran précédent.
 
+### Itération 59 — Tâche 16.1 (Paywall Pro avec tableau comparatif) ✅ — phase 16 amorcée
+
+- `PaywallScreen` existait déjà (bascule d'essai, statut, tableau comparatif basique) — deux écarts
+  réels avec les critères d'acceptation US-065 : (1) **aucun rappel « zéro connexion bancaire »**
+  sur cet écran précis, alors que le critère l'exige explicitement ici (le rappel existait ailleurs
+  — accueil, onboarding — mais pas sur le paywall) ; (2) **aucune ligne du tableau ne pouvait être
+  mise en évidence**, alors que `CategoriesScreen`/`MembersScreen` naviguaient déjà vers
+  `PaywallScreen` en plein écran au moment précis où une limite est atteinte (`atLimit →
+  setView('paywall')`, découvert en explorant le code existant) — le déclencheur existait, mais
+  rien n'exploitait cette information une fois sur l'écran.
+- Ajouté `TrustChip` (déjà utilisé par l'accueil et l'onboarding) juste sous le sous-titre.
+- Nouveau `highlightKey?: PaywallHighlightKey` sur `PaywallScreenProps`, câblé dans
+  `CategoriesScreen`/`MembersScreen` (`highlightKey="categories.max"` / `"members.max"`) à leurs
+  deux points de déclenchement déjà existants. La ligne correspondante gagne une bordure + fond
+  teinté (même convention que la carte « pays actuel » de `CountrySelectorScreen`, 14.3).
+- Tableau restructuré pour coller mot à mot aux 6 lignes du critère : fusionné Tontine+Dettes et
+  Zakat+Mode Ramadan en deux lignes combinées (`matchKeys: ['tontine','debts']` /
+  `['zakat','ramadan']` — `highlightKey` correspond à n'importe laquelle des deux clés d'une ligne
+  combinée), et ajouté une ligne « Suivi dépenses & revenus » toujours ✓/✓ puisque c'est un socle
+  jamais verrouillé, absent jusqu'ici du tableau alors que le critère le demande en premier.
+- Tests : `PaywallScreen.test.tsx` (+6 : rappel bancaire, ligne socle, mise en évidence sur clé
+  simple, sur l'une des deux clés d'une ligne combinée, absence de mise en évidence sans
+  déclencheur — via un `testID` par ligne et une comparaison `toMatchObject({ borderWidth: 2 })`,
+  même convention que `TontineScreen.test.tsx` pour son propre indicateur visuel « tour en cours ») ;
+  le test existant du tableau comparatif mis à jour pour chercher « Tontine & dettes » plutôt que
+  « Tontine » seul — évolution de comportement voulue, pas une régression.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **2020/2020, 163 suites** ✅.
+- ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé).
+
 ## Notes / blocages connus (hors périmètre Phase 1)
 
 - L'arbre de travail contient des changements accumulés multi-phases non
