@@ -6,6 +6,7 @@ import {
   createCategory,
   createMember,
   createTransaction,
+  listAllMembers,
   listMembers,
   listTransactions,
 } from '../../db/repositories';
@@ -132,5 +133,75 @@ describe('MemberForm — édition et suppression (US-027)', () => {
     expect(onDeleted).toHaveBeenCalledTimes(1);
     const all = await listTransactions(mockFakeDb);
     expect(all[0].memberId).toBe(other.id);
+  });
+});
+
+describe('MemberForm — retirer du foyer (US-052)', () => {
+  let member: Member;
+  let other: Member;
+
+  beforeEach(async () => {
+    mockFakeDb = createFakeDatabase().db;
+    member = await createMember(mockFakeDb, { name: 'Salma' });
+    other = await createMember(mockFakeDb, { name: 'Youssef' });
+  });
+
+  it('offers "Retirer du foyer" only when the member has transactions to preserve', async () => {
+    await renderForm(member, [other], []);
+
+    expect(screen.queryByText('Retirer du foyer')).toBeNull();
+  });
+
+  it('removes the member without reassigning, keeping their transactions attributed to them', async () => {
+    const category = await createCategory(mockFakeDb, {
+      name: 'Courses',
+      icon: 'cart',
+      color: '#000000',
+    });
+    const transaction = await createTransaction(mockFakeDb, {
+      type: 'expense',
+      amountMinor: 1000,
+      currencyCode: 'MAD',
+      categoryId: category.id,
+      memberId: member.id,
+      occurredAt: '2026-07-01T00:00:00.000Z',
+    });
+
+    const onDeleted = jest.fn();
+    await renderForm(member, [other], [transaction], jest.fn(), onDeleted);
+
+    await fireEvent.press(screen.getByText('Retirer du foyer'));
+    await fireEvent.press(screen.getByText('Oui, retirer'));
+
+    expect(onDeleted).toHaveBeenCalledTimes(1);
+    expect((await listTransactions(mockFakeDb))[0].memberId).toBe(member.id);
+    expect(await listMembers(mockFakeDb)).toEqual([other]);
+    const all = await listAllMembers(mockFakeDb);
+    expect(all.find((m) => m.id === member.id)?.removedAt).not.toBeNull();
+  });
+
+  it('cancels back to the delete options without removing anything', async () => {
+    const category = await createCategory(mockFakeDb, {
+      name: 'Courses',
+      icon: 'cart',
+      color: '#000000',
+    });
+    const transaction = await createTransaction(mockFakeDb, {
+      type: 'expense',
+      amountMinor: 1000,
+      currencyCode: 'MAD',
+      categoryId: category.id,
+      memberId: member.id,
+      occurredAt: '2026-07-01T00:00:00.000Z',
+    });
+
+    await renderForm(member, [other], [transaction]);
+
+    await fireEvent.press(screen.getByText('Retirer du foyer'));
+    await fireEvent.press(screen.getByText('Ne pas retirer'));
+
+    expect(screen.getByText('Retirer du foyer')).toBeTruthy();
+    const all = await listAllMembers(mockFakeDb);
+    expect(all.find((m) => m.id === member.id)?.removedAt).toBeNull();
   });
 });

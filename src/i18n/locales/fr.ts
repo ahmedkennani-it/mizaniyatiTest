@@ -593,8 +593,15 @@ export const fr = {
     subtitle: 'Gérez les membres de votre foyer et invitez-en de nouveaux.',
     addButton: 'Ajouter un membre',
     inviteButton: 'Inviter un membre',
-    roleEditor: 'Éditeur',
+    roleEditor: 'Peut modifier',
     roleViewer: 'Lecture seule',
+    upsellMessage: 'Le plan Gratuit est limité à 1 membre.',
+    upsellCta: 'Passez à un forfait supérieur pour inviter plus de membres.',
+    readOnlyPlanLimitBadge: 'Lecture seule (limite du forfait)',
+    removedSectionTitle: 'Retirés',
+    removedBadge: 'Retiré',
+    familyPreviewUpsell: 'Passez à Pro pour ajouter des membres à votre foyer.',
+    memberCountLabel: '{{count}} membre(s)',
   },
   memberForm: {
     titleNew: 'Nouveau membre',
@@ -613,6 +620,11 @@ export const fr = {
     deleteConfirmMessage: 'Supprimer définitivement ce membre ?',
     deleteConfirmYes: 'Oui, supprimer',
     deleteConfirmCancel: 'Ne pas supprimer',
+    removeFromHousehold: 'Retirer du foyer',
+    removeConfirmMessage:
+      'Retirer ce membre du foyer ? Ses {{count}} opération(s) passée(s) restent dans l’historique.',
+    removeConfirmYes: 'Oui, retirer',
+    removeConfirmCancel: 'Ne pas retirer',
   },
   memberInvite: {
     title: 'Inviter un membre',

@@ -2,7 +2,9 @@ export {
   createMember,
   getMemberById,
   listMembers,
+  listAllMembers,
   updateMember,
+  removeMember,
   deleteMember,
 } from './memberRepository';
 export {

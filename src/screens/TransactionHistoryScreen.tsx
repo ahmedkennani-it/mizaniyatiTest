@@ -6,7 +6,7 @@ import { useExpenseEntry } from './ExpenseEntryProvider';
 import { AppScreen, Card, Chip, ScreenHeader, TransactionRow, Txt } from '../components';
 import { categoryAccent, categoryIconName } from '../categories/categoryVisual';
 import { getDatabase } from '../db/client';
-import { listCategories, listMembers, listTransactions } from '../db/repositories';
+import { listAllMembers, listCategories, listTransactions } from '../db/repositories';
 import type { Category, Member, Transaction } from '../db/repositories';
 import { NO_FILTERS, filterTransactions } from '../transactions';
 import type { TransactionTypeFilter } from '../transactions';
@@ -35,7 +35,7 @@ export function TransactionHistoryScreen({ onBack }: TransactionHistoryScreenPro
     const db = getDatabase();
     listTransactions(db).then(setTransactions);
     listCategories(db).then(setCategories);
-    listMembers(db).then(setMembers);
+    listAllMembers(db).then(setMembers);
   }, []);
 
   useEffect(refresh, [refresh, dataVersion]);

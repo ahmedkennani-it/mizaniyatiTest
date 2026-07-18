@@ -25,9 +25,13 @@ import {
 import { getDatabase } from '../db/client';
 import { getNotificationSettings, listMembers, setBudgetAlertsEnabled } from '../db/repositories';
 import type { Member } from '../db/repositories';
+import { useEntitlements } from '../entitlements';
 import { languageOption, nextLanguage, useLanguage } from '../i18n';
 import { DEFAULT_CURRENCY_CODE } from '../money';
 import { useTheme } from '../theme';
+
+/** How many avatars stack before folding the rest into a "+N" tail (US-053). */
+const STACKED_AVATAR_LIMIT = 3;
 
 /** Wraps `PlaceholderScreen` with a back link — for entry points to specs not built yet. */
 function ProfilePlaceholder({
@@ -58,6 +62,7 @@ export function ProfileScreen() {
   const { t } = useTranslation();
   const { theme, colorScheme, seniorMode, toggleColorScheme, toggleSeniorMode } = useTheme();
   const { language, setLanguage } = useLanguage();
+  const entitlements = useEntitlements();
 
   const [budgetAlertsEnabled, setBudgetAlertsEnabledState] = useState(false);
   const [members, setMembers] = useState<Member[]>([]);
@@ -199,12 +204,33 @@ export function ProfileScreen() {
       <View style={{ gap: theme.spacing.sm }}>
         <SectionHeader title={t('membersScreen.openLink')} />
         <ListRow
-          icon="users"
-          accent="teal"
+          leading={
+            <View style={{ flexDirection: 'row' }}>
+              {members.slice(0, STACKED_AVATAR_LIMIT).map((member, index) => (
+                <Avatar
+                  key={member.id}
+                  name={member.name}
+                  size={32}
+                  accent={index % 2 === 0 ? 'teal' : 'purple'}
+                  style={{
+                    marginStart: index === 0 ? 0 : -12,
+                    borderWidth: 2,
+                    borderColor: theme.colors.surface,
+                  }}
+                />
+              ))}
+            </View>
+          }
           title={t('membersScreen.openLink')}
+          subtitle={t('membersScreen.memberCountLabel', { count: members.length })}
           onPress={() => setView('members')}
           chevron
         />
+        {members.length >= entitlements.limit('members.max') ? (
+          <Txt size="xs" color={theme.colors.textSecondary}>
+            {t('membersScreen.familyPreviewUpsell')}
+          </Txt>
+        ) : null}
         <ListRow
           icon="calendar-clock"
           accent="blue"

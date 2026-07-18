@@ -1326,7 +1326,7 @@
         "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
         "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
       ],
-      "done": false
+      "done": true
     },
     {
       "id": "13.2",
@@ -1381,7 +1381,7 @@
         "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
         "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
       ],
-      "done": false
+      "done": true
     },
     {
       "id": "13.5",
@@ -1399,7 +1399,7 @@
         "npm test passe (tests unitaires couvrant les criteres ci-dessus)",
         "Verifier dans le navigateur avec la skill dev-browser, en LTR et en RTL"
       ],
-      "done": false
+      "done": true
     },
     {
       "id": "14.1",

@@ -13,6 +13,9 @@ export interface Member {
   id: string;
   name: string;
   role: MemberRole;
+  /** `null` while an active household member; set once "retiré du foyer" (US-052) — the row is
+   *  never deleted, so past transactions keep resolving this member's name. */
+  removedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

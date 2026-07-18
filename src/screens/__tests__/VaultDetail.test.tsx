@@ -66,7 +66,7 @@ describe('VaultDetail (US-023)', () => {
 
     await fireEvent.press(screen.getByText("Ajouter de l'argent"));
     await fireEvent.changeText(screen.getByLabelText('Montant'), '444');
-    await fireEvent.press(screen.getByText('Youssef'));
+    await fireEvent.press(await screen.findByText('Youssef'));
     await fireEvent.changeText(screen.getByLabelText('Note (optionnel)'), 'Prime de juin');
     await fireEvent.press(screen.getByText('Enregistrer le versement'));
 

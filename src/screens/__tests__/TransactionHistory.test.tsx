@@ -12,7 +12,13 @@ jest.mock('../../db/client', () => ({
 }));
 
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
-import { createCategory, createHousehold, createMember, createTransaction } from '../../db/repositories';
+import {
+  createCategory,
+  createHousehold,
+  createMember,
+  createTransaction,
+  removeMember,
+} from '../../db/repositories';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import type { Category, Member } from '../../db/repositories';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
@@ -131,6 +137,17 @@ describe('transaction history (US-012)', () => {
 
     expect(await screen.findByText('L’an dernier')).toBeTruthy();
     expect(screen.getByText('Ce mois')).toBeTruthy();
+  });
+
+  /** US-052: removing a member never rewrites their past transactions' attribution. */
+  it("keeps a removed member's name on their past transactions", async () => {
+    await seed();
+    await add('Pain', 'expense', courses, salma);
+    await removeMember(mockFakeDb, salma.id);
+
+    await openHistory();
+
+    expect(await screen.findByText(/·.*Salma/)).toBeTruthy();
   });
 
   describe('filtering', () => {

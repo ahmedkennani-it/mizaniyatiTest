@@ -585,8 +585,15 @@ export const en: TranslationSchema = {
     subtitle: 'Manage your household members and invite new ones.',
     addButton: 'Add a member',
     inviteButton: 'Invite a member',
-    roleEditor: 'Editor',
+    roleEditor: 'Can edit',
     roleViewer: 'Read only',
+    upsellMessage: 'The Free plan is limited to 1 member.',
+    upsellCta: 'Upgrade to a higher plan to invite more members.',
+    readOnlyPlanLimitBadge: 'Read only (plan limit)',
+    removedSectionTitle: 'Removed',
+    removedBadge: 'Removed',
+    familyPreviewUpsell: 'Upgrade to Pro to add members to your household.',
+    memberCountLabel: '{{count}} member(s)',
   },
   memberForm: {
     titleNew: 'New member',
@@ -604,6 +611,11 @@ export const en: TranslationSchema = {
     deleteConfirmMessage: 'Permanently delete this member?',
     deleteConfirmYes: 'Yes, delete',
     deleteConfirmCancel: "Don't delete",
+    removeFromHousehold: 'Remove from household',
+    removeConfirmMessage:
+      'Remove this member from the household? Their {{count}} past transaction(s) stay in the history.',
+    removeConfirmYes: 'Yes, remove',
+    removeConfirmCancel: "Don't remove",
   },
   memberInvite: {
     title: 'Invite a member',

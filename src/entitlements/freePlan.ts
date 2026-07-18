@@ -7,8 +7,8 @@ import type { Plan } from './types';
  * here, never in feature code, once the business numbers are confirmed.
  *
  * `categories.max: 3` is fixed by US-031's own acceptance criterion ("plan Gratuit avec 3
- * catégories... 4e catégorie... paywall"), not a placeholder like the others — it's the one
- * number in this file with an explicit spec behind it.
+ * catégories... 4e catégorie... paywall"), not a placeholder like the others. `members.max: 1` is
+ * likewise fixed by US-054's own title ("Limite de 1 membre en plan Gratuit") — no longer a guess.
  */
 export const FREE_PLAN: Plan = {
   id: 'free',
@@ -16,7 +16,7 @@ export const FREE_PLAN: Plan = {
   isDefaultFree: true,
   entitlements: [
     { key: 'categories.max', type: 'limit', numericValue: 3 },
-    { key: 'members.max', type: 'limit', numericValue: 2 },
+    { key: 'members.max', type: 'limit', numericValue: 1 },
     { key: 'voice', type: 'feature', booleanValue: false },
     { key: 'tontine', type: 'feature', booleanValue: false },
     { key: 'zakat', type: 'feature', booleanValue: false },

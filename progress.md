@@ -1673,6 +1673,92 @@ détail), traitées ensemble plutôt qu'en trois passes séparées sur le même 
 - ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé) — repli sur
   `DebtsScreen.rtl.test.tsx`.
 
+### Itération 56 — Tâches 13.1, 13.4, 13.5 (Foyer & membres) ✅ — 13.2/13.3 restent bloquées
+
+**Audit préalable déterminant** : `MembersScreen`/`MemberForm` existaient déjà en profondeur (rôles
+editor/viewer, ajout, édition, suppression avec réaffectation) — et l'écran « Inviter » était déjà
+un **stub honnête** : « L'invitation nécessite un compte cloud (synchronisation). Activez-le
+d'abord pour inviter. », bouton désactivé, déjà testé. Ce n'est pas une lacune de cette itération :
+c'est la même décision déjà prise pour la 4.6 (connexion à un compte existant), documentée dans le
+commentaire de `MemberPatch` depuis l'itération 19 : « les rôles n'ont de portée réelle qu'une fois
+un compte cloud partagé — c'est US-052 qui doit le faire respecter, une fois l'invitation
+multi-appareil en place ».
+
+**🚨 13.2 et 13.3 laissées `done: false` — même blocage que la 4.6, pas une nouvelle limite.**
+Le critère central de 13.2 — « quand l'invité accepte, il apparaît dans la liste des membres » —
+suppose que deux appareils distincts partagent un jour le même foyer. Sans backend, chaque
+installation a sa **propre base SQLite locale et isolée** : un lien généré sur l'appareil A n'a
+**littéralement aucun moyen** d'être validé par l'appareil B, qui n'a jamais vu cette base. Ce
+n'est pas un problème d'UI à construire plus soigneusement — sans compte cloud partagé (US-039/
+US-040, jamais spécifié comme construit dans ce PRD), la fonctionnalité n'a pas de destinataire
+possible. Fabriquer un lien qui ne relie en réalité rien serait exactement la fabrication que les
+garde-fous interdisent. Le stub existant reste la réponse honnête ; rien n'a été changé ici.
+
+**Ce qui, en revanche, était honnêtement faisable sans backend — et qui n'attendait que d'être
+construit :**
+
+- **13.1 (limite de 1 membre en Gratuit)** : `members.max` était encore un chiffre provisoire (2,
+  jamais branché sur aucun garde-fou). Passé à **1**, avec la même justification que
+  `categories.max: 3` en son temps — désormais fixé par le titre même de la tâche, plus une
+  supposition. Le geste réel manquant : **rien ne vérifiait la limite avant d'ouvrir le formulaire
+  d'ajout**. `MembersScreen` gagne le même garde que `CategoriesScreen` (7.5) : au-delà de la
+  limite, « Ajouter un membre » **et** « Inviter un membre » ouvrent le `PaywallScreen` au lieu de
+  leur écran respectif — les deux, pas seulement « inviter », puisque « ajouter » est aujourd'hui
+  le seul chemin réellement fonctionnel pour faire grandir le foyer ; gate seulement l'un des deux
+  aurait laissé la fonctionnalité payante librement accessible en pratique.
+- **Rétrogradation Pro → Gratuit avec plusieurs membres (critère 3)** : nouveau
+  `computeMemberAccess` (`src/household/memberRights.ts`, à côté de `canEdit`/`isAdmin` déjà là) —
+  les places vont aux membres **les plus anciens** (`createdAt`), jamais à un ordre de tableau ou
+  de nom, pour que la personne qui a créé le foyer ne perde jamais l'accès la première. Aucune
+  donnée supprimée : un membre hors limite est marqué « Lecture seule (limite du forfait) » dans la
+  liste, rien d'autre ne bouge.
+- **13.4 (rôles & permissions) — la moitié construisible sans compte, construite ; l'autre moitié
+  documentée comme dépendante de 13.2/13.3, pas ignorée.**
+  - ✅ Critère 1 (deux rôles proposés) : le libellé du rôle éditeur était « Éditeur », le critère
+    écrit dit littéralement « Peut modifier » — renommé dans les 3 langues, sans toucher à la
+    valeur stockée (`role: 'editor'` inchangée).
+  - ✅ Critère 3 (admin change le rôle / retire un membre à tout moment) : déjà vrai pour le rôle
+    (édition existante) ; le retrait est la nouveauté réelle de cette tâche (voir ci-dessous).
+  - ✅ Critère 4 (historique préservé) — **écart réel trouvé** : `deleteMember` exigeait une
+    réaffectation forcée des transactions vers un autre membre avant de pouvoir supprimer, ce qui
+    est l'**inverse** de ce que ce critère demande (garder l'attribution au membre retiré). Nouveau
+    **suppression douce** : `members.removed_at` (migration 0026, nullable, `NULL` = actif — même
+    principe « une seule source de vérité » que `debts`/Zakat, pas un second statut parallèle) +
+    `removeMember` qui ne touche **jamais** `transactions.member_id`. `MemberForm` propose
+    désormais « Retirer du foyer » (nouveau, doux) à côté de « Supprimer » (existant, dur avec
+    réaffectation) quand le membre a des transactions — les deux restent disponibles, l'admin
+    choisit.
+  - 🚨 Critère 2 (« actions masquées/désactivées pour un membre en Lecture seule ») — **non
+    construit, et non constructible ici** : appliquer ceci exigerait de savoir *qui tient le
+    téléphone en ce moment*, un concept de session qui n'existe nulle part dans cette app
+    mono-appareil. C'est exactement le blocage déjà documenté pour la tâche 6.9 (« Modification et
+    suppression d'une opération »), toujours `done: false` pour la même raison. Pas un nouvel
+    écart : le même trou, revu depuis un autre angle.
+- **`listMembers` filtre désormais les membres retirés** (tout appelant qui choisit *parmi* les
+  membres actifs — nouvelle dépense, versement, règle récurrente — ne doit jamais proposer un
+  membre retiré) ; nouveau `listAllMembers` pour les **deux** endroits qui doivent encore résoudre
+  le nom d'un membre retiré sur une transaction passée (`TransactionHistoryScreen`,
+  `HomeScreen.memberById`) — `HomeScreen` garde `members` (actifs) pour la salutation et
+  `allMembers` (tous) séparément pour cette résolution, jamais le même tableau pour les deux.
+- **13.5 (liste des membres du foyer)** : la ligne « Famille » de Profil était un `ListRow` plat.
+  Remplacée par un aperçu avec avatars empilés (jusqu'à 3, `marginStart` négatif + liseré de la
+  couleur de surface pour l'effet de pile) et le nombre de membres ; un indice Pro s'affiche en
+  dessous dès que le foyer est à sa limite de plan — vrai sur Gratuit (toujours exactement 1 membre
+  par construction de 13.1), pas câblé en dur sur le nom du plan.
+- 🐛 **Flake trouvé en cours de route, sans lien avec cette tâche** : `VaultDetail › adds a
+  contribution` (interrogeait `getByText('Youssef')` de façon synchrone juste après l'ouverture du
+  formulaire) est passé de « juste assez rapide » à intermittent une fois `listMembers` passé par
+  un niveau d'indirection supplémentaire (`listAllMembers` + filtre). Même classe de bug que
+  l'itération 8 : corrigé en `findByText`, pas contourné.
+- Tests : `memberRepository.test.ts` étendu (+5, `removeMember`/`listAllMembers`) ; nouveau
+  `household/__tests__/memberRights.test.ts` (11 cas, `computeMemberAccess` inclus) ;
+  `MembersScreen.test.tsx` réécrit avec fournisseurs d'entitlements/abonnement (+8 nouveaux cas) ;
+  `MemberForm.test.tsx` étendu (+3, le flux « Retirer du foyer ») ; `TransactionHistory.test.tsx`
+  (+1, nom d'un membre retiré toujours visible) ; `ProfileScreen.test.tsx` étendu (+6, l'aperçu
+  Famille et l'accès aux Dettes de l'itération précédente).
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1939/1939, 158 suites** ✅.
+- ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé).
+
 ## Notes / blocages connus (hors périmètre Phase 1)
 
 - L'arbre de travail contient des changements accumulés multi-phases non

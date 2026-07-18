@@ -19,7 +19,7 @@ const category: Category = {
 };
 
 const members: Member[] = [
-  { id: 'member-1', name: 'Youssef', role: 'editor', createdAt: '', updatedAt: '' },
+  { id: 'member-1', name: 'Youssef', role: 'editor', removedAt: null, createdAt: '', updatedAt: '' },
 ];
 
 function budget(overrides: Partial<CategoryBudget> = {}): CategoryBudget {

@@ -10,7 +10,7 @@ jest.mock('../../db/client', () => ({
 }));
 
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
-import { getNotificationSettings, setBudgetAlertsEnabled } from '../../db/repositories';
+import { createMember, getNotificationSettings, setBudgetAlertsEnabled } from '../../db/repositories';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { EntitlementsProvider, PRO_PLAN } from '../../entitlements';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
@@ -24,7 +24,9 @@ function renderScreen() {
   return render(
     <LanguageProvider>
       <ThemeProvider initialColorScheme="light">
-        <ProfileScreen />
+        <EntitlementsProvider>
+          <ProfileScreen />
+        </EntitlementsProvider>
       </ThemeProvider>
     </LanguageProvider>,
   );
@@ -103,5 +105,48 @@ describe('ProfileScreen — accès aux Dettes & prêts (US-048)', () => {
     fireEvent.press(await screen.findByLabelText('Retour'));
 
     expect(await screen.findByText('Activer les alertes')).toBeTruthy();
+  });
+});
+
+describe('ProfileScreen — aperçu Famille (US-053)', () => {
+  beforeEach(() => {
+    mockFakeDb = createFakeDatabase().db;
+  });
+
+  it('shows the member count next to the Famille section', async () => {
+    await createMember(mockFakeDb, { name: 'Youssef' });
+
+    renderScreen();
+
+    expect(await screen.findByText('1 membre(s)')).toBeTruthy();
+  });
+
+  it('shows the Pro upsell hint on the Free plan (limited to 1 member)', async () => {
+    await createMember(mockFakeDb, { name: 'Youssef' });
+
+    renderScreen();
+
+    expect(await screen.findByText('Passez à Pro pour ajouter des membres à votre foyer.')).toBeTruthy();
+  });
+
+  it('hides the upsell hint on the Pro plan', async () => {
+    await createMember(mockFakeDb, { name: 'Youssef' });
+
+    renderScreenAsPro();
+
+    await screen.findByText('1 membre(s)');
+    expect(screen.queryByText('Passez à Pro pour ajouter des membres à votre foyer.')).toBeNull();
+  });
+
+  it('opens the full member list when the Famille preview is tapped', async () => {
+    await createMember(mockFakeDb, { name: 'Youssef' });
+    renderScreen();
+
+    // "Famille" labels both the section header and the preview row's own title.
+    const famille = await screen.findAllByText('Famille');
+    fireEvent.press(famille[famille.length - 1]);
+
+    expect(await screen.findByText('Youssef')).toBeTruthy();
+    expect(screen.getByText('Gérez les membres de votre foyer et invitez-en de nouveaux.')).toBeTruthy();
   });
 });

@@ -4,7 +4,13 @@ import { useTranslation } from 'react-i18next';
 
 import { AppScreen, Button, Card, Chip, ScreenHeader, TextField, Txt } from '../components';
 import { getDatabase } from '../db/client';
-import { createMember, deleteMember, updateMember, updateTransaction } from '../db/repositories';
+import {
+  createMember,
+  deleteMember,
+  removeMember,
+  updateMember,
+  updateTransaction,
+} from '../db/repositories';
 import type { Member, MemberRole, Transaction } from '../db/repositories';
 import { useTheme } from '../theme';
 
@@ -37,7 +43,7 @@ export function MemberForm({
   const [role, setRole] = useState<MemberRole>(member?.role ?? 'editor');
   const [errorName, setErrorName] = useState<string | undefined>(undefined);
 
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [confirmingAction, setConfirmingAction] = useState<'none' | 'remove' | 'delete'>('none');
   const [reassignToMemberId, setReassignToMemberId] = useState<string | null>(
     otherMembers[0]?.id ?? null,
   );
@@ -69,6 +75,19 @@ export function MemberForm({
       }
     }
     await deleteMember(db, member.id);
+    onDeleted?.();
+  }
+
+  /**
+   * "Retirer du foyer" (US-052) — soft delete: unlike `handleConfirmDelete`, this never reassigns
+   * or touches `transactionsToReassign` — they stay attributed to `member`, which just falls out
+   * of the active member list (`Member.removedAt`).
+   */
+  async function handleConfirmRemove() {
+    if (!member) {
+      return;
+    }
+    await removeMember(getDatabase(), member.id);
     onDeleted?.();
   }
 
@@ -118,7 +137,23 @@ export function MemberForm({
             <Txt size="sm" color={theme.colors.textSecondary}>
               {t('memberForm.deleteBlockedLastMember')}
             </Txt>
-          ) : confirmingDelete ? (
+          ) : confirmingAction === 'remove' ? (
+            <>
+              <Txt size="sm">
+                {t('memberForm.removeConfirmMessage', { count: transactionsToReassign.length })}
+              </Txt>
+              <Button
+                label={t('memberForm.removeConfirmYes')}
+                variant="danger"
+                onPress={handleConfirmRemove}
+              />
+              <Button
+                label={t('memberForm.removeConfirmCancel')}
+                variant="secondary"
+                onPress={() => setConfirmingAction('none')}
+              />
+            </>
+          ) : confirmingAction === 'delete' ? (
             <>
               {transactionsToReassign.length > 0 ? (
                 <>
@@ -157,15 +192,24 @@ export function MemberForm({
               <Button
                 label={t('memberForm.deleteConfirmCancel')}
                 variant="secondary"
-                onPress={() => setConfirmingDelete(false)}
+                onPress={() => setConfirmingAction('none')}
               />
             </>
           ) : (
-            <Button
-              label={t('memberForm.delete')}
-              variant="danger"
-              onPress={() => setConfirmingDelete(true)}
-            />
+            <>
+              {transactionsToReassign.length > 0 ? (
+                <Button
+                  label={t('memberForm.removeFromHousehold')}
+                  variant="danger"
+                  onPress={() => setConfirmingAction('remove')}
+                />
+              ) : null}
+              <Button
+                label={t('memberForm.delete')}
+                variant={transactionsToReassign.length > 0 ? 'secondary' : 'danger'}
+                onPress={() => setConfirmingAction('delete')}
+              />
+            </>
           )}
         </Card>
       ) : null}

@@ -11,9 +11,9 @@ describe('FREE_PLAN', () => {
     expect(typeof entitlement?.numericValue).toBe('number');
   });
 
-  it('defines a members limit', () => {
+  it('caps members at 1 (US-054)', () => {
     const entitlement = FREE_PLAN.entitlements.find((e) => e.key === 'members.max');
     expect(entitlement?.type).toBe('limit');
-    expect(typeof entitlement?.numericValue).toBe('number');
+    expect(entitlement?.numericValue).toBe(1);
   });
 });

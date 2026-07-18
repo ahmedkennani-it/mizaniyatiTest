@@ -33,6 +33,7 @@ import {
   dismissRamadanSuggestion,
   dismissVoicePromo,
   getUserSettings,
+  listAllMembers,
   listCategories,
   listHouseholds,
   listMembers,
@@ -92,6 +93,9 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
+  // Includes removed members (US-052) — only for resolving a past transaction's name; the
+  // greeting (`firstName`) and any member picker must stay on the active-only `members` above.
+  const [allMembers, setAllMembers] = useState<Member[]>([]);
   const [households, setHouseholds] = useState<Household[]>([]);
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [vaults, setVaults] = useState<Vault[]>([]);
@@ -104,6 +108,7 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
     listTransactions(db).then(setTransactions);
     listCategories(db).then(setCategories);
     listMembers(db).then(setMembers);
+    listAllMembers(db).then(setAllMembers);
     listHouseholds(db).then(setHouseholds);
     getUserSettings(db).then(setSettings);
     listVaults(db).then(setVaults);
@@ -139,9 +144,9 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
 
   const memberById = useMemo(() => {
     const map = new Map<string, Member>();
-    for (const member of members) map.set(member.id, member);
+    for (const member of allMembers) map.set(member.id, member);
     return map;
-  }, [members]);
+  }, [allMembers]);
 
   // The household's own currency, not the launch market's — a France household budgets in EUR.
   // Falls back to the launch default only until the household row has loaded.
