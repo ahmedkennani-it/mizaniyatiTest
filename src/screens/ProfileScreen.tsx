@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { CountrySelectorScreen } from './CountrySelectorScreen';
 import { DebtsScreen } from './DebtsScreen';
 import { MembersScreen } from './MembersScreen';
 import { PaywallScreen } from './PaywallScreen';
@@ -16,6 +17,7 @@ import {
   Avatar,
   Button,
   Card,
+  Chip,
   ListRow,
   Pill,
   ScreenHeader,
@@ -23,11 +25,19 @@ import {
   Txt,
 } from '../components';
 import { getDatabase } from '../db/client';
-import { getNotificationSettings, listMembers, setBudgetAlertsEnabled } from '../db/repositories';
-import type { Member } from '../db/repositories';
-import { useEntitlements } from '../entitlements';
+import {
+  getNotificationSettings,
+  getUserSettings,
+  listHouseholds,
+  listMembers,
+  setBudgetAlertsEnabled,
+} from '../db/repositories';
+import type { Household, Member, UserSettings } from '../db/repositories';
+import { PRO_PLAN, useEntitlements } from '../entitlements';
 import { languageOption, nextLanguage, useLanguage } from '../i18n';
+import { findMarket } from '../market';
 import { DEFAULT_CURRENCY_CODE } from '../money';
+import { useSubscription } from '../subscriptions';
 import { useTheme } from '../theme';
 
 /** How many avatars stack before folding the rest into a "+N" tail (US-053). */
@@ -60,12 +70,23 @@ function ProfilePlaceholder({
  */
 export function ProfileScreen() {
   const { t } = useTranslation();
-  const { theme, colorScheme, seniorMode, toggleColorScheme, toggleSeniorMode } = useTheme();
+  const {
+    theme,
+    colorScheme,
+    colorSchemePreference,
+    setColorSchemePreference,
+    seniorMode,
+    toggleSeniorMode,
+  } = useTheme();
   const { language, setLanguage } = useLanguage();
   const entitlements = useEntitlements();
+  const { plan } = useSubscription();
+  const isPro = plan.id === PRO_PLAN.id;
 
   const [budgetAlertsEnabled, setBudgetAlertsEnabledState] = useState(false);
   const [members, setMembers] = useState<Member[]>([]);
+  const [households, setHouseholds] = useState<Household[]>([]);
+  const [settings, setSettings] = useState<UserSettings | null>(null);
   const [view, setView] = useState<
     | 'settings'
     | 'recurring'
@@ -77,6 +98,7 @@ export function ProfileScreen() {
     | 'subscription'
     | 'account'
     | 'debts'
+    | 'country'
   >('settings');
 
   const refresh = useCallback(() => {
@@ -85,6 +107,8 @@ export function ProfileScreen() {
       .then((settings) => settings.budgetAlertsEnabled)
       .then(setBudgetAlertsEnabledState);
     listMembers(db).then(setMembers);
+    listHouseholds(db).then(setHouseholds);
+    getUserSettings(db).then(setSettings);
   }, []);
 
   useEffect(() => {
@@ -108,6 +132,7 @@ export function ProfileScreen() {
     );
   if (view === 'members') return <MembersScreen onBack={() => setView('settings')} />;
   if (view === 'debts') return <DebtsScreen onBack={() => setView('settings')} />;
+  if (view === 'country') return <CountrySelectorScreen onBack={() => setView('settings')} />;
   if (view === 'security') return <SecurityScreen onBack={() => setView('settings')} />;
   if (view === 'subscription') return <PaywallScreen onBack={() => setView('settings')} />;
   if (view === 'account') {
@@ -120,7 +145,11 @@ export function ProfileScreen() {
     );
   }
 
-  const householdName = members[0]?.name ?? t('home.household');
+  // The household's own name, not its first member's (US-005's fix, revisited here — the profile
+  // hero is a second place this same "membre confondu avec foyer" bug could have crept back in).
+  const householdName = households[0]?.name ?? t('home.household');
+  const currencyCode = households[0]?.currencyCode ?? DEFAULT_CURRENCY_CODE;
+  const countryName = settings?.countryCode ? findMarket(settings.countryCode)?.nameKey : undefined;
   const languageName = t(languageOption(language).translatedNameKey);
 
   return (
@@ -131,15 +160,24 @@ export function ProfileScreen() {
       <Card elevated style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md }}>
         <Avatar name={householdName} size={56} />
         <View style={{ flex: 1, gap: 2 }}>
-          <Txt weight="bold" size="md">
-            {householdName}
-          </Txt>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs }}>
+            <Txt weight="bold" size="md">
+              {householdName}
+            </Txt>
+            {isPro ? (
+              <Pill
+                label={t('profileScreen.proBadge')}
+                background={theme.accents.gold.wash}
+                color={theme.accents.gold.ink}
+              />
+            ) : null}
+          </View>
           <Txt size="xs" color={theme.colors.textSecondary}>
-            {`${t('home.disclaimer')}`}
+            {countryName ? `${t(countryName)} · ${t('home.disclaimer')}` : t('home.disclaimer')}
           </Txt>
         </View>
         <Pill
-          label={DEFAULT_CURRENCY_CODE}
+          label={currencyCode}
           background={theme.accents.teal.wash}
           color={theme.accents.teal.ink}
         />
@@ -154,6 +192,14 @@ export function ProfileScreen() {
           title={t('language.label')}
           value={languageName}
           onPress={() => setLanguage(nextLanguage(language))}
+          chevron
+        />
+        <ListRow
+          icon="map-pin"
+          accent="blue"
+          title={t('countrySelector.openLink')}
+          value={currencyCode}
+          onPress={() => setView('country')}
           chevron
         />
         <ListRow
@@ -173,11 +219,23 @@ export function ProfileScreen() {
             senior: seniorMode ? t('theme.seniorSuffix') : '',
           })}
         </Txt>
-        <Button
-          label={colorScheme === 'light' ? t('theme.switchToDark') : t('theme.switchToLight')}
-          variant="secondary"
-          onPress={toggleColorScheme}
-        />
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.xs }}>
+          <Chip
+            label={t('theme.schemeLight')}
+            selected={colorSchemePreference === 'light'}
+            onPress={() => setColorSchemePreference('light')}
+          />
+          <Chip
+            label={t('theme.schemeDark')}
+            selected={colorSchemePreference === 'dark'}
+            onPress={() => setColorSchemePreference('dark')}
+          />
+          <Chip
+            label={t('theme.schemeSystem')}
+            selected={colorSchemePreference === 'system'}
+            onPress={() => setColorSchemePreference('system')}
+          />
+        </View>
         <Button
           label={seniorMode ? t('theme.disableSenior') : t('theme.enableSenior')}
           variant={seniorMode ? 'danger' : 'primary'}
@@ -274,7 +332,7 @@ export function ProfileScreen() {
         <ListRow
           icon="tag"
           accent="purple"
-          title={t('subscriptionScreen.openLink')}
+          title={isPro ? t('subscriptionScreen.openLink') : t('subscriptionScreen.upgradeLink')}
           onPress={() => setView('subscription')}
           chevron
         />

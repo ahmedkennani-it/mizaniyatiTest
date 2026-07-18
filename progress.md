@@ -1759,6 +1759,84 @@ construit :**
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1939/1939, 158 suites** ✅.
 - ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé).
 
+### Itération 57 — Phase 14 complète (Profil, réglages & thèmes) ✅ — 14.1 à 14.6
+
+Beaucoup de cette phase existait déjà en profondeur (Profil, bascule sombre/senior, mode Ramadan) —
+le vrai travail était d'auditer chaque critère écrit contre ce qui tournait réellement, plutôt que
+de reconstruire à l'aveugle. Deux vrais bugs trouvés, trois lacunes construites, une tâche déjà
+entièrement couverte.
+
+- **14.1 (Écran Profil)** — 🐛 **même bug que la 4.5/itération 19, revenu par une autre porte** :
+  la carte de profil affichait `members[0]?.name` comme nom du foyer — le PREMIER MEMBRE, pas le
+  foyer. La 4.5 avait corrigé exactement ça sur le tableau de bord ; personne n'avait vérifié que
+  Profil ne portait pas la même confusion. Corrigé (`households[0]?.name`), plus la devise réelle du
+  foyer sur le badge (codée en dur sur `DEFAULT_CURRENCY_CODE` jusque-là — un foyer en EUR voyait
+  « MAD »). Ajouts réels : le pays (`findMarket(settings.countryCode)`), un badge Pro
+  (`useSubscription().plan.id === PRO_PLAN.id`), et l'entrée « Abonnement » qui devient
+  « Passer à Pro » tant que le foyer est Gratuit.
+- **14.2 (Changement de langue)** — critères 1 et 2 déjà acquis par l'architecture existante
+  (sélecteur déjà fonctionnel ; `LanguageContext` gère déjà le bascule RTL en session, documenté
+  depuis une itération antérieure). **Critère 3 (catégories par défaut retraduites, catégories
+  personnalisées inchangées) était le vrai manque** : `Category.name` stocke une chaîne littérale,
+  pas une clé i18n (choix déjà documenté dans `getDefaultCategories` — renommer une catégorie par
+  défaut se comporte comme renommer une catégorie personnalisée). Nouveau
+  `resolveCategoryDisplayName(category, language)` : une catégorie par défaut dont le nom actuel
+  correspond encore à l'une des 3 traductions connues pour son icône est retraduite en direct ;
+  dès qu'elle ne correspond à aucune, elle est laissée intacte pour toujours — seul signal fiable
+  vu qu'aucun indicateur « jamais modifié » n'existe. Câblé dans **10 fichiers d'écran** partout où
+  un nom de catégorie s'affiche (liste, détail, chips de saisie, historique, notifications) —
+  jamais dans le formulaire d'édition (la valeur initiale reste la chaîne brute) ni dans la logique
+  de correspondance sur « Autres »/« أخرى » (CategoryForm), qui doivent rester littérales.
+- **14.3 (Sélecteur pays & devise)** — n'existait pas du tout comme écran de réglages (seul
+  l'onboarding en avait un, non réutilisable). Nouveau `CountrySelectorScreen` : recherche en
+  direct (nom, devise ou code pays), regroupement MENA & Golfe / Diaspora via `isMenaGulfMarket`
+  déjà établi (10.3), pays actuel mis en évidence en tête avec un montant d'exemple formaté, et
+  confirmation explicite avant tout changement de devise — le texte est purement informatif,
+  puisque chaque transaction porte déjà sa propre `currencyCode` : rien à migrer, l'historique ne
+  peut pas être réécrit par construction. Parcourt tout `MARKETS` (sélectionnables **et**
+  annoncés, même logique « visible sans prétendre livrer » que l'onboarding et les packs de
+  langue) — un marché annoncé est inerte, badge « Bientôt disponible », aucun `onPress`.
+  ⚠️ **Pas de drapeau** : aucun système d'emoji/asset de drapeau n'existe dans le design system ;
+  gardé `map-pin` (déjà utilisé partout ailleurs pour un pays) plutôt que d'introduire un élément
+  visuel isolé du reste de l'app.
+- **14.4 (Mode sombre)** — le bascule manuel existait ; **« l'app peut suivre le réglage système »
+  n'existait pas du tout** : `ThemeProvider` ne lisait `useColorScheme()` qu'une fois au montage,
+  puis un bascule manuel prenait le dessus pour toujours, sans retour possible à l'auto sans
+  redémarrer l'app. Nouveau `colorSchemePreference` (`'light' | 'dark' | 'system'`, distinct du
+  `colorScheme` **effectif** déjà consommé partout ailleurs dans le code — aucun appelant existant
+  n'a eu à changer). `initialColorScheme` (utilisé par des dizaines de tests pour figer un thème)
+  garde exactement son comportement actuel. Profil gagne un choix à 3 (Clair/Sombre/Automatique)
+  au lieu d'un bascule à 2.
+- **14.5 (Mode senior)** — le bascule global (police, cibles tactiles 56 pt, contrastes) était déjà
+  branché depuis la 2.1-2.4 ; **`HomeScreen` n'utilisait `seniorMode` nulle part** — le tableau de
+  bord restait toujours complet. Masqué en mode senior : bannière de suggestion Ramadan, chip de
+  confiance, promo vocale, raccourci transferts, anneau de répartition, aperçu des objectifs.
+  Conservé, comme l'exige le critère : salutation, sélecteur de mois, solde du mois,
+  revenus/dépenses, dernières transactions.
+- **14.6 (Thème saisonnier)** — presque tout construit à la phase 10 (bascule d'activation,
+  identité du tableau de bord, suggestion proactive refusable par année hégirienne). 🐛 **Écart
+  réel trouvé** : le bouton « Désactiver » n'existait que dans la carte de récapitulatif, visible
+  uniquement une fois le Ramadan **terminé** — impossible de revenir à « Aucun » en cours de saison
+  alors que le critère dit explicitement « je peux choisir Aucun ou Ramadan » sans réserve
+  temporelle. Déplacé pour être toujours visible tant qu'un thème est actif.
+- Tests : `resolveCategoryDisplayName.test.ts` (6), 3 nouveaux cas dans `CategoriesScreen.test.tsx`
+  (retraduction bout-en-bout via un vrai rendu d'écran) ; `ThemeContext.test.tsx` (nouveau, 6 cas,
+  `useColorScheme` mocké au niveau du module RN feuille pour éviter les modules natifs que le
+  preset jest-expo ne résout pas) ; `CountrySelectorScreen.test.tsx` (10) +
+  `.rtl.test.tsx` (2), avec la France rendue temporairement sélectionnable **dans le test
+  seulement** (`jest.mock` partiel sur `MARKETS`) pour exercer un vrai changement de devise plutôt
+  que de se limiter au seul marché MVP réellement sélectionnable ; `HomeSeniorMode.test.tsx`
+  (nouveau, 4 cas) ; `RamadanScreen.test.tsx` (+1, désactivation en cours de saison) ;
+  `ProfileScreen.test.tsx` étendu (+6) ; `MembersScreen`/`MemberForm` inchangés par cette itération
+  mais leurs suites déjà vertes confirment qu'aucune régression n'a traversé les fichiers partagés
+  (`Member`, `listMembers`).
+- 🐛 **Flake indépendant trouvé en cours de route** : `RecurringRuleForm.test.tsx` ne fournissait
+  pas `LanguageProvider` — invisible tant que l'écran n'appelait pas `useLanguage()`, révélé par le
+  câblage de 14.2. Corrigé dans le harnais de test, pas dans le composant.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1980/1980, 163 suites** ✅.
+- ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé) — repli sur les
+  suites `.rtl.test.tsx` comme pour chaque écran précédent.
+
 ## Notes / blocages connus (hors périmètre Phase 1)
 
 - L'arbre de travail contient des changements accumulés multi-phases non

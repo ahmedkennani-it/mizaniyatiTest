@@ -24,6 +24,7 @@ import type { Category, SeasonalTheme, Transaction } from '../db/repositories';
 import { useEntitlements } from '../entitlements';
 import { useLanguage } from '../i18n';
 import { DEFAULT_CURRENCY_CODE, formatMoney, parseAmountInput } from '../money';
+import { resolveCategoryDisplayName } from '../categories';
 import { activateRamadanTheme, computeSeasonalThemeStatus } from '../seasonalThemes';
 import { ramadanSurface, useTheme } from '../theme';
 
@@ -182,11 +183,6 @@ export function RamadanScreen({ onBack, onNavigateToZakat }: RamadanScreenProps)
             {t('ramadanScreen.envelopeLabel')}:{' '}
             {formatMoney(activeTheme.envelopeMinor, activeTheme.currencyCode, language)}
           </Txt>
-          <Button
-            label={t('ramadanScreen.deactivateButton')}
-            variant="danger"
-            onPress={handleDeactivate}
-          />
         </Card>
       ) : (
         <Card
@@ -217,6 +213,14 @@ export function RamadanScreen({ onBack, onNavigateToZakat }: RamadanScreenProps)
         </Card>
       )}
 
+      {/* US-058: "je peux choisir Aucun ou Ramadan" — available at any time while a theme is
+          active, not only once the season has naturally ended. */}
+      <Button
+        label={t('ramadanScreen.deactivateButton')}
+        variant="danger"
+        onPress={handleDeactivate}
+      />
+
       <Button
         label={t('ramadanScreen.zakatShortcut')}
         variant="secondary"
@@ -230,7 +234,7 @@ export function RamadanScreen({ onBack, onNavigateToZakat }: RamadanScreenProps)
             key={category.id}
             icon="utensils"
             accent="gold"
-            title={category.name}
+            title={resolveCategoryDisplayName(category, language)}
             value={formatMoney(spentMinor, activeTheme.currencyCode, language)}
           />
         ))}

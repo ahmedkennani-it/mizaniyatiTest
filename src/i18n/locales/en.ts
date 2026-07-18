@@ -8,9 +8,8 @@ export const en: TranslationSchema = {
     label: 'Theme: {{scheme}}{{senior}}',
     schemeLight: 'light',
     schemeDark: 'dark',
+    schemeSystem: 'automatic',
     seniorSuffix: ' · senior',
-    switchToDark: 'Switch to dark',
-    switchToLight: 'Switch to light',
     enableSenior: 'Enable senior mode',
     disableSenior: 'Disable senior mode',
   },
@@ -578,6 +577,23 @@ export const en: TranslationSchema = {
     suggestionActivate: 'Activate',
     suggestionDismiss: 'Not now',
   },
+  countrySelector: {
+    title: 'Country & currency',
+    openLink: 'Country & currency',
+    searchLabel: 'Search',
+    searchPlaceholder: 'Country or currency…',
+    selectedTitle: 'Current country',
+    exampleAmountLabel: 'Example: {{amount}}',
+    regionMenaGulf: 'MENA & Gulf',
+    regionDiaspora: 'Diaspora',
+    comingSoonBadge: 'Coming soon',
+    noResults: 'No country matches your search.',
+    confirmTitle: 'Change currency?',
+    confirmMessage:
+      'Your transaction history stays in its original currency ({{oldCurrency}}); only new transactions will use {{newCurrency}}.',
+    confirmYes: 'Confirm',
+    confirmCancel: 'Cancel',
+  },
   membersScreen: {
     back: 'Back',
     title: 'Family',
@@ -676,6 +692,10 @@ export const en: TranslationSchema = {
   },
   subscriptionScreen: {
     openLink: 'Subscription',
+    upgradeLink: 'Upgrade to Pro',
+  },
+  profileScreen: {
+    proBadge: 'Pro',
   },
   paywallScreen: {
     back: 'Back',

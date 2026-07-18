@@ -6,9 +6,8 @@ export const fr = {
     label: 'Thème : {{scheme}}{{senior}}',
     schemeLight: 'clair',
     schemeDark: 'sombre',
+    schemeSystem: 'automatique',
     seniorSuffix: ' · senior',
-    switchToDark: 'Passer en sombre',
-    switchToLight: 'Passer en clair',
     enableSenior: 'Activer le mode senior',
     disableSenior: 'Désactiver le mode senior',
   },
@@ -586,6 +585,23 @@ export const fr = {
     suggestionActivate: 'Activer',
     suggestionDismiss: 'Pas maintenant',
   },
+  countrySelector: {
+    title: 'Pays & devise',
+    openLink: 'Pays & devise',
+    searchLabel: 'Rechercher',
+    searchPlaceholder: 'Pays ou devise…',
+    selectedTitle: 'Pays actuel',
+    exampleAmountLabel: 'Exemple : {{amount}}',
+    regionMenaGulf: 'MENA & Golfe',
+    regionDiaspora: 'Diaspora',
+    comingSoonBadge: 'Bientôt disponible',
+    noResults: 'Aucun pays ne correspond à votre recherche.',
+    confirmTitle: 'Changer de devise ?',
+    confirmMessage:
+      "L'historique de vos opérations reste dans sa devise d'origine ({{oldCurrency}}) ; seules les nouvelles opérations utiliseront {{newCurrency}}.",
+    confirmYes: 'Confirmer',
+    confirmCancel: 'Annuler',
+  },
   membersScreen: {
     back: 'Retour',
     title: 'Famille',
@@ -687,6 +703,10 @@ export const fr = {
   },
   subscriptionScreen: {
     openLink: 'Abonnement',
+    upgradeLink: 'Passer à Pro',
+  },
+  profileScreen: {
+    proBadge: 'Pro',
   },
   paywallScreen: {
     back: 'Retour',

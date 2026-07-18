@@ -2,7 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { categoryIconName, computeCategoryBudgetStatus, rankCategoriesByFrequency } from '../categories';
+import {
+  categoryIconName,
+  computeCategoryBudgetStatus,
+  rankCategoriesByFrequency,
+  resolveCategoryDisplayName,
+} from '../categories';
 import {
   AppScreen,
   Button,
@@ -209,7 +214,7 @@ export function AddExpenseForm({
     await notificationClient.presentNow({
       title: t('notifications.budgetAlertTitle'),
       body: t('notifications.budgetAlertBody', {
-        category: category?.name ?? '',
+        category: category ? resolveCategoryDisplayName(category, language) : '',
         amount: formatMoney(budgetStatus.spentMinor, currencyCode, language),
       }),
     });
@@ -369,7 +374,7 @@ export function AddExpenseForm({
             {rankedCategories.map((category) => (
               <Chip
                 key={category.id}
-                label={category.name}
+                label={resolveCategoryDisplayName(category, language)}
                 selected={category.id === categoryId}
                 onPress={() => {
                   // Picking closes the list back onto the strip, where the choice shows up pinned:
@@ -393,7 +398,7 @@ export function AddExpenseForm({
               <CategoryChipV
                 key={category.id}
                 icon={categoryIconName(category.icon)}
-                label={category.name}
+                label={resolveCategoryDisplayName(category, language)}
                 selected={category.id === categoryId}
                 onPress={() => setCategoryId(category.id)}
               />

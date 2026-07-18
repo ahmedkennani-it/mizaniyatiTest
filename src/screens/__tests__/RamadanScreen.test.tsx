@@ -123,6 +123,23 @@ describe('RamadanScreen (US-026)', () => {
     expect(await screen.findByText(/Enveloppe dépassée/)).toBeTruthy();
   });
 
+  it('lets the user deactivate mid-season, before the theme has ended (US-058)', async () => {
+    await activateRamadanTheme(mockFakeDb, {
+      startDate: '2020-01-01',
+      endDate: '2099-01-30',
+      envelopeMinor: 750000,
+      currencyCode: 'MAD',
+      language: 'fr',
+    });
+
+    await renderScreen(jest.fn(), jest.fn(), RAMADAN_PLAN);
+    expect(await screen.findByText('Budget Ramadan — restant')).toBeTruthy();
+
+    await fireEvent.press(screen.getByText('Désactiver le mode Ramadan'));
+
+    expect(await screen.findByText('Activer le mode Ramadan')).toBeTruthy();
+  });
+
   it('navigates to Zakat via the shortcut', async () => {
     await activateRamadanTheme(mockFakeDb, {
       startDate: '2020-01-01',

@@ -30,6 +30,8 @@ import { ThemeProvider } from '../../theme';
 import { CategoriesScreen } from '../CategoriesScreen';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { ExpenseEntryProvider } from '../ExpenseEntryProvider';
+// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
+import i18n from '../../i18n/i18n';
 
 const TWO_CATEGORY_PLAN: Plan = {
   id: 'two-category-test-plan',
@@ -181,6 +183,57 @@ describe('CategoriesScreen', () => {
       await screen.findByText('Courses');
       expect(screen.queryByText(/du plafond/)).toBeNull();
       expect(screen.queryByText(/Dépassé de/)).toBeNull();
+    });
+  });
+
+  describe('retraduction des catégories par défaut (US-056)', () => {
+    afterEach(async () => {
+      await i18n.changeLanguage('fr');
+    });
+
+    it('shows a pristine default category translated into the active language', async () => {
+      await createCategory(mockFakeDb, {
+        name: 'Courses',
+        icon: 'cart',
+        color: '#D97706',
+        isDefault: true,
+      });
+      await i18n.changeLanguage('en');
+
+      await renderScreen();
+
+      expect(await screen.findByText('Groceries')).toBeTruthy();
+      expect(screen.queryByText('Courses')).toBeNull();
+    });
+
+    it('keeps a renamed default category exactly as the household typed it, in every language', async () => {
+      await createCategory(mockFakeDb, {
+        name: 'Épicerie du coin',
+        icon: 'cart',
+        color: '#D97706',
+        isDefault: true,
+      });
+      await i18n.changeLanguage('en');
+
+      await renderScreen();
+
+      expect(await screen.findByText('Épicerie du coin')).toBeTruthy();
+      expect(screen.queryByText('Groceries')).toBeNull();
+    });
+
+    it('never retranslates a fully custom (non-default) category', async () => {
+      await createCategory(mockFakeDb, {
+        name: 'Courses',
+        icon: 'cart',
+        color: '#D97706',
+        isDefault: false,
+      });
+      await i18n.changeLanguage('en');
+
+      await renderScreen();
+
+      expect(await screen.findByText('Courses')).toBeTruthy();
+      expect(screen.queryByText('Groceries')).toBeNull();
     });
   });
 });

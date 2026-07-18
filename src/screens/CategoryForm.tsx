@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { CATEGORY_COLOR_OPTIONS, CATEGORY_ICON_OPTIONS } from '../categories';
+import { CATEGORY_COLOR_OPTIONS, CATEGORY_ICON_OPTIONS, resolveCategoryDisplayName } from '../categories';
 import { AppScreen, Button, Card, Chip, NumericKeypad, ScreenHeader, TextField, Txt } from '../components';
 import { getDatabase } from '../db/client';
 import {
@@ -306,7 +306,7 @@ export function CategoryForm({
                     {otherCategories.map((candidate) => (
                       <Chip
                         key={candidate.id}
-                        label={candidate.name}
+                        label={resolveCategoryDisplayName(candidate, language)}
                         selected={candidate.id === reassignToCategoryId}
                         onPress={() => setReassignToCategoryId(candidate.id)}
                       />

@@ -2,7 +2,7 @@ export { buildTheme } from './buildTheme';
 export { ThemeProvider, useTheme } from './ThemeContext';
 export { useAppFont } from './useAppFont';
 export { ramadanSurface } from './tokens';
-export type { ThemeContextValue, ThemeProviderProps } from './ThemeContext';
+export type { ThemeContextValue, ThemeProviderProps, ColorSchemePreference } from './ThemeContext';
 export type {
   AccentName,
   AccentTokens,

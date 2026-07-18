@@ -10,11 +10,20 @@ jest.mock('../../db/client', () => ({
 }));
 
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
-import { createMember, getNotificationSettings, setBudgetAlertsEnabled } from '../../db/repositories';
+import {
+  createHousehold,
+  createMember,
+  getNotificationSettings,
+  saveLanguageCountry,
+  setBudgetAlertsEnabled,
+  upsertSubscription,
+} from '../../db/repositories';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { EntitlementsProvider, PRO_PLAN } from '../../entitlements';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { LanguageProvider } from '../../i18n';
+// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
+import { SubscriptionProvider } from '../../subscriptions';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { ThemeProvider } from '../../theme';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
@@ -25,20 +34,26 @@ function renderScreen() {
     <LanguageProvider>
       <ThemeProvider initialColorScheme="light">
         <EntitlementsProvider>
-          <ProfileScreen />
+          <SubscriptionProvider>
+            <ProfileScreen />
+          </SubscriptionProvider>
         </EntitlementsProvider>
       </ThemeProvider>
     </LanguageProvider>,
   );
 }
 
-/** Entry points to Pro-gated spec screens (e.g. Debts) need `useEntitlements()` in scope. */
-function renderScreenAsPro() {
+/** Entry points to Pro-gated spec screens (e.g. Debts) need `useEntitlements()` in scope, and the
+ *  profile hero's Pro badge/label reads `useSubscription()` — an active row must exist for real. */
+async function renderScreenAsPro() {
+  await upsertSubscription(mockFakeDb, { planId: 'pro', status: 'active' });
   return render(
     <LanguageProvider>
       <ThemeProvider initialColorScheme="light">
         <EntitlementsProvider plan={PRO_PLAN}>
-          <ProfileScreen />
+          <SubscriptionProvider>
+            <ProfileScreen />
+          </SubscriptionProvider>
         </EntitlementsProvider>
       </ThemeProvider>
     </LanguageProvider>,
@@ -90,7 +105,7 @@ describe('ProfileScreen — accès aux Dettes & prêts (US-048)', () => {
   });
 
   it('opens the Debts screen from the "Famille & fonctionnalités" section', async () => {
-    renderScreenAsPro();
+    await renderScreenAsPro();
 
     await fireEvent.press(await screen.findByText('Dettes & prêts'));
 
@@ -98,7 +113,7 @@ describe('ProfileScreen — accès aux Dettes & prêts (US-048)', () => {
   });
 
   it('returns to the settings list from the Debts screen', async () => {
-    renderScreenAsPro();
+    await renderScreenAsPro();
 
     await fireEvent.press(await screen.findByText('Dettes & prêts'));
     await screen.findByText('On me doit');
@@ -132,7 +147,7 @@ describe('ProfileScreen — aperçu Famille (US-053)', () => {
   it('hides the upsell hint on the Pro plan', async () => {
     await createMember(mockFakeDb, { name: 'Youssef' });
 
-    renderScreenAsPro();
+    await renderScreenAsPro();
 
     await screen.findByText('1 membre(s)');
     expect(screen.queryByText('Passez à Pro pour ajouter des membres à votre foyer.')).toBeNull();
@@ -148,5 +163,71 @@ describe('ProfileScreen — aperçu Famille (US-053)', () => {
 
     expect(await screen.findByText('Youssef')).toBeTruthy();
     expect(screen.getByText('Gérez les membres de votre foyer et invitez-en de nouveaux.')).toBeTruthy();
+  });
+});
+
+describe('ProfileScreen — carte de profil (US-055)', () => {
+  beforeEach(() => {
+    mockFakeDb = createFakeDatabase().db;
+  });
+
+  it("shows the household's own name, not its first member's", async () => {
+    await createHousehold(mockFakeDb, { name: 'Famille Benali', currencyCode: 'MAD' });
+    await createMember(mockFakeDb, { name: 'Youssef' });
+
+    renderScreen();
+
+    // Not "Youssef" — that would be the pre-fix bug (member name mistaken for household name).
+    expect(await screen.findByText('Famille Benali')).toBeTruthy();
+    expect(screen.queryByText('Youssef')).toBeNull();
+  });
+
+  it('shows the household currency and country', async () => {
+    await createHousehold(mockFakeDb, { name: 'Famille Dubois', currencyCode: 'EUR' });
+    await saveLanguageCountry(mockFakeDb, {
+      languageCode: 'fr',
+      countryCode: 'FR',
+      currencyCode: 'EUR',
+    });
+
+    renderScreen();
+
+    expect((await screen.findAllByText('EUR')).length).toBeGreaterThan(0);
+    expect(await screen.findByText(/France/)).toBeTruthy();
+  });
+
+  it('shows no Pro badge and the "Passer à Pro" entry on the Free plan', async () => {
+    renderScreen();
+
+    expect(await screen.findByText('Passer à Pro')).toBeTruthy();
+    expect(screen.queryByText('Pro')).toBeNull();
+  });
+
+  it('shows a Pro badge and "Abonnement" (not "Passer à Pro") once subscribed', async () => {
+    await renderScreenAsPro();
+
+    expect(await screen.findByText('Pro')).toBeTruthy();
+    expect(screen.getByText('Abonnement')).toBeTruthy();
+    expect(screen.queryByText('Passer à Pro')).toBeNull();
+  });
+});
+
+describe('ProfileScreen — thème (US-059)', () => {
+  beforeEach(() => {
+    mockFakeDb = createFakeDatabase().db;
+  });
+
+  it('offers clair / sombre / automatique and switches on tap', async () => {
+    renderScreen();
+
+    expect(await screen.findByText(/Thème : clair/)).toBeTruthy();
+
+    fireEvent.press(screen.getByText('sombre'));
+    expect(await screen.findByText(/Thème : sombre/)).toBeTruthy();
+
+    // Back to "automatique" resolves to whatever the (unmocked, default light) test
+    // environment reports for the system scheme — "clair" again, not stuck on "sombre".
+    fireEvent.press(screen.getByText('automatique'));
+    expect(await screen.findByText(/Thème : clair/)).toBeTruthy();
   });
 });

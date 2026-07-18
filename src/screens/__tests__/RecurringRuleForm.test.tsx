@@ -1,7 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
 
-import '../../i18n';
 import {
   createCategory,
   createMember,
@@ -10,6 +9,7 @@ import {
 } from '../../db/repositories';
 import type { Category, Member, RecurringRule } from '../../db/repositories';
 import { createFakeDatabase } from '../../db/testUtils/createFakeDatabase';
+import { LanguageProvider } from '../../i18n';
 import { ThemeProvider } from '../../theme';
 import { RecurringRuleForm } from '../RecurringRuleForm';
 
@@ -28,9 +28,11 @@ function renderForm(
   onDeleted: () => void = jest.fn(),
 ) {
   return render(
-    <ThemeProvider initialColorScheme="light">
-      <RecurringRuleForm rule={rule} onSaved={onSaved} onCancel={jest.fn()} onDeleted={onDeleted} />
-    </ThemeProvider>,
+    <LanguageProvider>
+      <ThemeProvider initialColorScheme="light">
+        <RecurringRuleForm rule={rule} onSaved={onSaved} onCancel={jest.fn()} onDeleted={onDeleted} />
+      </ThemeProvider>
+    </LanguageProvider>,
   );
 }
 

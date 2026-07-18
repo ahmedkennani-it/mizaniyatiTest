@@ -1,3 +1,4 @@
+import { resolveCategoryDisplayName } from '../categories';
 import {
   createTransaction,
   listCategories,
@@ -6,6 +7,7 @@ import {
 } from '../db/repositories';
 import type { SqlDatabase } from '../db/types';
 import i18n from '../i18n/i18n';
+import type { SupportedLanguage } from '../i18n/i18n';
 import { notificationClient } from '../notifications';
 import { computeDueOccurrenceDates } from './recurringOccurrences';
 
@@ -54,7 +56,9 @@ export async function processRecurringRules(
       title: i18n.t('notifications.recurringAutoTitle'),
       body: i18n.t('notifications.recurringAutoBody', {
         count: due.length,
-        category: category?.name ?? '',
+        category: category
+          ? resolveCategoryDisplayName(category, i18n.language as SupportedLanguage)
+          : '',
       }),
     });
   }

@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { AppScreen, Button, Card, CategoryChipV, Chip, ScreenHeader, Txt, VoiceWaveform } from '../components';
-import { categoryIconName } from '../categories';
+import { categoryIconName, resolveCategoryDisplayName } from '../categories';
 import { getDatabase } from '../db/client';
 import {
   createTransaction,
@@ -358,7 +358,7 @@ export function VoiceEntrySheet({
                 <CategoryChipV
                   key={category.id}
                   icon={categoryIconName(category.icon)}
-                  label={category.name}
+                  label={resolveCategoryDisplayName(category, language)}
                   selected={category.id === selectedCategoryId}
                   onPress={() => {
                     setSelectedCategoryId(category.id);

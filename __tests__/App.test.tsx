@@ -124,7 +124,7 @@ describe('App', () => {
 
     expect(screen.getByText(/Thème : clair/)).toBeTruthy();
 
-    await fireEvent.press(screen.getByText('Passer en sombre'));
+    await fireEvent.press(screen.getByText('sombre'));
     expect(screen.getByText(/Thème : sombre/)).toBeTruthy();
 
     await fireEvent.press(screen.getByText('Activer le mode senior'));

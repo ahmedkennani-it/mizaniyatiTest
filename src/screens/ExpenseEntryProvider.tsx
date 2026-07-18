@@ -8,7 +8,7 @@ import { ExpenseConfirmation } from './ExpenseConfirmation';
 import type { ExpenseConfirmationOverBudget } from './ExpenseConfirmation';
 import { VoiceEntrySheet } from './VoiceEntrySheet';
 import { UndoBanner } from '../components';
-import { computeCategoryBudgetStatus } from '../categories';
+import { computeCategoryBudgetStatus, resolveCategoryDisplayName } from '../categories';
 import { getDatabase } from '../db/client';
 import {
   createTransaction,
@@ -18,6 +18,7 @@ import {
   listTransactions,
 } from '../db/repositories';
 import type { Transaction } from '../db/repositories';
+import { useLanguage } from '../i18n';
 import { computeMonthlyBalance } from '../transactions';
 
 /** US-024: how long "Annuler" stays offered after a deletion. */
@@ -58,6 +59,7 @@ interface SavedSummary {
 
 export function ExpenseEntryProvider({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
+  const { language } = useLanguage();
   const [mode, setMode] = useState<Mode>('closed');
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [prefill, setPrefill] = useState<AddExpenseFormPrefill | undefined>(undefined);
@@ -112,20 +114,23 @@ export function ExpenseEntryProvider({ children }: { children: React.ReactNode }
       }
       const status = computeCategoryBudgetStatus(loaded, budget, currentMonthKey());
       return status.isOverBudget
-        ? { categoryName: category?.name ?? '', overageMinor: status.overageMinor }
+        ? {
+            categoryName: category ? resolveCategoryDisplayName(category, language) : '',
+            overageMinor: status.overageMinor,
+          }
         : undefined;
     })();
 
     setSavedSummary({
       amountMinor: transaction.amountMinor,
       currencyCode: transaction.currencyCode,
-      categoryName: category?.name ?? '',
+      categoryName: category ? resolveCategoryDisplayName(category, language) : '',
       memberName: members.find((candidate) => candidate.id === transaction.memberId)?.name ?? '',
       occurredAt: transaction.occurredAt,
       overBudget,
     });
     setMode('confirmation');
-  }, []);
+  }, [language]);
 
   /** US-024: the deletion already happened — this only offers 5s to bring it back. */
   const handleDeleted = useCallback(

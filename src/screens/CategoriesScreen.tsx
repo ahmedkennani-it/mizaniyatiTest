@@ -6,7 +6,7 @@ import { CategoryDetail } from './CategoryDetail';
 import { CategoryForm } from './CategoryForm';
 import { useExpenseEntry } from './ExpenseEntryProvider';
 import { PaywallScreen } from './PaywallScreen';
-import { computeCategoryBudgetStatus } from '../categories';
+import { computeCategoryBudgetStatus, resolveCategoryDisplayName } from '../categories';
 import { categoryAccent, categoryIconName } from '../categories/categoryVisual';
 import { nextMonthKey, previousMonthKey } from '../calendar';
 import {
@@ -183,7 +183,7 @@ export function CategoriesScreen() {
       {overCategories.length === 1 ? (
         <AlertBanner
           message={t('categoriesScreen.overBanner', {
-            name: overCategories[0].category.name,
+            name: resolveCategoryDisplayName(overCategories[0].category, language),
             amount: formatMoney(overCategories[0].status.overageMinor, DEFAULT_CURRENCY_CODE, language),
           })}
           onPress={() => openDetail(overCategories[0].category)}
@@ -208,6 +208,7 @@ export function CategoriesScreen() {
           const icon = categoryIconName(category.icon);
           const accent = categoryAccent(category.color);
           const budget = budgets.find((candidate) => candidate.categoryId === category.id);
+          const displayName = resolveCategoryDisplayName(category, language);
 
           if (!budget) {
             return (
@@ -215,7 +216,7 @@ export function CategoriesScreen() {
                 key={category.id}
                 icon={icon}
                 accent={accent}
-                title={category.name}
+                title={displayName}
                 chevron
                 onPress={() => openDetail(category)}
               />
@@ -228,7 +229,7 @@ export function CategoriesScreen() {
               key={category.id}
               icon={icon}
               accent={accent}
-              name={category.name}
+              name={displayName}
               amountLabel={`${num(status.spentMinor)} / ${num(status.capMinor)} ${DEFAULT_CURRENCY_CODE}`}
               progress={status.percentage === Infinity ? 1 : status.percentage / 100}
               over={status.isOverBudget}

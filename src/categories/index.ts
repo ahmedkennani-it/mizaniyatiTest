@@ -11,3 +11,4 @@ export {
 export { rankCategoriesByFrequency, FREQUENCY_WINDOW_DAYS } from './categoryFrequency';
 export { computeCategoryBudgetStatus } from './categoryBudgetStatus';
 export type { CategoryBudgetStatus } from './categoryBudgetStatus';
+export { resolveCategoryDisplayName } from './resolveCategoryDisplayName';

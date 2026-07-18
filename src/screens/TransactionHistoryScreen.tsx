@@ -4,10 +4,12 @@ import { useTranslation } from 'react-i18next';
 
 import { useExpenseEntry } from './ExpenseEntryProvider';
 import { AppScreen, Card, Chip, ScreenHeader, TransactionRow, Txt } from '../components';
+import { resolveCategoryDisplayName } from '../categories';
 import { categoryAccent, categoryIconName } from '../categories/categoryVisual';
 import { getDatabase } from '../db/client';
 import { listAllMembers, listCategories, listTransactions } from '../db/repositories';
 import type { Category, Member, Transaction } from '../db/repositories';
+import { useLanguage } from '../i18n';
 import { NO_FILTERS, filterTransactions } from '../transactions';
 import type { TransactionTypeFilter } from '../transactions';
 import { useTheme } from '../theme';
@@ -24,6 +26,7 @@ export interface TransactionHistoryScreenProps {
 export function TransactionHistoryScreen({ onBack }: TransactionHistoryScreenProps) {
   const { t } = useTranslation();
   const { theme } = useTheme();
+  const { language } = useLanguage();
   const { openEntry, dataVersion } = useExpenseEntry();
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -93,7 +96,7 @@ export function TransactionHistoryScreen({ onBack }: TransactionHistoryScreenPro
           {categories.map((category) => (
             <Chip
               key={category.id}
-              label={category.name}
+              label={resolveCategoryDisplayName(category, language)}
               selected={filters.categoryId === category.id}
               onPress={() => setFilters((previous) => ({ ...previous, categoryId: category.id }))}
             />
@@ -146,7 +149,11 @@ export function TransactionHistoryScreen({ onBack }: TransactionHistoryScreenPro
                 key={transaction.id}
                 icon={categoryIconName(category?.icon ?? 'ellipsis')}
                 accent={categoryAccent(category?.color)}
-                title={transaction.note || category?.name || transaction.occurredAt.slice(0, 10)}
+                title={
+                  transaction.note ||
+                  (category ? resolveCategoryDisplayName(category, language) : null) ||
+                  transaction.occurredAt.slice(0, 10)
+                }
                 occurredAt={transaction.occurredAt}
                 memberName={memberById.get(transaction.memberId)?.name}
                 amountMinor={isIncome ? transaction.amountMinor : -transaction.amountMinor}

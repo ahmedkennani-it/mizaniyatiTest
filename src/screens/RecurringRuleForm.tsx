@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { resolveCategoryDisplayName } from '../categories';
 import { AppScreen, Button, Card, Chip, ScreenHeader, TextField, Txt } from '../components';
 import { getDatabase } from '../db/client';
 import {
@@ -19,6 +20,7 @@ import type {
   RecurringRule,
   TransactionType,
 } from '../db/repositories';
+import { useLanguage } from '../i18n';
 import { DEFAULT_CURRENCY_CODE, parseAmountInput, toMajorUnits } from '../money';
 import { useTheme } from '../theme';
 
@@ -50,6 +52,7 @@ export interface RecurringRuleFormProps {
 export function RecurringRuleForm({ rule, onSaved, onCancel, onDeleted }: RecurringRuleFormProps) {
   const { t } = useTranslation();
   const { theme } = useTheme();
+  const { language } = useLanguage();
   const isEditing = rule !== undefined;
 
   const [categories, setCategories] = useState<Category[]>([]);
@@ -196,7 +199,7 @@ export function RecurringRuleForm({ rule, onSaved, onCancel, onDeleted }: Recurr
           {categories.map((category) => (
             <Chip
               key={category.id}
-              label={category.name}
+              label={resolveCategoryDisplayName(category, language)}
               selected={category.id === categoryId}
               onPress={() => setCategoryId(category.id)}
             />

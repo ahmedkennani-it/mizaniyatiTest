@@ -1,7 +1,12 @@
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { categoryAccent, categoryIconName, computeCategoryBudgetStatus } from '../categories';
+import {
+  categoryAccent,
+  categoryIconName,
+  computeCategoryBudgetStatus,
+  resolveCategoryDisplayName,
+} from '../categories';
 import { AppScreen, Button, Card, ProgressRing, ScreenHeader, StatCard, Txt, TransactionRow } from '../components';
 import type { Category, CategoryBudget, Member, Transaction } from '../db/repositories';
 import { useLanguage } from '../i18n';
@@ -52,10 +57,11 @@ export function CategoryDetail({
     .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
 
   const status = budget ? computeCategoryBudgetStatus(transactions, budget, monthKey) : null;
+  const displayName = resolveCategoryDisplayName(category, language);
 
   return (
     <AppScreen scroll bottomInset={110} contentStyle={{ gap: theme.spacing.md }}>
-      <ScreenHeader title={category.name} onBack={onBack} />
+      <ScreenHeader title={displayName} onBack={onBack} />
 
       {status ? (
         <>
@@ -136,7 +142,7 @@ export function CategoryDetail({
                 key={transaction.id}
                 icon={icon}
                 accent={accent}
-                title={transaction.note || category.name}
+                title={transaction.note || displayName}
                 occurredAt={transaction.occurredAt}
                 memberName={memberById.get(transaction.memberId)?.name}
                 amountMinor={

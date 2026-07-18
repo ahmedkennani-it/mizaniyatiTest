@@ -27,6 +27,7 @@ import {
 } from '../components';
 import type { AccentName } from '../theme';
 import type { DonutSegment } from '../components';
+import { resolveCategoryDisplayName } from '../categories';
 import { categoryAccent, categoryIconName } from '../categories/categoryVisual';
 import { getDatabase } from '../db/client';
 import {
@@ -85,7 +86,7 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
   const [view, setView] = useState<'dashboard' | 'history' | 'vaults' | 'ramadan' | 'zakat'>(
     'dashboard',
   );
-  const { theme } = useTheme();
+  const { theme, seniorMode } = useTheme();
   const { language } = useLanguage();
   const entitlements = useEntitlements();
   const { openEntry, openVoiceEntry, dataVersion } = useExpenseEntry();
@@ -171,16 +172,24 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
    * the slices still add up to the figure in the middle of the ring.
    */
   const segments: DonutSegment[] = rankCategories(breakdown, t('home.breakdownOthers')).map(
-    (entry) => ({
-      label: entry.categoryName,
-      value: entry.totalMinor,
-      valueLabel: num(entry.totalMinor),
-      accent: entry.isOthers ? 'blue' : categoryAccent(categoryById.get(entry.categoryId)?.color),
-      // "Autres" stands for several categories, so there is no single detail to open.
-      // The per-category detail screen lands with the categories stories (phase 7); until then a
-      // slice opens the Categories tab, which is where that detail will live.
-      onPress: entry.isOthers ? undefined : () => navigation?.navigate('categories'),
-    }),
+    (entry) => {
+      const category = categoryById.get(entry.categoryId);
+      return {
+        // "Autres" (`entry.categoryName` itself, not a real category) never retranslates through
+        // `resolveCategoryDisplayName` — it has no `Category` row to resolve against.
+        label:
+          !entry.isOthers && category
+            ? resolveCategoryDisplayName(category, language)
+            : entry.categoryName,
+        value: entry.totalMinor,
+        valueLabel: num(entry.totalMinor),
+        accent: entry.isOthers ? 'blue' : categoryAccent(category?.color),
+        // "Autres" stands for several categories, so there is no single detail to open.
+        // The per-category detail screen lands with the categories stories (phase 7); until then a
+        // slice opens the Categories tab, which is where that detail will live.
+        onPress: entry.isOthers ? undefined : () => navigation?.navigate('categories'),
+      };
+    },
   );
 
   // The current month is the ceiling: there is nothing to show past it, and letting the user walk
@@ -355,7 +364,7 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
                 key={category.id}
                 icon={categoryIconName(category.icon)}
                 accent={categoryAccent(category.color)}
-                label={category.name}
+                label={resolveCategoryDisplayName(category, language)}
                 value={formatMoney(spentMinor, activeRamadanTheme.currencyCode, language)}
                 style={{ width: '47%' }}
               />
@@ -390,8 +399,9 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
       />
 
       {/* Approximate Hijri-calendar nudge (US-041) — never shown once a theme is active, and
-          silenced for the rest of this approximate Hijri year once dismissed. */}
-      {showRamadanSuggestion ? (
+          silenced for the rest of this approximate Hijri year once dismissed. Also a secondary
+          element, hidden in senior mode (US-060) like the rest of this block. */}
+      {showRamadanSuggestion && !seniorMode ? (
         <Card elevated style={{ gap: theme.spacing.sm }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
             <IconTile icon="moon-star" accent="gold" />
@@ -444,100 +454,108 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
         }}
       />
 
-      <TrustChip label={t('home.disclaimer')} />
+      {/* US-060: the senior dashboard keeps only greeting, month balance, income/expense and
+          recent transactions — the trust chip, voice promo, transfers shortcut, category ring
+          and goals preview are all secondary elements, hidden below rather than trimmed to a
+          smaller size, per the criterion's own list of what stays. */}
+      {!seniorMode ? (
+        <>
+          <TrustChip label={t('home.disclaimer')} />
 
-      {/* A discovery aid, not a permanent ad: it retires itself once the household has used
-          voice or said no thanks (US-014). */}
-      {shouldShowVoicePromo(settings) ? (
-        <VoicePromoCard
-          title={t('home.voiceTitle')}
-          subtitle={t('home.voiceSubtitle')}
-          badge={t('home.voiceBadge')}
-          onPress={openVoiceEntry}
-          onDismiss={async () => {
-            await dismissVoicePromo(getDatabase());
-            setSettings(await getUserSettings(getDatabase()));
-          }}
-          dismissLabel={t('home.voiceDismiss')}
-        />
-      ) : null}
-
-      {/* US-047: only where the household's market actually sends money "back home" (US-013's
-          Transferts slot), and only once Pro-entitled — a free household sees the Transferts tab's
-          own upsell instead of a shortcut to a form it can't use. */}
-      {entitlements.can('transfers') &&
-      settings?.countryCode &&
-      marketHasModule(settings.countryCode, 'transfers') ? (
-        <Button
-          label={t('home.transfersShortcut', { country: t(originMarket().nameKey) })}
-          variant="secondary"
-          icon="plane"
-          onPress={() => navigation?.navigate('transfers', { openRecordForm: true })}
-        />
-      ) : null}
-
-      <Card elevated testID="category-breakdown">
-        <Txt weight="semibold" size="md" style={{ marginBottom: theme.spacing.sm }}>
-          {t('home.breakdownTitle')}
-        </Txt>
-        {segments.length === 0 ? (
-          <Txt size="sm" color={theme.colors.textSecondary}>
-            {t('home.breakdownEmpty')}
-          </Txt>
-        ) : (
-          <DonutBreakdown
-            segments={segments}
-            centerLabel={t('home.spentLabel')}
-            centerValue={num(expenseMinor)}
-            centerSubLabel={currencyCode}
-          />
-        )}
-      </Card>
-
-      <View style={{ gap: theme.spacing.sm }}>
-        <SectionHeader
-          title={t('home.goalsTitle')}
-          actionLabel={vaults.length > 0 ? t('home.seeAll') : undefined}
-          onActionPress={() => setView('vaults')}
-        />
-        {vaults.length === 0 ? (
-          // The section stays, with an invitation: hiding it entirely would leave a household
-          // that has never saved with no way to discover goals at all (US-011).
-          <Card elevated style={{ alignItems: 'center', gap: theme.spacing.sm }}>
-            <Txt size="sm" color={theme.colors.textSecondary}>
-              {t('home.goalsEmpty')}
-            </Txt>
-            <Button
-              label={t('home.goalsEmptyCta')}
-              variant="secondary"
-              icon="piggy-bank"
-              onPress={() => setView('vaults')}
+          {/* A discovery aid, not a permanent ad: it retires itself once the household has used
+              voice or said no thanks (US-014). */}
+          {shouldShowVoicePromo(settings) ? (
+            <VoicePromoCard
+              title={t('home.voiceTitle')}
+              subtitle={t('home.voiceSubtitle')}
+              badge={t('home.voiceBadge')}
+              onPress={openVoiceEntry}
+              onDismiss={async () => {
+                await dismissVoicePromo(getDatabase());
+                setSettings(await getUserSettings(getDatabase()));
+              }}
+              dismissLabel={t('home.voiceDismiss')}
             />
+          ) : null}
+
+          {/* US-047: only where the household's market actually sends money "back home" (US-013's
+              Transferts slot), and only once Pro-entitled — a free household sees the Transferts
+              tab's own upsell instead of a shortcut to a form it can't use. */}
+          {entitlements.can('transfers') &&
+          settings?.countryCode &&
+          marketHasModule(settings.countryCode, 'transfers') ? (
+            <Button
+              label={t('home.transfersShortcut', { country: t(originMarket().nameKey) })}
+              variant="secondary"
+              icon="plane"
+              onPress={() => navigation?.navigate('transfers', { openRecordForm: true })}
+            />
+          ) : null}
+
+          <Card elevated testID="category-breakdown">
+            <Txt weight="semibold" size="md" style={{ marginBottom: theme.spacing.sm }}>
+              {t('home.breakdownTitle')}
+            </Txt>
+            {segments.length === 0 ? (
+              <Txt size="sm" color={theme.colors.textSecondary}>
+                {t('home.breakdownEmpty')}
+              </Txt>
+            ) : (
+              <DonutBreakdown
+                segments={segments}
+                centerLabel={t('home.spentLabel')}
+                centerValue={num(expenseMinor)}
+                centerSubLabel={currencyCode}
+              />
+            )}
           </Card>
-        ) : (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: theme.spacing.sm, paddingVertical: 2 }}
-          >
-            {vaults.slice(0, GOAL_PREVIEW_COUNT).map((vault, index) => {
-              const status = computeVaultStatus(vault, contributionsUpToMonth);
-              return (
-                <GoalCard
-                  key={vault.id}
+
+          <View style={{ gap: theme.spacing.sm }}>
+            <SectionHeader
+              title={t('home.goalsTitle')}
+              actionLabel={vaults.length > 0 ? t('home.seeAll') : undefined}
+              onActionPress={() => setView('vaults')}
+            />
+            {vaults.length === 0 ? (
+              // The section stays, with an invitation: hiding it entirely would leave a household
+              // that has never saved with no way to discover goals at all (US-011).
+              <Card elevated style={{ alignItems: 'center', gap: theme.spacing.sm }}>
+                <Txt size="sm" color={theme.colors.textSecondary}>
+                  {t('home.goalsEmpty')}
+                </Txt>
+                <Button
+                  label={t('home.goalsEmptyCta')}
+                  variant="secondary"
                   icon="piggy-bank"
-                  accent={GOAL_ACCENTS[index % GOAL_ACCENTS.length]}
-                  title={vault.name}
-                  progress={status.percentage === Infinity ? 1 : status.percentage / 100}
-                  caption={`${num(status.savedMinor)} / ${num(vault.targetMinor)} ${vault.currencyCode}`}
                   onPress={() => setView('vaults')}
-                  style={{ width: 160 }}
                 />
-              );
-            })}
-          </ScrollView>
-        )}
-      </View>
+              </Card>
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: theme.spacing.sm, paddingVertical: 2 }}
+              >
+                {vaults.slice(0, GOAL_PREVIEW_COUNT).map((vault, index) => {
+                  const status = computeVaultStatus(vault, contributionsUpToMonth);
+                  return (
+                    <GoalCard
+                      key={vault.id}
+                      icon="piggy-bank"
+                      accent={GOAL_ACCENTS[index % GOAL_ACCENTS.length]}
+                      title={vault.name}
+                      progress={status.percentage === Infinity ? 1 : status.percentage / 100}
+                      caption={`${num(status.savedMinor)} / ${num(vault.targetMinor)} ${vault.currencyCode}`}
+                      onPress={() => setView('vaults')}
+                      style={{ width: 160 }}
+                    />
+                  );
+                })}
+              </ScrollView>
+            )}
+          </View>
+        </>
+      ) : null}
 
       <SectionHeader
         title={t('home.recentTitle')}
@@ -584,7 +602,11 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
                 key={transaction.id}
                 icon={categoryIconName(category?.icon ?? 'ellipsis')}
                 accent={categoryAccent(category?.color)}
-                title={transaction.note || category?.name || transaction.occurredAt.slice(0, 10)}
+                title={
+                  transaction.note ||
+                  (category ? resolveCategoryDisplayName(category, language) : null) ||
+                  transaction.occurredAt.slice(0, 10)
+                }
                 occurredAt={transaction.occurredAt}
                 memberName={member?.name}
                 amountMinor={isIncome ? transaction.amountMinor : -transaction.amountMinor}

@@ -57,6 +57,8 @@ export type { OnboardingLanguageCountryScreenProps } from './OnboardingLanguageC
 export { ExpenseEntryProvider, useExpenseEntry } from './ExpenseEntryProvider';
 export { VoiceEntrySheet } from './VoiceEntrySheet';
 export type { VoiceEntrySheetProps } from './VoiceEntrySheet';
+export { CountrySelectorScreen } from './CountrySelectorScreen';
+export type { CountrySelectorScreenProps } from './CountrySelectorScreen';
 export { DebtsScreen } from './DebtsScreen';
 export type { DebtsScreenProps } from './DebtsScreen';
 export { DebtForm } from './DebtForm';

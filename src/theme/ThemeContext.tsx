@@ -4,11 +4,21 @@ import { useColorScheme as useSystemColorScheme } from 'react-native';
 import { buildTheme } from './buildTheme';
 import type { ColorScheme, Theme } from './types';
 
+/** `'system'` follows the OS setting live (US-059's "l'app peut le suivre automatiquement");
+ *  `'light'`/`'dark'` are an explicit household override that ignores OS changes. */
+export type ColorSchemePreference = ColorScheme | 'system';
+
 export interface ThemeContextValue {
   theme: Theme;
+  /** The *effective*, resolved scheme `theme` was built from — always `'light'` or `'dark'`,
+   *  never `'system'`, so every existing light/dark check keeps working unchanged. */
   colorScheme: ColorScheme;
+  /** What the household actually chose — `'system'` unless they've explicitly overridden it. */
+  colorSchemePreference: ColorSchemePreference;
   seniorMode: boolean;
-  setColorScheme: (scheme: ColorScheme) => void;
+  setColorSchemePreference: (preference: ColorSchemePreference) => void;
+  /** Toggles between an explicit light/dark override, based on the *current effective* scheme —
+   *  from `'system'`, this picks the opposite of whatever the OS currently resolves to. */
   toggleColorScheme: () => void;
   setSeniorMode: (enabled: boolean) => void;
   toggleSeniorMode: () => void;
@@ -18,7 +28,8 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 export interface ThemeProviderProps {
   children: React.ReactNode;
-  /** Overrides the system color scheme; mainly useful for tests/storybook-style previews. */
+  /** Pins an explicit scheme, bypassing OS live-following — mainly for tests/storybook-style
+   *  previews. Omit to default to `'system'`. */
   initialColorScheme?: ColorScheme;
   initialSeniorMode?: boolean;
 }
@@ -29,14 +40,18 @@ export function ThemeProvider({
   initialSeniorMode = false,
 }: ThemeProviderProps) {
   const systemScheme = useSystemColorScheme();
-  const [colorScheme, setColorScheme] = useState<ColorScheme>(
-    initialColorScheme ?? (systemScheme === 'dark' ? 'dark' : 'light'),
+  const [colorSchemePreference, setColorSchemePreference] = useState<ColorSchemePreference>(
+    initialColorScheme ?? 'system',
   );
   const [seniorMode, setSeniorMode] = useState(initialSeniorMode);
 
+  const systemEffective: ColorScheme = systemScheme === 'dark' ? 'dark' : 'light';
+  const colorScheme: ColorScheme =
+    colorSchemePreference === 'system' ? systemEffective : colorSchemePreference;
+
   const toggleColorScheme = useCallback(() => {
-    setColorScheme((prev) => (prev === 'light' ? 'dark' : 'light'));
-  }, []);
+    setColorSchemePreference(colorScheme === 'light' ? 'dark' : 'light');
+  }, [colorScheme]);
 
   const toggleSeniorMode = useCallback(() => {
     setSeniorMode((prev) => !prev);
@@ -48,13 +63,14 @@ export function ThemeProvider({
     () => ({
       theme,
       colorScheme,
+      colorSchemePreference,
       seniorMode,
-      setColorScheme,
+      setColorSchemePreference,
       toggleColorScheme,
       setSeniorMode,
       toggleSeniorMode,
     }),
-    [theme, colorScheme, seniorMode, toggleColorScheme, toggleSeniorMode],
+    [theme, colorScheme, colorSchemePreference, seniorMode, toggleColorScheme, toggleSeniorMode],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
