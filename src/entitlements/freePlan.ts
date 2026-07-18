@@ -22,5 +22,6 @@ export const FREE_PLAN: Plan = {
     { key: 'zakat', type: 'feature', booleanValue: false },
     { key: 'ramadan', type: 'feature', booleanValue: false },
     { key: 'transfers', type: 'feature', booleanValue: false },
+    { key: 'debts', type: 'feature', booleanValue: false },
   ],
 };

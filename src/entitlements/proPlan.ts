@@ -19,5 +19,6 @@ export const PRO_PLAN: Plan = {
     { key: 'zakat', type: 'feature', booleanValue: true },
     { key: 'ramadan', type: 'feature', booleanValue: true },
     { key: 'transfers', type: 'feature', booleanValue: true },
+    { key: 'debts', type: 'feature', booleanValue: true },
   ],
 };

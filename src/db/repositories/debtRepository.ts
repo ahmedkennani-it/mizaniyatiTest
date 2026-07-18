@@ -10,14 +10,16 @@ interface DebtRow {
   direction: Debt['direction'];
   amount_minor: number;
   currency_code: string;
+  date: string;
   due_date: string | null;
   settled: number;
+  reminded_at: string | null;
   created_at: string;
   updated_at: string;
 }
 
 const SELECT_COLUMNS =
-  'id, label, counterparty, direction, amount_minor, currency_code, due_date, settled, created_at, updated_at';
+  'id, label, counterparty, direction, amount_minor, currency_code, date, due_date, settled, reminded_at, created_at, updated_at';
 
 function fromRow(row: DebtRow): Debt {
   return {
@@ -27,8 +29,10 @@ function fromRow(row: DebtRow): Debt {
     direction: row.direction,
     amountMinor: row.amount_minor,
     currencyCode: row.currency_code,
+    date: row.date,
     dueDate: row.due_date,
     settled: row.settled === 1,
+    remindedAt: row.reminded_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -40,7 +44,7 @@ export async function createDebt(db: SqlDatabase, input: NewDebt): Promise<Debt>
   const dueDate = input.dueDate ?? null;
   const settled = input.settled ?? false;
   await db.runAsync(
-    `INSERT INTO debts (id, label, counterparty, direction, amount_minor, currency_code, due_date, settled, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+    `INSERT INTO debts (id, label, counterparty, direction, amount_minor, currency_code, date, due_date, settled, reminded_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
     [
       id,
       input.label,
@@ -48,8 +52,10 @@ export async function createDebt(db: SqlDatabase, input: NewDebt): Promise<Debt>
       input.direction,
       input.amountMinor,
       input.currencyCode,
+      input.date,
       dueDate,
       settled ? 1 : 0,
+      null,
       now,
       now,
     ],
@@ -61,8 +67,10 @@ export async function createDebt(db: SqlDatabase, input: NewDebt): Promise<Debt>
     direction: input.direction,
     amountMinor: input.amountMinor,
     currencyCode: input.currencyCode,
+    date: input.date,
     dueDate,
     settled,
+    remindedAt: null,
     createdAt: now,
     updatedAt: now,
   };
@@ -90,19 +98,36 @@ export async function updateDebt(db: SqlDatabase, id: string, patch: DebtPatch):
   }
   const updated: Debt = { ...existing, ...patch, updatedAt: new Date().toISOString() };
   await db.runAsync(
-    'UPDATE debts SET label = ?, counterparty = ?, direction = ?, amount_minor = ?, currency_code = ?, due_date = ?, settled = ?, updated_at = ? WHERE id = ?;',
+    'UPDATE debts SET label = ?, counterparty = ?, direction = ?, amount_minor = ?, currency_code = ?, date = ?, due_date = ?, settled = ?, reminded_at = ?, updated_at = ? WHERE id = ?;',
     [
       updated.label,
       updated.counterparty,
       updated.direction,
       updated.amountMinor,
       updated.currencyCode,
+      updated.date,
       updated.dueDate,
       updated.settled ? 1 : 0,
+      updated.remindedAt,
       updated.updatedAt,
       id,
     ],
   );
+  return updated;
+}
+
+/** Marks that the due-date reminder has fired, so `processDebtReminders` never repeats it. */
+export async function markDebtReminded(
+  db: SqlDatabase,
+  id: string,
+  remindedAt = new Date().toISOString(),
+): Promise<Debt> {
+  const existing = await getDebtById(db, id);
+  if (!existing) {
+    throw new NotFoundError('Debt', id);
+  }
+  const updated: Debt = { ...existing, remindedAt };
+  await db.runAsync('UPDATE debts SET reminded_at = ? WHERE id = ?;', [remindedAt, id]);
   return updated;
 }
 

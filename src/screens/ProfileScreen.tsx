@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { DebtsScreen } from './DebtsScreen';
 import { MembersScreen } from './MembersScreen';
 import { PaywallScreen } from './PaywallScreen';
 import { PlaceholderScreen } from './PlaceholderScreen';
@@ -70,6 +71,7 @@ export function ProfileScreen() {
     | 'security'
     | 'subscription'
     | 'account'
+    | 'debts'
   >('settings');
 
   const refresh = useCallback(() => {
@@ -100,6 +102,7 @@ export function ProfileScreen() {
       />
     );
   if (view === 'members') return <MembersScreen onBack={() => setView('settings')} />;
+  if (view === 'debts') return <DebtsScreen onBack={() => setView('settings')} />;
   if (view === 'security') return <SecurityScreen onBack={() => setView('settings')} />;
   if (view === 'subscription') return <PaywallScreen onBack={() => setView('settings')} />;
   if (view === 'account') {
@@ -221,6 +224,13 @@ export function ProfileScreen() {
           accent="gold"
           title={t('zakatScreen.openLink')}
           onPress={() => setView('zakat')}
+          chevron
+        />
+        <ListRow
+          icon="handshake"
+          accent="coral"
+          title={t('debtsScreen.openLink')}
+          onPress={() => setView('debts')}
           chevron
         />
       </View>

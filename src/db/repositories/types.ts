@@ -647,9 +647,17 @@ export interface Debt {
   direction: DebtDirection;
   amountMinor: number;
   currencyCode: string;
+  /** ISO date `YYYY-MM-DD` the loan was made — distinct from `dueDate` (the deadline) and from
+   *  `createdAt` (just when the row was written; a household can log a loan made last week). */
+  date: string;
   /** ISO date `YYYY-MM-DD`, or `null` for a debt with no agreed due date. */
   dueDate: string | null;
+  /** Legacy column from the original schema (task 1.3) — unused: whether a debt is settled is
+   *  computed from `DebtRepayment` rows (`computeDebtStatus`), never stored here, so it can never
+   *  diverge from the repayment history. */
   settled: boolean;
+  /** `null` until the due-date reminder has fired once (US-049's "notification de rappel"). */
+  remindedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -660,6 +668,7 @@ export interface NewDebt {
   direction: DebtDirection;
   amountMinor: number;
   currencyCode: string;
+  date: string;
   dueDate?: string | null;
   settled?: boolean;
 }
@@ -672,6 +681,22 @@ export interface DebtPatch {
   currencyCode?: string;
   dueDate?: string | null;
   settled?: boolean;
+}
+
+/** A partial or total repayment against a `Debt` (US-050) — append-only, like `VaultContribution`. */
+export interface DebtRepayment {
+  id: string;
+  debtId: string;
+  amountMinor: number;
+  /** ISO date `YYYY-MM-DD` the repayment was made. */
+  date: string;
+  createdAt: string;
+}
+
+export interface NewDebtRepayment {
+  debtId: string;
+  amountMinor: number;
+  date: string;
 }
 
 /**

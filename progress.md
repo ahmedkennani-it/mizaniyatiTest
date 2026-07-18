@@ -1618,6 +1618,61 @@ tâche réelle était de brancher `HomeScreen` sur cet état déjà persistant, 
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1834/1834, 149 suites** ✅.
 - ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé, cf. itération 52).
 
+### Itération 55 — Tâches 12.1, 12.2, 12.3 (Dettes informelles) ✅ — phase 12 terminée en une itération
+
+Les trois tâches partagent un seul modèle de données et un seul écran (liste → formulaire →
+détail), traitées ensemble plutôt qu'en trois passes séparées sur le même code.
+
+- **Audit préalable** : `Debt`/`debtRepository` existaient déjà (tâche 1.3) mais n'étaient
+  utilisés nulle part — aucun écran, aucune donnée réelle possible. Ça a permis un choix net :
+  rendre `date` (date du prêt, distincte de l'échéance et du `created_at`) **obligatoire** plutôt
+  que rétro-compatible, et casser franchement les 8 tests existants de `debtRepository.test.ts`
+  plutôt que de la rendre optionnelle avec un flou sur sa valeur par défaut.
+- **Migration 0025** : `debts` gagne `date` et `reminded_at` (même garde « une seule fois » que
+  Zakat/Tontine) ; nouvelle table `debt_repayments`, journal des versements — même schéma que
+  `vault_contributions`.
+- 🐛 **Décision d'architecture : la colonne `debts.settled` (héritée de la 1.3) n'est plus la
+  source de vérité.** Un statut booléen stocké à côté d'un journal de versements est exactement le
+  piège que Zakat (`paid_at IS NULL`) et Tontine (`closed_at`) évitent déjà — deux sources qui
+  peuvent diverger. `computeDebtStatus(debt, repayments)` calcule `remainingMinor` et `isSettled`
+  en sommant les versements, jamais en lisant `settled`. La colonne reste dans le schéma (coûteux à
+  retirer en SQLite) mais un test dédié (« never reads the legacy settled column ») fige qu'elle
+  n'a plus aucun effet.
+- **`computeNetDebtTotals`** (`src/debts`) : les deux totaux de la vue nette, une dette soldée n'y
+  contribue plus (US-050 « sort des totaux ») — recalculé en mémoire à chaque changement, même
+  schéma que `computeCategoryBreakdown`.
+- **Rappel d'échéance (US-049), même mécanique que Zakat/Tontine — pas une nouvelle** :
+  `shouldSendDebtReminder`/`processDebtReminders`, branchés dans `ensureAppReady`. Une dette sans
+  échéance ne rappelle jamais (`dueDate === null` coupe la décision), et le message notifie le
+  montant **restant dû** (`status.remainingMinor`), pas le montant initial — plus juste après un
+  remboursement partiel déjà enregistré avant que l'échéance n'arrive.
+- **Règle métier « aucun intérêt » appliquée structurellement, pas juste documentée** : ni
+  `Debt`/`NewDebt` ni `DebtForm` n'ont de champ taux — il n'existe littéralement rien à calculer.
+  Testé négativement (`queryByText(/intérêt/i)` doit être vide) pour que toute régression future qui
+  ajouterait un champ taux fasse échouer le test.
+- **`DebtsScreen`/`DebtForm`/`DebtDetail`** (nouveaux, calqués sur `VaultsScreen`/`VaultForm`/
+  `VaultDetail`) : `DebtForm` est **création uniquement** — aucun critère des trois tâches ne
+  demande de modifier/supprimer une dette une fois créée (contrairement aux coffres), donc aucun
+  bouton de suppression n'a été ajouté par réflexe. `DebtDetail` propose deux façons d'enregistrer
+  un remboursement : « Enregistrer un remboursement » (formulaire, partiel ou total) et
+  « Marquer comme soldée » (un seul tap, crée un versement du montant restant exact) — les deux
+  passent par le même `createDebtRepayment`, aucun code de statut séparé.
+- Ligne de dette : avatar (`Avatar` sur `counterparty`, une personne hors foyer, pas un `Member`),
+  date du prêt **et** échéance (ou « Pas d'échéance ») dans le sous-titre, montant **restant dû**
+  (pas le montant initial — c'est ce que la vue nette veut faire connaître). Badge « Échéance ce
+  mois » calculé en direct (`dueDate.slice(0,7) === monthKey`), jamais stocké.
+- **Entrée depuis Profil** (`Famille & fonctionnalités`, à côté de Zakat) — pas d'onglet dédié,
+  aucun critère ne le demandait, même choix que Coffres/Zakat déjà en place.
+- Nouvel entitlement `debts` (free: false, pro: true), même porte que Transferts/Tontine/Zakat.
+- Tests : `computeDebtStatus.test.ts` (10 cas), `debtReminderDecision.test.ts` (7),
+  `processDebtReminders.test.ts` (5), `debtRepository.test.ts` étendu (+2, `markDebtReminded`),
+  nouveau `debtRepaymentRepository.test.ts` (4), `DebtsScreen.test.tsx` (13),
+  `DebtForm.test.tsx` (7), `DebtDetail.test.tsx` (9), `DebtsScreen.rtl.test.tsx` (2),
+  `ProfileScreen.test.tsx` étendu (+2, l'entrée de navigation).
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **1908/1908, 157 suites** ✅.
+- ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé) — repli sur
+  `DebtsScreen.rtl.test.tsx`.
+
 ## Notes / blocages connus (hors périmètre Phase 1)
 
 - L'arbre de travail contient des changements accumulés multi-phases non

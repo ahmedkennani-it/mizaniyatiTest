@@ -100,8 +100,10 @@ export {
   getDebtById,
   listDebts,
   updateDebt,
+  markDebtReminded,
   deleteDebt,
 } from './debtRepository';
+export { createDebtRepayment, listDebtRepayments } from './debtRepaymentRepository';
 export {
   createTransfer,
   getTransferById,
@@ -179,6 +181,8 @@ export type {
   NewDebt,
   DebtPatch,
   DebtDirection,
+  DebtRepayment,
+  NewDebtRepayment,
   Transfer,
   NewTransfer,
   TransferPatch,
