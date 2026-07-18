@@ -25,6 +25,8 @@ import { diasporaBeneficiariesMigration } from './0023_diaspora_beneficiaries';
 import { diasporaTransferRecordingMigration } from './0024_diaspora_transfer_recording';
 import { debtRepaymentsMigration } from './0025_debt_repayments';
 import { memberRemovalMigration } from './0026_member_removal';
+import { originCountryMigration } from './0027_origin_country';
+import { diasporaTransferOriginCurrencyMigration } from './0028_diaspora_transfer_origin_currency';
 
 /**
  * Ordered registry of schema migrations. Add new entries with a strictly increasing
@@ -58,4 +60,6 @@ export const migrations: Migration[] = [
   diasporaTransferRecordingMigration,
   debtRepaymentsMigration,
   memberRemovalMigration,
+  originCountryMigration,
+  diasporaTransferOriginCurrencyMigration,
 ];

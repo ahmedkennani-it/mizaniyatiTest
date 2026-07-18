@@ -485,7 +485,9 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
           settings?.countryCode &&
           marketHasModule(settings.countryCode, 'transfers') ? (
             <Button
-              label={t('home.transfersShortcut', { country: t(originMarket().nameKey) })}
+              label={t('home.transfersShortcut', {
+                country: t(originMarket(settings?.originCountryCode).nameKey),
+              })}
               variant="secondary"
               icon="plane"
               onPress={() => navigation?.navigate('transfers', { openRecordForm: true })}

@@ -84,11 +84,19 @@ export function isMenaGulfMarket(countryCode: string): boolean {
 }
 
 /**
- * The market money is sent "back home" to, from the Transferts screen's perspective (US-045/047)
- * — always the one whose currency matches `DEFAULT_ORIGIN_CURRENCY_CODE`, a placeholder until
- * US-064 (phase 15) lets a household configure its own origin country. Falls back to `MARKETS[0]`
+ * The market money is sent "back home" to, from the Transferts screen's perspective (US-045/047).
+ * `originCountryCode` is the household's own configured choice (US-064,
+ * `UserSettings.originCountryCode`) — pass it whenever it's known. `undefined`/`null`/an unknown
+ * code all fall back to the market whose currency matches `DEFAULT_ORIGIN_CURRENCY_CODE`, the
+ * placeholder used before a household ever configures one, and further back to `MARKETS[0]`
  * (Morocco) if that constant is ever pointed at a currency not in this registry.
  */
-export function originMarket(): Market {
+export function originMarket(originCountryCode?: string | null): Market {
+  if (originCountryCode) {
+    const configured = findMarket(originCountryCode);
+    if (configured) {
+      return configured;
+    }
+  }
   return MARKETS.find((market) => market.currencyCode === DEFAULT_ORIGIN_CURRENCY_CODE) ?? MARKETS[0];
 }

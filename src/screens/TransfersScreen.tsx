@@ -21,24 +21,23 @@ import {
 import { getDatabase } from '../db/client';
 import {
   createDiasporaTransfer,
+  getUserSettings,
   listDiasporaBeneficiaries,
   listDiasporaTransfers,
   listHouseholds,
+  setOriginCountry,
 } from '../db/repositories';
 import type {
   DiasporaBeneficiary,
   DiasporaTransfer,
   DiasporaTransferMethod,
   Household,
+  UserSettings,
 } from '../db/repositories';
 import { useEntitlements } from '../entitlements';
 import { useLanguage } from '../i18n';
-import {
-  convertAmountMinor,
-  convertAmountMinorWithRate,
-  DEFAULT_ORIGIN_CURRENCY_CODE,
-  MOCK_RATES_UPDATED_AT,
-} from '../lib/rates';
+import { convertAmountMinor, convertAmountMinorWithRate, MOCK_RATES_UPDATED_AT } from '../lib/rates';
+import { MARKETS, originMarket } from '../market';
 import type { RootTabParamList } from '../navigation';
 import { DEFAULT_CURRENCY_CODE, formatMoney, parseAmountInput, toMajorUnits } from '../money';
 import { useTheme } from '../theme';
@@ -73,9 +72,9 @@ export type TransfersScreenProps = Partial<
  * Diaspora transfers tab (US-045): annual total sent + count, with a picker for previous years.
  * Recurring beneficiaries (US-046) let a household jump into a prefilled record; the full
  * recording form (US-047) adds method + an indicative or manual conversion, snapshotted at
- * recording time so a later rate change never rewrites a past transfer's contre-valeur. `origin`
- * currency is `DEFAULT_ORIGIN_CURRENCY_CODE` (a placeholder) until US-064 (phase 15) lets a
- * household configure its own — see that constant's own comment.
+ * recording time so a later rate change never rewrites a past transfer's contre-valeur. The
+ * `origin` currency (US-064) is the household's configured `UserSettings.originCountryCode`,
+ * resolved via `originMarket()`, falling back to MAD until a diaspora household picks its own.
  */
 export function TransfersScreen({ navigation, route }: TransfersScreenProps = {}) {
   const { t } = useTranslation();
@@ -87,6 +86,7 @@ export function TransfersScreen({ navigation, route }: TransfersScreenProps = {}
   const [transfers, setTransfers] = useState<DiasporaTransfer[]>([]);
   const [beneficiaries, setBeneficiaries] = useState<DiasporaBeneficiary[]>([]);
   const [households, setHouseholds] = useState<Household[]>([]);
+  const [settings, setSettings] = useState<UserSettings | null>(null);
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
 
@@ -109,7 +109,13 @@ export function TransfersScreen({ navigation, route }: TransfersScreenProps = {}
     listDiasporaTransfers(db).then(setTransfers);
     listDiasporaBeneficiaries(db).then(setBeneficiaries);
     listHouseholds(db).then(setHouseholds);
+    getUserSettings(db).then(setSettings);
   }, []);
+
+  async function handleSelectOriginCountry(countryCode: string) {
+    const updated = await setOriginCountry(getDatabase(), countryCode);
+    setSettings(updated);
+  }
 
   useEffect(() => {
     refresh();
@@ -147,7 +153,8 @@ export function TransfersScreen({ navigation, route }: TransfersScreenProps = {}
   }
 
   const currencyCode = households[0]?.currencyCode ?? DEFAULT_CURRENCY_CODE;
-  const needsConversion = currencyCode !== DEFAULT_ORIGIN_CURRENCY_CODE;
+  const originCurrencyCode = originMarket(settings?.originCountryCode).currencyCode;
+  const needsConversion = currencyCode !== originCurrencyCode;
   const beneficiaryById = new Map(beneficiaries.map((beneficiary) => [beneficiary.id, beneficiary] as const));
 
   function methodLabel(method: DiasporaTransferMethod): string {
@@ -199,11 +206,11 @@ export function TransfersScreen({ navigation, route }: TransfersScreenProps = {}
           ? convertAmountMinorWithRate(
               recordAmountMinorPreview,
               currencyCode,
-              DEFAULT_ORIGIN_CURRENCY_CODE,
+              originCurrencyCode,
               recordManualRateValue,
             )
           : null
-        : convertAmountMinor(recordAmountMinorPreview, currencyCode, DEFAULT_ORIGIN_CURRENCY_CODE);
+        : convertAmountMinor(recordAmountMinorPreview, currencyCode, originCurrencyCode);
 
   async function handleRecordSubmit() {
     const nextErrors: typeof recordErrors = {};
@@ -227,10 +234,10 @@ export function TransfersScreen({ navigation, route }: TransfersScreenProps = {}
         ? convertAmountMinorWithRate(
             recordAmountMinorPreview,
             currencyCode,
-            DEFAULT_ORIGIN_CURRENCY_CODE,
+            originCurrencyCode,
             recordManualRateValue as number,
           )
-        : convertAmountMinor(recordAmountMinorPreview, currencyCode, DEFAULT_ORIGIN_CURRENCY_CODE);
+        : convertAmountMinor(recordAmountMinorPreview, currencyCode, originCurrencyCode);
 
     await createDiasporaTransfer(getDatabase(), {
       amountMinor: recordAmountMinorPreview,
@@ -239,6 +246,7 @@ export function TransfersScreen({ navigation, route }: TransfersScreenProps = {}
       beneficiaryId: recordBeneficiaryId,
       method: recordMethod,
       originAmountMinor,
+      originCurrencyCode: originAmountMinor !== null ? originCurrencyCode : null,
       rateIsManual: needsConversion && recordRateMode === 'manual',
     });
     refresh();
@@ -345,7 +353,7 @@ export function TransfersScreen({ navigation, route }: TransfersScreenProps = {}
             </View>
             {recordRateMode === 'manual' ? (
               <TextField
-                label={t('transfersScreen.manualRateLabel')}
+                label={t('transfersScreen.manualRateLabel', { currency: originCurrencyCode })}
                 value={recordManualRateInput}
                 onChangeText={setRecordManualRateInput}
                 keyboardType="decimal-pad"
@@ -359,7 +367,7 @@ export function TransfersScreen({ navigation, route }: TransfersScreenProps = {}
             {recordOriginMinorPreview !== null ? (
               <Txt weight="semibold" size="sm">
                 {t('transfersScreen.conversionPreview', {
-                  amount: formatMoney(recordOriginMinorPreview, DEFAULT_ORIGIN_CURRENCY_CODE, language),
+                  amount: formatMoney(recordOriginMinorPreview, originCurrencyCode, language),
                 })}
               </Txt>
             ) : null}
@@ -389,7 +397,7 @@ export function TransfersScreen({ navigation, route }: TransfersScreenProps = {}
   const summary = computeAnnualTransferSummary(transfers, selectedYear);
   const approxMinor = !needsConversion
     ? null
-    : convertAmountMinor(summary.totalMinor, currencyCode, DEFAULT_ORIGIN_CURRENCY_CODE);
+    : convertAmountMinor(summary.totalMinor, currencyCode, originCurrencyCode);
   const yearTransfers = transfers.filter(
     (transfer) => new Date(transfer.occurredAt).getUTCFullYear() === selectedYear,
   );
@@ -399,6 +407,22 @@ export function TransfersScreen({ navigation, route }: TransfersScreenProps = {}
       <ScreenHeader title={t('transfersScreen.title')} />
 
       <AlertBanner tone="info" icon="shield-check" message={t('transfersScreen.disclaimer')} />
+
+      <View style={{ gap: theme.spacing.xs }}>
+        <Txt size="sm" color={theme.colors.textSecondary}>
+          {t('transfersScreen.originCountryLabel')}
+        </Txt>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.xs }}>
+          {MARKETS.filter((market) => market.currencyCode !== currencyCode).map((market) => (
+            <Chip
+              key={market.code}
+              label={t(market.nameKey)}
+              selected={market.currencyCode === originCurrencyCode}
+              onPress={() => handleSelectOriginCountry(market.code)}
+            />
+          ))}
+        </View>
+      </View>
 
       <Button label={t('transfersScreen.recordButton')} onPress={() => openRecordForm(null)} />
 
@@ -427,7 +451,7 @@ export function TransfersScreen({ navigation, route }: TransfersScreenProps = {}
         {approxMinor !== null ? (
           <Txt size="sm" color={theme.colors.textSecondary}>
             {t('transfersScreen.approxLabel', {
-              amount: formatMoney(approxMinor, DEFAULT_ORIGIN_CURRENCY_CODE, language),
+              amount: formatMoney(approxMinor, originCurrencyCode, language),
             })}
           </Txt>
         ) : null}
@@ -491,7 +515,7 @@ export function TransfersScreen({ navigation, route }: TransfersScreenProps = {}
                       {t('transfersScreen.approxLabel', {
                         amount: formatMoney(
                           transfer.originAmountMinor,
-                          DEFAULT_ORIGIN_CURRENCY_CODE,
+                          transfer.originCurrencyCode ?? originCurrencyCode,
                           language,
                         ),
                       })}

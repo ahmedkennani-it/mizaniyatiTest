@@ -49,4 +49,26 @@ describe('resolveCategoryDisplayName (US-056)', () => {
     const unknownIcon = category({ name: 'Something', icon: 'unknown-icon' });
     expect(resolveCategoryDisplayName(unknownIcon, 'en')).toBe('Something');
   });
+
+  describe('deux familles de noms sur la même icône (US-063)', () => {
+    it("keeps a Morocco household's base \"École\" within the base family when retranslating", () => {
+      const school = category({ name: 'École', icon: 'school' });
+      expect(resolveCategoryDisplayName(school, 'en')).toBe('School');
+      expect(resolveCategoryDisplayName(school, 'ar')).toBe('المدرسة');
+    });
+
+    it('keeps a Gulf household\'s "Écoles des enfants" within the Gulf family when retranslating, never falling back to "School"', () => {
+      const gulfSchool = category({ name: 'Écoles des enfants', icon: 'school' });
+      expect(resolveCategoryDisplayName(gulfSchool, 'en')).toBe("Children's schools");
+      expect(resolveCategoryDisplayName(gulfSchool, 'ar')).toBe('مدارس الأبناء');
+    });
+
+    it('translates the diaspora and Gulf remittance categories within their own family', () => {
+      const diaspora = category({ name: 'Transfert famille', icon: 'plane' });
+      const gulf = category({ name: 'Transfert aux proches', icon: 'plane' });
+
+      expect(resolveCategoryDisplayName(diaspora, 'en')).toBe('Family transfer');
+      expect(resolveCategoryDisplayName(gulf, 'en')).toBe('Transfer to relatives');
+    });
+  });
 });

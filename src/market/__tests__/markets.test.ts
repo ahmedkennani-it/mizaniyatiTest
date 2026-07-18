@@ -8,6 +8,7 @@ import {
   isMenaGulfMarket,
   marketHasModule,
   marketModules,
+  originMarket,
 } from '../markets';
 
 describe('market registry (US-003)', () => {
@@ -109,5 +110,30 @@ describe('isMenaGulfMarket (US-044)', () => {
 
   it('treats an unprofiled market as diaspora, not MENA/Gulf', () => {
     expect(isMenaGulfMarket('ZZ')).toBe(false);
+  });
+});
+
+/**
+ * US-064: the "pays d'origine" a diaspora household sends money back to is its own configured
+ * choice when it has one, and otherwise the launch market (Morocco/MAD) as a placeholder.
+ */
+describe('originMarket (US-064)', () => {
+  it('falls back to Morocco/MAD when nothing is configured', () => {
+    expect(originMarket().code).toBe('MA');
+    expect(originMarket(null).code).toBe('MA');
+    expect(originMarket(undefined).code).toBe('MA');
+  });
+
+  it("uses the household's configured origin country", () => {
+    expect(originMarket('FR').code).toBe('FR');
+    expect(originMarket('AE').currencyCode).toBe('AED');
+  });
+
+  it('accepts a lowercase code, like findMarket does', () => {
+    expect(originMarket('fr').code).toBe('FR');
+  });
+
+  it('falls back to Morocco/MAD for an unknown configured code', () => {
+    expect(originMarket('ZZ').code).toBe('MA');
   });
 });

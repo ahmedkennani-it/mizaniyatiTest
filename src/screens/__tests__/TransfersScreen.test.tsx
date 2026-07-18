@@ -15,6 +15,8 @@ import {
   createDiasporaTransfer,
   createHousehold,
   listDiasporaTransfers,
+  saveLanguageCountry,
+  setOriginCountry,
 } from '../../db/repositories';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { EntitlementsProvider } from '../../entitlements';
@@ -370,5 +372,103 @@ describe('TransfersScreen — enregistrement avec méthode et conversion (US-047
 
     expect(await screen.findByText('Nouveau transfert')).toBeTruthy();
     expect(mockSetParams).toHaveBeenCalledWith({ openRecordForm: undefined });
+  });
+});
+
+describe('TransfersScreen — devise du pays d’origine (US-064)', () => {
+  beforeEach(async () => {
+    mockFakeDb = createFakeDatabase().db;
+    // The Transferts screen is only reachable post-onboarding, so a settings row always exists —
+    // `setOriginCountry` (like every other settings setter) requires one.
+    await saveLanguageCountry(mockFakeDb, { languageCode: 'fr', countryCode: 'FR', currencyCode: 'EUR' });
+  });
+
+  it('defaults the contre-valeur to MAD when no origin country is configured', async () => {
+    await createHousehold(mockFakeDb, { name: 'Famille Dubois', currencyCode: 'EUR' });
+    await createDiasporaTransfer(mockFakeDb, {
+      amountMinor: 10000,
+      currencyCode: 'EUR',
+      occurredAt: `${CURRENT_YEAR}-03-01T00:00:00.000Z`,
+    });
+    await renderScreen(TRANSFERS_PLAN);
+
+    expect(await screen.findByText(/≈ .*MAD/)).toBeTruthy();
+  });
+
+  it('switches the contre-valeur currency when the household picks a different pays d’origine', async () => {
+    await createHousehold(mockFakeDb, { name: 'Famille Dubois', currencyCode: 'EUR' });
+    await createDiasporaTransfer(mockFakeDb, {
+      amountMinor: 10000,
+      currencyCode: 'EUR',
+      occurredAt: `${CURRENT_YEAR}-03-01T00:00:00.000Z`,
+    });
+    await renderScreen(TRANSFERS_PLAN);
+
+    fireEvent.press(await screen.findByText('Émirats arabes unis'));
+
+    expect(await screen.findByText(/≈ .*AED/)).toBeTruthy();
+  });
+
+  it('reads back a previously configured origin country on mount', async () => {
+    await createHousehold(mockFakeDb, { name: 'Famille Dubois', currencyCode: 'EUR' });
+    await setOriginCountry(mockFakeDb, 'AE');
+    await createDiasporaTransfer(mockFakeDb, {
+      amountMinor: 10000,
+      currencyCode: 'EUR',
+      occurredAt: `${CURRENT_YEAR}-03-01T00:00:00.000Z`,
+    });
+    await renderScreen(TRANSFERS_PLAN);
+
+    expect(await screen.findByText(/≈ .*AED/)).toBeTruthy();
+  });
+
+  it('shows the manual rate label in the configured origin currency', async () => {
+    await createHousehold(mockFakeDb, { name: 'Famille Dubois', currencyCode: 'EUR' });
+    await renderScreen(TRANSFERS_PLAN);
+
+    fireEvent.press(await screen.findByText('Émirats arabes unis'));
+    fireEvent.press(await screen.findByText('Enregistrer un transfert'));
+    fireEvent.changeText(await screen.findByDisplayValue(''), '100');
+    fireEvent.press(await screen.findByText('Taux manuel'));
+
+    expect(await screen.findByLabelText('Taux saisi (1 unité = ? AED)')).toBeTruthy();
+  });
+
+  it('does not offer the household’s own currency as a pays d’origine choice', async () => {
+    await createHousehold(mockFakeDb, { name: 'Famille Dubois', currencyCode: 'EUR' });
+    await renderScreen(TRANSFERS_PLAN);
+
+    await screen.findByText('Émirats arabes unis');
+    expect(screen.queryByText('France')).toBeNull();
+  });
+
+  it('never relabels a past transfer’s snapshotted contre-valeur when the origin country changes later', async () => {
+    await createHousehold(mockFakeDb, { name: 'Famille Dubois', currencyCode: 'EUR' });
+    await createDiasporaTransfer(mockFakeDb, {
+      amountMinor: 10000,
+      currencyCode: 'EUR',
+      occurredAt: `${CURRENT_YEAR}-03-01T00:00:00.000Z`,
+      originAmountMinor: 108000,
+      originCurrencyCode: 'MAD',
+    });
+    await renderScreen(TRANSFERS_PLAN);
+
+    fireEvent.press(await screen.findByText('Émirats arabes unis'));
+
+    expect(await screen.findByText(/≈ .*1\.080,00 MAD/)).toBeTruthy();
+  });
+
+  it('saves the currently configured origin currency alongside a new transfer’s contre-valeur', async () => {
+    await createHousehold(mockFakeDb, { name: 'Famille Dubois', currencyCode: 'EUR' });
+    await renderScreen(TRANSFERS_PLAN);
+
+    fireEvent.press(await screen.findByText('Émirats arabes unis'));
+    fireEvent.press(await screen.findByText('Enregistrer un transfert'));
+    fireEvent.changeText(await screen.findByDisplayValue(''), '100');
+    fireEvent.press(await screen.findByText('Enregistrer le transfert'));
+
+    const transfers = await listDiasporaTransfers(mockFakeDb);
+    expect(transfers).toHaveLength(1);
+    expect(transfers[0].originCurrencyCode).toBe('AED');
   });
 });

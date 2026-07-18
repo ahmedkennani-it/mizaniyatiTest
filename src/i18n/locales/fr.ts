@@ -492,6 +492,7 @@ export const fr = {
     upsellCta: 'Passez à un forfait supérieur pour suivre vos transferts.',
     disclaimer:
       "Les envois sont enregistrés manuellement. Mizaniyati n'est pas un service de transfert d'argent.",
+    originCountryLabel: 'Pays d’origine (pour la contre-valeur)',
     totalLabel: 'Total envoyé cette année',
     approxLabel: '≈ {{amount}} (contre-valeur indicative)',
     countLabel: '{{count}} transfert(s) enregistré(s)',
@@ -518,7 +519,7 @@ export const fr = {
     methodOther: 'Autre',
     rateModeAuto: 'Taux automatique',
     rateModeManual: 'Taux manuel',
-    manualRateLabel: 'Taux saisi (1 unité = ? MAD)',
+    manualRateLabel: 'Taux saisi (1 unité = ? {{currency}})',
     rateSourceNote: 'Taux indicatif, données de démonstration mises à jour le {{date}}.',
     conversionPreview: '≈ {{amount}} (contre-valeur avant enregistrement)',
     recordSubmit: 'Enregistrer le transfert',

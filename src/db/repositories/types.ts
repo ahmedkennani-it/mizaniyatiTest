@@ -453,12 +453,18 @@ export interface DiasporaTransfer {
   /** How the money was actually sent (US-047). Defaults to `'other'` for pre-US-047 rows. */
   method: DiasporaTransferMethod;
   /**
-   * The converted amount in `DEFAULT_ORIGIN_CURRENCY_CODE`, snapshotted at recording time
-   * (US-047) — never recomputed from a later rate, so a rate change afterwards never rewrites a
-   * past transfer's contre-valeur. `null` when the household's own currency already *is* the
-   * origin currency (no conversion needed) or pre-US-047.
+   * The converted amount in `originCurrencyCode`, snapshotted at recording time (US-047) — never
+   * recomputed from a later rate, so a rate change afterwards never rewrites a past transfer's
+   * contre-valeur. `null` when the household's own currency already *is* the origin currency (no
+   * conversion needed) or pre-US-047.
    */
   originAmountMinor: number | null;
+  /**
+   * The currency `originAmountMinor` is expressed in, snapshotted alongside it (US-064) — a
+   * household changing its configured "pays d'origine" later must not relabel past transfers.
+   * `null` for pre-US-064 rows and whenever `originAmountMinor` itself is `null`.
+   */
+  originCurrencyCode: string | null;
   /** Whether `originAmountMinor` came from a household-entered rate rather than the mock table. */
   rateIsManual: boolean;
   createdAt: string;
@@ -471,6 +477,7 @@ export interface NewDiasporaTransfer {
   beneficiaryId?: string | null;
   method?: DiasporaTransferMethod;
   originAmountMinor?: number | null;
+  originCurrencyCode?: string | null;
   rateIsManual?: boolean;
 }
 
@@ -602,6 +609,9 @@ export interface UserSettings {
   /** The approximate Hijri year the household last dismissed the Ramadan activation suggestion
    * (US-041), or `null` if never dismissed — a year, not a boolean, so it resurfaces next year. */
   ramadanSuggestionDismissedHijriYear: number | null;
+  /** The "pays d'origine" a diaspora household sends money back to (US-064) — `null` until
+   *  configured, in which case the Transferts screen falls back to `DEFAULT_ORIGIN_CURRENCY_CODE`. */
+  originCountryCode: string | null;
   createdAt: string;
   updatedAt: string;
 }

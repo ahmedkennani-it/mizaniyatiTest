@@ -12,6 +12,7 @@ function settings(patch: Partial<UserSettings> = {}): UserSettings {
     voicePromoDismissed: false,
     micPermissionExplainerSeen: false,
     ramadanSuggestionDismissedHijriYear: null,
+    originCountryCode: null,
     createdAt: '2026-07-16T10:00:00.000Z',
     updatedAt: '2026-07-16T10:00:00.000Z',
     ...patch,

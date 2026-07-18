@@ -10,6 +10,7 @@ function transfer(amountMinor: number, occurredAt: string): DiasporaTransfer {
     beneficiaryId: null,
     method: 'other',
     originAmountMinor: null,
+    originCurrencyCode: null,
     rateIsManual: false,
     createdAt: occurredAt,
   };

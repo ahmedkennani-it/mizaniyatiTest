@@ -1837,6 +1837,76 @@ entièrement couverte.
 - ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé) — repli sur les
   suites `.rtl.test.tsx` comme pour chaque écran précédent.
 
+### Itération 58 — Tâches 15.1, 15.2 (Multi-marchés & conversion) ✅ — phase 15 terminée
+
+- **15.1 (Catégories et modules localisés par marché)** — `getDefaultCategories` proposait déjà un
+  ensemble fixe de 9 catégories partout, avec un ajout Tontine/Zakat conditionnel au marché (10.3)
+  mais **aucune adaptation pour la diaspora ni le Golfe** : la France n'avait ni « Transfert
+  famille » ni de catégorie Zakat, et le Golfe utilisait le même nom d'« École » que le Maroc alors
+  que le critère demande « Écoles des enfants ». Réécrit pour dériver la liste du marché
+  (`marketHasModule`) : Tontine → ajoute Zakat & dons ; Transferts → ajoute une catégorie de
+  transfert dont le libellé dépend du marché (« Transfert famille » en diaspora,
+  « Transfert aux proches » au Golfe, puisque le Golfe a *aussi* la tontine et n'est donc pas une
+  diaspora au sens strict) ; Golfe (tontine **et** transferts à la fois) → renomme aussi la
+  catégorie « École » par défaut en « Écoles des enfants ». Ce dernier point a cassé l'hypothèse de
+  `resolveCategoryDisplayName` (14.2) qu'une icône ne porte qu'une seule famille de noms {fr,ar,en}
+  — « school » en porte désormais deux selon le marché où la catégorie a été créée. Résolu en
+  extrayant un registre `KNOWN_CATEGORY_NAME_VARIANTS` (une famille de noms par variante, pas par
+  icône) que `resolveCategoryDisplayName` parcourt pour trouver celle qui contient le nom actuel.
+  🐛 **Écart réel trouvé sur le critère « les modules sont reproposés sans supprimer les données
+  déjà saisies »** : rien ne recalculait les catégories par défaut d'un foyer après un changement
+  de pays sur `CountrySelectorScreen` (14.3) — un foyer qui migre de France vers les Émirats restait
+  bloqué avec son ancien jeu de catégories. Nouveau `reconcileMarketCategories(db, language,
+  countryCode)` : calcule le jeu par défaut complet du nouveau marché, ne garde que les catégories
+  dont l'**icône** n'existe pas déjà parmi les catégories par défaut du foyer, et les ajoute à la
+  suite — jamais de renommage ni de suppression d'une catégorie existante, même si son nom
+  ressemble à une future catégorie du nouveau marché (ex. France → Émirats : l'icône « avion » de
+  « Transfert famille » existe déjà, donc seule « Zakat & dons » est ajoutée). Câblé dans
+  `CountrySelectorScreen.handleConfirmChange`, juste après le changement de devise confirmé.
+- **15.2 (Conversion vers la devise du pays d'origine, US-064)** — jusqu'ici
+  `DEFAULT_ORIGIN_CURRENCY_CODE` était une constante figée à `'MAD'`, avec un commentaire explicite
+  disant que la configurer par foyer restait à faire. Nouveau `UserSettings.originCountryCode`
+  (migration `0027`, `null` par défaut) et `setOriginCountry(db, code)` — indépendant du
+  pays/devise propre du foyer (`countryCode`/`currencyCode`, gérés par `saveLanguageCountry`),
+  puisqu'un foyer peut vivre dans un pays et envoyer de l'argent vers un autre. `originMarket()`
+  (déjà utilisé par le Dashboard et Transferts) accepte désormais ce code en paramètre optionnel,
+  et retombe sur `DEFAULT_ORIGIN_CURRENCY_CODE`/Maroc si non configuré ou inconnu — aucun appelant
+  existant n'a dû changer sa signature d'appel sans argument. `TransfersScreen` gagne une rangée de
+  puces « Pays d'origine » (tous les marchés sauf celui du foyer) au-dessus du total annuel ; la
+  sélectionner appelle `setOriginCountry` et rafraîchit aussitôt la contre-valeur affichée, le
+  libellé du taux manuel (qui affichait « MAD » en dur — corrigé en `{{currency}}` interpolé dans
+  les 3 langues) et l'aperçu avant enregistrement.
+  🐛 **Écart de conception trouvé en cours de route, corrigé avant tout test** : `originAmountMinor`
+  est un instantané figé au moment de l'enregistrement (« snapshot, don't recompute », comme les
+  évaluations de zakat) — mais la devise dans laquelle il est exprimé n'était **jamais stockée**,
+  seulement déduite implicitement de la constante globale. Un foyer changeant son pays d'origine
+  après avoir enregistré des transferts aurait vu tout son historique se relabelliser silencieusement
+  dans la nouvelle devise. Ajouté `origin_currency_code` (migration `0028`, `NULL` sur les lignes
+  existantes — elles étaient bien en MAD, la constante d'alors) comme second instantané à côté
+  d'`origin_amount_minor`, rempli à l'enregistrement et jamais recalculé ; l'historique affiche
+  `transfer.originCurrencyCode ?? originCurrencyCode` (repli sur la devise courante uniquement pour
+  les lignes pré-US-064, par construction toujours en MAD).
+  ⚠️ **Limite assumée, non corrigée** : `App.tsx` ne lit `countryCode` qu'une seule fois au
+  démarrage pour piloter les onglets visibles (`RootNavigator`) ; changer de pays via
+  `CountrySelectorScreen` en cours de session ne rafraîchit pas la barre d'onglets sans redémarrage
+  de l'app — même limite déjà documentée et acceptée pour le changement de langue RTL
+  (`LanguageContext`). Corriger demanderait de faire remonter l'état par props depuis `App.tsx`
+  jusqu'à `ProfileScreen`, hors proportion avec le reste de la tâche ; documenté ici plutôt que
+  laissé silencieux.
+- Tests : `defaultCategories.test.ts` (+7, dont le test France réécrit — son ancienne assertion
+  « France = base Maroc » est devenue un vrai changement de comportement voulu, pas un bug) ;
+  `resolveCategoryDisplayName.test.ts` (+3, désambiguïsation des deux familles « school ») ;
+  `seedDefaultCategories.test.ts` (+6, `reconcileMarketCategories`) ;
+  `CountrySelectorScreen.test.tsx` (+1) ; `userSettingsRepository.test.ts` (+5,
+  `setOriginCountry`) ; `markets.test.ts` (+4, `originMarket` avec paramètre) ;
+  `diasporaTransferRepository.test.ts` (+1, `origin_currency_code`) ;
+  `TransfersScreen.test.tsx` (+7, nouvelle description « devise du pays d'origine ») ;
+  `TransfersScreen.rtl.test.tsx` (le nouveau libellé « Pays d'origine » ajouté aux assertions
+  fumée LTR/RTL existantes).
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **2015/2015, 163 suites** ✅.
+- ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé) — repli sur les
+  suites `.rtl.test.tsx` comme pour chaque écran précédent.
+
 ## Notes / blocages connus (hors périmètre Phase 1)
 
 - L'arbre de travail contient des changements accumulés multi-phases non

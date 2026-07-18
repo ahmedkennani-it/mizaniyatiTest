@@ -14,12 +14,13 @@ interface UserSettingsRow {
   voice_promo_dismissed: number | null;
   mic_permission_explainer_seen: number | null;
   ramadan_suggestion_dismissed_hijri_year: number | null;
+  origin_country_code: string | null;
   created_at: string;
   updated_at: string;
 }
 
 const SELECT_COLUMNS =
-  'language_code, country_code, currency_code, onboarding_step, privacy_accepted_at, voice_entry_count, voice_promo_dismissed, mic_permission_explainer_seen, ramadan_suggestion_dismissed_hijri_year, created_at, updated_at';
+  'language_code, country_code, currency_code, onboarding_step, privacy_accepted_at, voice_entry_count, voice_promo_dismissed, mic_permission_explainer_seen, ramadan_suggestion_dismissed_hijri_year, origin_country_code, created_at, updated_at';
 
 function fromRow(row: UserSettingsRow): UserSettings {
   return {
@@ -33,6 +34,7 @@ function fromRow(row: UserSettingsRow): UserSettings {
     voicePromoDismissed: Boolean(row.voice_promo_dismissed),
     micPermissionExplainerSeen: Boolean(row.mic_permission_explainer_seen),
     ramadanSuggestionDismissedHijriYear: row.ramadan_suggestion_dismissed_hijri_year ?? null,
+    originCountryCode: row.origin_country_code ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -68,6 +70,7 @@ export async function saveLanguageCountry(
     voicePromoDismissed: existing?.voicePromoDismissed ?? false,
     micPermissionExplainerSeen: existing?.micPermissionExplainerSeen ?? false,
     ramadanSuggestionDismissedHijriYear: existing?.ramadanSuggestionDismissedHijriYear ?? null,
+    originCountryCode: existing?.originCountryCode ?? null,
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };
@@ -85,7 +88,7 @@ export async function saveLanguageCountry(
     );
   } else {
     await db.runAsync(
-      'INSERT INTO user_settings (id, language_code, country_code, currency_code, onboarding_step, privacy_accepted_at, voice_entry_count, voice_promo_dismissed, mic_permission_explainer_seen, ramadan_suggestion_dismissed_hijri_year, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);',
+      'INSERT INTO user_settings (id, language_code, country_code, currency_code, onboarding_step, privacy_accepted_at, voice_entry_count, voice_promo_dismissed, mic_permission_explainer_seen, ramadan_suggestion_dismissed_hijri_year, origin_country_code, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);',
       [
         USER_SETTINGS_ID,
         updated.languageCode,
@@ -97,6 +100,7 @@ export async function saveLanguageCountry(
         updated.voicePromoDismissed ? 1 : 0,
         updated.micPermissionExplainerSeen ? 1 : 0,
         updated.ramadanSuggestionDismissedHijriYear,
+        updated.originCountryCode,
         updated.createdAt,
         updated.updatedAt,
       ],
@@ -203,6 +207,29 @@ export async function dismissRamadanSuggestion(
     'UPDATE user_settings SET ramadan_suggestion_dismissed_hijri_year = ?, updated_at = ? WHERE id = ?;',
     [hijriYear, updated.updatedAt, USER_SETTINGS_ID],
   );
+  return updated;
+}
+
+/**
+ * Configures the diaspora household's "pays d'origine" (US-064) — independent of the household's
+ * own country/currency (`countryCode`/`currencyCode`, set by `saveLanguageCountry`), since a
+ * household can live in one country and send money to a different one.
+ */
+export async function setOriginCountry(
+  db: SqlDatabase,
+  originCountryCode: string | null,
+): Promise<UserSettings> {
+  const existing = await requireSettings(db);
+  const updated: UserSettings = {
+    ...existing,
+    originCountryCode,
+    updatedAt: new Date().toISOString(),
+  };
+  await db.runAsync('UPDATE user_settings SET origin_country_code = ?, updated_at = ? WHERE id = ?;', [
+    originCountryCode,
+    updated.updatedAt,
+    USER_SETTINGS_ID,
+  ]);
   return updated;
 }
 

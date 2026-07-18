@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { reconcileMarketCategories } from '../categories';
 import { AppScreen, Button, Card, Icon, ListRow, Pill, ScreenHeader, TextField, Txt } from '../components';
 import { getDatabase } from '../db/client';
 import { getUserSettings, listHouseholds, saveLanguageCountry, updateHousehold } from '../db/repositories';
@@ -90,6 +91,10 @@ export function CountrySelectorScreen({ onBack }: CountrySelectorScreenProps) {
     if (households[0]) {
       await updateHousehold(db, households[0].id, { currencyCode: pendingMarket.currencyCode });
     }
+    // US-063: the new market's modules/categories are reproposed — never deletes or renames
+    // anything the household already entered, only adds whatever's missing (e.g. a household
+    // moving from Morocco to France gains "Transfert famille" without losing its own categories).
+    await reconcileMarketCategories(db, language, pendingMarket.code);
     setPendingMarket(null);
     refresh();
   }

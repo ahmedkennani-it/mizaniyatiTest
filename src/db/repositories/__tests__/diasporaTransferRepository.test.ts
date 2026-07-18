@@ -31,12 +31,34 @@ describe('diasporaTransferRepository', () => {
       occurredAt: '2026-03-15T10:00:00.000Z',
       method: 'wise',
       originAmountMinor: 110000,
+      originCurrencyCode: 'MAD',
       rateIsManual: true,
     });
 
     expect(transfer.method).toBe('wise');
     expect(transfer.originAmountMinor).toBe(110000);
+    expect(transfer.originCurrencyCode).toBe('MAD');
     expect(transfer.rateIsManual).toBe(true);
+    expect(await listDiasporaTransfers(db)).toEqual([transfer]);
+  });
+
+  /**
+   * US-064: the currency is only meaningful alongside a converted amount — a transfer with no
+   * `originAmountMinor` (household already budgets in its own origin currency) never gets one
+   * either, even if a caller passes one by mistake.
+   */
+  it('never stores an origin currency without a converted amount to go with it', async () => {
+    const { db } = createFakeDatabase();
+
+    const transfer = await createDiasporaTransfer(db, {
+      amountMinor: 10000,
+      currencyCode: 'MAD',
+      occurredAt: '2026-03-15T10:00:00.000Z',
+      originCurrencyCode: 'MAD',
+    });
+
+    expect(transfer.originAmountMinor).toBeNull();
+    expect(transfer.originCurrencyCode).toBeNull();
     expect(await listDiasporaTransfers(db)).toEqual([transfer]);
   });
 

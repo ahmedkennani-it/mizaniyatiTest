@@ -10,12 +10,13 @@ interface DiasporaTransferRow {
   beneficiary_id: string | null;
   method: string;
   origin_amount_minor: number | null;
+  origin_currency_code: string | null;
   rate_is_manual: number;
   created_at: string;
 }
 
 const SELECT_COLUMNS =
-  'id, amount_minor, currency_code, occurred_at, beneficiary_id, method, origin_amount_minor, rate_is_manual, created_at';
+  'id, amount_minor, currency_code, occurred_at, beneficiary_id, method, origin_amount_minor, origin_currency_code, rate_is_manual, created_at';
 
 function fromRow(row: DiasporaTransferRow): DiasporaTransfer {
   return {
@@ -26,6 +27,7 @@ function fromRow(row: DiasporaTransferRow): DiasporaTransfer {
     beneficiaryId: row.beneficiary_id,
     method: row.method as DiasporaTransferMethod,
     originAmountMinor: row.origin_amount_minor,
+    originCurrencyCode: row.origin_currency_code ?? null,
     rateIsManual: row.rate_is_manual === 1,
     createdAt: row.created_at,
   };
@@ -40,9 +42,10 @@ export async function createDiasporaTransfer(
   const beneficiaryId = input.beneficiaryId ?? null;
   const method = input.method ?? 'other';
   const originAmountMinor = input.originAmountMinor ?? null;
+  const originCurrencyCode = originAmountMinor !== null ? (input.originCurrencyCode ?? null) : null;
   const rateIsManual = input.rateIsManual ?? false;
   await db.runAsync(
-    `INSERT INTO diaspora_transfers (id, amount_minor, currency_code, occurred_at, beneficiary_id, method, origin_amount_minor, rate_is_manual, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+    `INSERT INTO diaspora_transfers (id, amount_minor, currency_code, occurred_at, beneficiary_id, method, origin_amount_minor, origin_currency_code, rate_is_manual, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
     [
       id,
       input.amountMinor,
@@ -51,6 +54,7 @@ export async function createDiasporaTransfer(
       beneficiaryId,
       method,
       originAmountMinor,
+      originCurrencyCode,
       rateIsManual ? 1 : 0,
       now,
     ],
@@ -63,6 +67,7 @@ export async function createDiasporaTransfer(
     beneficiaryId,
     method,
     originAmountMinor,
+    originCurrencyCode,
     rateIsManual,
     createdAt: now,
   };

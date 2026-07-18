@@ -1,6 +1,6 @@
 export { getDefaultCategories } from './defaultCategories';
 export type { DefaultCategoryDefinition } from './defaultCategories';
-export { seedDefaultCategories } from './seedDefaultCategories';
+export { seedDefaultCategories, reconcileMarketCategories } from './seedDefaultCategories';
 export { CATEGORY_ICON_OPTIONS, CATEGORY_COLOR_OPTIONS } from './categoryPalette';
 export {
   categoryIconName,

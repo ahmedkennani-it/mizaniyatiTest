@@ -8,6 +8,7 @@ import {
   markMicPermissionExplainerSeen,
   recordVoiceEntry,
   saveLanguageCountry,
+  setOriginCountry,
 } from '../userSettingsRepository';
 
 describe('userSettingsRepository', () => {
@@ -250,5 +251,57 @@ describe('Ramadan suggestion dismissal', () => {
   it('refuses to record it with no settings row', async () => {
     const { db } = createFakeDatabase();
     await expect(dismissRamadanSuggestion(db, 1446)).rejects.toThrow(NotFoundError);
+  });
+});
+
+/**
+ * US-064: a diaspora household's "pays d'origine" is independent of its own country/currency, and
+ * is `null` until it's explicitly configured — the Transferts screen falls back to
+ * `DEFAULT_ORIGIN_CURRENCY_CODE` in that case.
+ */
+describe('origin country configuration', () => {
+  async function seed(db: ReturnType<typeof createFakeDatabase>['db']) {
+    await saveLanguageCountry(db, { languageCode: 'fr', countryCode: 'FR', currencyCode: 'EUR' });
+  }
+
+  it('starts unset', async () => {
+    const { db } = createFakeDatabase();
+    await seed(db);
+
+    expect((await getUserSettings(db))?.originCountryCode).toBeNull();
+  });
+
+  it('records the configured origin country', async () => {
+    const { db } = createFakeDatabase();
+    await seed(db);
+
+    await setOriginCountry(db, 'MA');
+
+    expect((await getUserSettings(db))?.originCountryCode).toBe('MA');
+  });
+
+  it('lets the household clear its choice back to unset', async () => {
+    const { db } = createFakeDatabase();
+    await seed(db);
+    await setOriginCountry(db, 'MA');
+
+    await setOriginCountry(db, null);
+
+    expect((await getUserSettings(db))?.originCountryCode).toBeNull();
+  });
+
+  it('never clears the origin country when the language & country step is re-run', async () => {
+    const { db } = createFakeDatabase();
+    await seed(db);
+    await setOriginCountry(db, 'MA');
+
+    await saveLanguageCountry(db, { languageCode: 'ar', countryCode: 'FR', currencyCode: 'EUR' });
+
+    expect((await getUserSettings(db))?.originCountryCode).toBe('MA');
+  });
+
+  it('refuses to record it with no settings row', async () => {
+    const { db } = createFakeDatabase();
+    await expect(setOriginCountry(db, 'MA')).rejects.toThrow(NotFoundError);
   });
 });

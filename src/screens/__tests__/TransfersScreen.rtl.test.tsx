@@ -73,6 +73,7 @@ describe('TransfersScreen under RTL and LTR (US-045)', () => {
 
     expect(await screen.findByText(fr.transfersScreen.title)).toBeTruthy();
     expect(screen.getByText(fr.transfersScreen.disclaimer)).toBeTruthy();
+    expect(screen.getByText(fr.transfersScreen.originCountryLabel)).toBeTruthy();
     expect(screen.getByText(fr.transfersScreen.totalLabel)).toBeTruthy();
     expect(screen.getByText(fr.transfersScreen.historyTitle)).toBeTruthy();
   });
@@ -88,6 +89,7 @@ describe('TransfersScreen under RTL and LTR (US-045)', () => {
 
     expect(await screen.findByText(fr.transfersScreen.title)).toBeTruthy();
     expect(screen.getByText(fr.transfersScreen.disclaimer)).toBeTruthy();
+    expect(screen.getByText(fr.transfersScreen.originCountryLabel)).toBeTruthy();
     expect(screen.getByText(fr.transfersScreen.totalLabel)).toBeTruthy();
     expect(screen.getByText(fr.transfersScreen.historyTitle)).toBeTruthy();
   });

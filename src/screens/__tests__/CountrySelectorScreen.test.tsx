@@ -23,7 +23,15 @@ jest.mock('../../market', () => {
 });
 
 // eslint-disable-next-line import/first -- must come after jest.mock(...) calls above
-import { createHousehold, getUserSettings, listHouseholds, saveLanguageCountry } from '../../db/repositories';
+import {
+  createHousehold,
+  getUserSettings,
+  listCategories,
+  listHouseholds,
+  saveLanguageCountry,
+} from '../../db/repositories';
+// eslint-disable-next-line import/first -- must come after jest.mock(...) calls above
+import { seedDefaultCategories } from '../../categories';
 // eslint-disable-next-line import/first -- must come after jest.mock(...) calls above
 import { LanguageProvider } from '../../i18n';
 // eslint-disable-next-line import/first -- must come after jest.mock(...) calls above
@@ -161,5 +169,26 @@ describe('CountrySelectorScreen (US-057)', () => {
     fireEvent.press(await screen.findByLabelText('Retour'));
 
     expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
+  it('reproposes the new market\'s categories on confirm, without deleting anything already entered (US-063)', async () => {
+    await seedDefaultCategories(mockFakeDb, 'fr', 'MA'); // 9 base + Zakat
+    const before = await listCategories(mockFakeDb);
+
+    renderScreen();
+
+    fireEvent.press(await screen.findByText('France'));
+    await screen.findByText('Changer de devise ?');
+    fireEvent.press(screen.getByText('Confirmer'));
+    await screen.findByText('France');
+
+    const after = await listCategories(mockFakeDb);
+    // Every category that existed before the switch is still there, untouched...
+    for (const category of before) {
+      expect(after.find((c) => c.id === category.id)).toEqual(category);
+    }
+    // ...plus the new market's missing category ("Transfert famille").
+    expect(after.map((c) => c.name)).toContain('Transfert famille');
+    expect(after.length).toBe(before.length + 1);
   });
 });

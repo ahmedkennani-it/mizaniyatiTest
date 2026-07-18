@@ -18,10 +18,11 @@ export const MOCK_RATES_UPDATED_AT = '2026-01-01';
 export const MOCK_RATES_SOURCE = 'Taux fictifs (données de démonstration)';
 
 /**
- * Placeholder "pays d'origine" currency used to compute the Transferts screen's contre-valeur
- * (US-045) until US-064 (phase 15) lets each diaspora household configure its own. MAD, the
- * launch market's currency, is the only real destination today since the diaspora markets (FR,
- * AE, SA) aren't selectable at onboarding yet — see `src/market/markets.ts`.
+ * Fallback "pays d'origine" currency for the Transferts screen's contre-valeur (US-045), used
+ * until a household configures its own (US-064, `UserSettings.originCountryCode`, resolved via
+ * `originMarket()` in `src/market/markets.ts`). MAD, the launch market's currency, is the only
+ * real destination reachable without configuring one, since the diaspora markets (FR, AE, SA)
+ * aren't selectable at onboarding yet.
  */
 export const DEFAULT_ORIGIN_CURRENCY_CODE = 'MAD';
 
