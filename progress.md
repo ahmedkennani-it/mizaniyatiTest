@@ -2095,6 +2095,41 @@ entièrement couverte.
   badge cadenas utilise exclusivement des propriétés logiques (`end`, jamais `right`), cohérent
   avec la garde `noHardcodedColors`/RTL déjà en place ailleurs.
 
+### Itération 64 — Tâche 16.6 (Gestion de l'abonnement) ✅ — phase 16 close (6/6)
+
+- **`resolveActivePlan` avait un vrai trou pour `status: 'active'`** : il retournait Pro
+  indéfiniment sans jamais comparer `renewsAt` à l'heure courante — correct pour un abonnement qui
+  se renouvelle tout seul, mais aucun état ne modélisait « résilié, mais encore payé jusqu'à telle
+  date » (2e critère). Nouveau statut **`cancelled`** dans `SubscriptionStatus` : même forme que
+  `trial` (Pro tant que sa date n'est pas dépassée), mais indexé sur `renewsAt` au lieu de
+  `trialEndsAt`.
+- **`cancelSubscription(db)`** (nouveau, `src/purchases/mockPurchaseFlow.ts`) : ne fait que changer
+  `status → 'cancelled'`, **conserve `renewsAt` tel quel** — rien n'est remboursé ni révoqué,
+  exactement le comportement d'un vrai « gérer l'abonnement → annuler » d'App Store/Play. No-op
+  défensif si rien n'est actif à résilier (le bouton n'est de toute façon proposé que dans ce cas).
+  Aucun chemin de retour explicite (« reprendre l'abonnement ») n'a été ajouté : une fois
+  `renewsAt` dépassé, `resolveActivePlan` repasse en Gratuit et la carte tarifaire reparaît
+  naturellement — inutile de dupliquer ce chemin.
+- **`PaywallScreen` gagne 2 blocs**, tous deux lisibles dès l'écran « Abonnement » du profil
+  (déjà routé vers `PaywallScreen`, aucun nouveau point d'entrée nécessaire pour le 1er critère) :
+  - **Carte « Gérer mon abonnement »** (visible seulement pour un vrai achat, essai exclu) : formule
+    (mensuel/annuel), date de renouvellement, bouton Résilier — remplacé par une bannière
+    « Résilié — reste actif jusqu'au {date} » une fois fait.
+  - **Bouton « Restaurer les achats »**, dans la carte de statut, **toujours visible** (Gratuit,
+    essai ou Pro) — le critère vise un changement d'appareil, où l'utilisateur ne sait justement
+    pas encore dans quel état il est. `restorePurchases` (16.2) n'était jusqu'ici câblé à aucun
+    bouton ; message de confirmation ou « aucun achat trouvé » selon le résultat.
+- ⚠️ **Limite déjà documentée en 16.2, reconfirmée ici** : « restaurer » ne peut relire que la ligne
+  SQLite déjà présente sur **cet** appareil — un vrai transfert vers un appareil neuf attendra la
+  sauvegarde chiffrée de la Phase 17.
+- Tests : `resolveActivePlan.test.ts` (+3, le nouveau statut `cancelled`) ; `mockPurchaseFlow.test.ts`
+  (+4, `cancelSubscription`) ; `PaywallScreen.test.tsx` (+4 : plan + date affichés, résiliation qui
+  garde Pro actif sans faire réapparaître la carte tarifaire, restauration trouvée/absente).
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **2077/2077, 166 suites** ✅.
+- ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé).
+
+**Phase 16 (Monétisation freemium) close : 6/6 tâches `done: true`.**
+
 ## Notes / blocages connus (hors périmètre Phase 1)
 
 - L'arbre de travail contient des changements accumulés multi-phases non

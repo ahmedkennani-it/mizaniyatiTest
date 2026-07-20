@@ -553,7 +553,10 @@ export interface SeasonalThemePatch {
   envelopeMinor?: number;
 }
 
-export type SubscriptionStatus = 'trial' | 'active' | 'expired';
+/** `'cancelled'` (US-069): the household turned off auto-renew, but stays Pro until `renewsAt` —
+ * the same "still valid until its end date" shape as `'trial'`, just keyed off `renewsAt` instead
+ * of `trialEndsAt`. */
+export type SubscriptionStatus = 'trial' | 'active' | 'cancelled' | 'expired';
 
 /** Which of the two products (US-066a/US-066b) a purchase was for — `null` for a trial row. */
 export type SubscriptionProductId = 'monthly' | 'annual';

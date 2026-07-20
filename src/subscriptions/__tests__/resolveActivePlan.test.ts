@@ -56,4 +56,26 @@ describe('resolveActivePlan', () => {
     const subscription = makeSubscription({ status: 'expired' });
     expect(resolveActivePlan(subscription, NOW)).toBe(FREE_PLAN);
   });
+
+  /** US-069: cancelling turns off auto-renew but the already-paid period still counts. */
+  it('resolves to Pro for a cancelled subscription still within its paid period', () => {
+    const subscription = makeSubscription({
+      status: 'cancelled',
+      renewsAt: '2026-07-20T00:00:00.000Z',
+    });
+    expect(resolveActivePlan(subscription, NOW)).toBe(PRO_PLAN);
+  });
+
+  it('resolves to the free plan once a cancelled subscription\'s paid period has ended', () => {
+    const subscription = makeSubscription({
+      status: 'cancelled',
+      renewsAt: '2026-07-01T00:00:00.000Z',
+    });
+    expect(resolveActivePlan(subscription, NOW)).toBe(FREE_PLAN);
+  });
+
+  it('resolves to the free plan for a cancelled subscription with no renewal date (defensive)', () => {
+    const subscription = makeSubscription({ status: 'cancelled', renewsAt: null });
+    expect(resolveActivePlan(subscription, NOW)).toBe(FREE_PLAN);
+  });
 });

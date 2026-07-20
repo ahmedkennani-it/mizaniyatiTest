@@ -13,8 +13,9 @@ import type { Subscription } from '../db/repositories';
  * - `'trial'` with `trialEndsAt` in the past → free plan ("Given un abonnement expiré... je
  *   repasse aux entitlements gratuits, données conservées" — this never deletes anything, it just
  *   changes which `Plan` object the entitlements engine reads).
- * - `'active'` → Pro (a real recurring purchase; not reachable via any UI in this app yet since no
- *   in-app-purchase integration exists, but the state is modeled for when it does).
+ * - `'active'` → Pro (a real recurring purchase, auto-renewing — never lapses on its own).
+ * - `'cancelled'` (US-069) → Pro until `renewsAt` (the already-paid period's end), then free — same
+ *   "valid until its own end date" shape as `'trial'`, just keyed off `renewsAt`.
  * - `'expired'` → free plan.
  */
 export function resolveActivePlan(subscription: Subscription | null, now: Date = new Date()): Plan {
@@ -28,6 +29,10 @@ export function resolveActivePlan(subscription: Subscription | null, now: Date =
   }
   if (subscription.status === 'active') {
     return PRO_PLAN;
+  }
+  if (subscription.status === 'cancelled') {
+    const stillPaidFor = subscription.renewsAt !== null && new Date(subscription.renewsAt) > now;
+    return stillPaidFor ? PRO_PLAN : FREE_PLAN;
   }
   return FREE_PLAN;
 }

@@ -54,6 +54,26 @@ export async function purchasePro(
   });
 }
 
+/**
+ * Turns off auto-renew (US-069) — mirrors a real store's "manage subscription → cancel": nothing
+ * is refunded or revoked, `renewsAt` (the already-paid period's end) is left untouched, and
+ * `resolveActivePlan` keeps resolving to Pro until that date passes. A no-op if there is nothing
+ * active to cancel (defensive: the UI only offers this button for an `'active'` subscription).
+ */
+export async function cancelSubscription(db: SqlDatabase): Promise<Subscription | null> {
+  const subscription = await getSubscription(db);
+  if (!subscription || subscription.status !== 'active') {
+    return subscription;
+  }
+  return upsertSubscription(db, {
+    planId: subscription.planId,
+    status: 'cancelled',
+    productId: subscription.productId,
+    trialEndsAt: subscription.trialEndsAt,
+    renewsAt: subscription.renewsAt,
+  });
+}
+
 export interface RestoreResult {
   /** Whether a still-valid Pro purchase was found and is (again) in effect. */
   restored: boolean;

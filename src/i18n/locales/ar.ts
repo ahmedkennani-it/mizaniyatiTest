@@ -724,6 +724,13 @@ export const ar: TranslationSchema = {
     unlimitedLabel: 'غير محدود',
     checkMark: '✓',
     dashMark: '—',
+    restoreButton: 'استعادة المشتريات',
+    restoreFoundMessage: 'تمت استعادة الشراء: أنت الآن على خطة برو من جديد.',
+    restoreNoneMessage: 'لم يتم العثور على أي شراء برو على هذا الجهاز.',
+    manageTitle: 'إدارة اشتراكي',
+    renewsOnLabel: 'التجديد في {{date}}.',
+    cancelledUntilLabel: 'تم الإلغاء — يبقى برو نشطًا حتى {{date}}.',
+    cancelButton: 'إلغاء الاشتراك',
   },
   accountScreen: {
     openLink: 'تصدير / حذف حسابي',

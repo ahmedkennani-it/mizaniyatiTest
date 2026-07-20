@@ -745,6 +745,13 @@ export const fr = {
     unlimitedLabel: 'Illimité',
     checkMark: '✓',
     dashMark: '—',
+    restoreButton: 'Restaurer les achats',
+    restoreFoundMessage: 'Achat restauré : vous êtes de nouveau sur le forfait Pro.',
+    restoreNoneMessage: 'Aucun achat Pro trouvé sur cet appareil.',
+    manageTitle: 'Gérer mon abonnement',
+    renewsOnLabel: 'Renouvellement le {{date}}.',
+    cancelledUntilLabel: 'Résilié — Pro reste actif jusqu\'au {{date}}.',
+    cancelButton: "Résilier l'abonnement",
   },
   accountScreen: {
     openLink: 'Exporter / supprimer mon compte',

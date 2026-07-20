@@ -734,6 +734,13 @@ export const en: TranslationSchema = {
     unlimitedLabel: 'Unlimited',
     checkMark: '✓',
     dashMark: '—',
+    restoreButton: 'Restore purchases',
+    restoreFoundMessage: 'Purchase restored: you are on the Pro plan again.',
+    restoreNoneMessage: 'No Pro purchase found on this device.',
+    manageTitle: 'Manage my subscription',
+    renewsOnLabel: 'Renews on {{date}}.',
+    cancelledUntilLabel: 'Cancelled — Pro stays active until {{date}}.',
+    cancelButton: 'Cancel subscription',
   },
   accountScreen: {
     openLink: 'Export / delete my account',

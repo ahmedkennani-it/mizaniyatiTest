@@ -290,3 +290,71 @@ describe('PaywallScreen — tarification et achat (US-066a/US-066b)', () => {
     expect(mockPurchasePro).toHaveBeenCalledTimes(2);
   });
 });
+
+describe('PaywallScreen — gestion de l’abonnement et restauration (US-069)', () => {
+  beforeEach(() => {
+    mockFakeDb = createFakeDatabase().db;
+  });
+
+  it('shows the plan and renewal date for an active paid subscription', async () => {
+    await upsertSubscription(mockFakeDb, {
+      planId: 'pro',
+      status: 'active',
+      productId: 'annual',
+      renewsAt: '2026-08-15T00:00:00.000Z',
+    });
+
+    await renderScreen();
+
+    expect(await screen.findByText('Gérer mon abonnement')).toBeTruthy();
+    expect(screen.getByText('Annuel')).toBeTruthy();
+    expect(screen.getByText('Renouvellement le 2026-08-15.')).toBeTruthy();
+  });
+
+  it('cancels the subscription but keeps Pro active until the renewal date', async () => {
+    await upsertSubscription(mockFakeDb, {
+      planId: 'pro',
+      status: 'active',
+      productId: 'monthly',
+      renewsAt: '2026-08-15T00:00:00.000Z',
+    });
+
+    await renderScreen();
+    await screen.findByText('Gérer mon abonnement');
+
+    fireEvent.press(screen.getByText("Résilier l'abonnement"));
+
+    expect(
+      await screen.findByText("Résilié — Pro reste actif jusqu'au 2026-08-15."),
+    ).toBeTruthy();
+    expect(screen.queryByText("Résilier l'abonnement")).toBeNull();
+    expect((await getSubscription(mockFakeDb))?.status).toBe('cancelled');
+    // Still Pro in the meantime — the upgrade/pricing card must not reappear.
+    expect(screen.queryByText('Choisissez votre formule')).toBeNull();
+  });
+
+  it('reports nothing to restore when there is no purchase on this device', async () => {
+    await renderScreen();
+
+    fireEvent.press(await screen.findByText('Restaurer les achats'));
+
+    expect(await screen.findByText('Aucun achat Pro trouvé sur cet appareil.')).toBeTruthy();
+  });
+
+  it('restores a still-valid purchase found on this device', async () => {
+    await upsertSubscription(mockFakeDb, {
+      planId: 'pro',
+      status: 'active',
+      productId: 'annual',
+      renewsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    });
+
+    await renderScreen();
+
+    fireEvent.press(await screen.findByText('Restaurer les achats'));
+
+    expect(
+      await screen.findByText('Achat restauré : vous êtes de nouveau sur le forfait Pro.'),
+    ).toBeTruthy();
+  });
+});

@@ -12,8 +12,10 @@ import { FREE_PLAN, PRO_PLAN } from '../entitlements';
 import {
   PurchaseCancelledError,
   annualDiscountPercent,
+  cancelSubscription,
   priceFor,
   purchasePro,
+  restorePurchases,
 } from '../purchases';
 import type { PurchaseProductId } from '../purchases';
 import { useSubscription } from '../subscriptions';
@@ -67,6 +69,9 @@ export function PaywallScreen({ onBack, highlightKey }: PaywallScreenProps) {
   const [selectedProduct, setSelectedProduct] = useState<PurchaseProductId>('annual');
   const [purchasing, setPurchasing] = useState(false);
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
+  const [restoring, setRestoring] = useState(false);
+  const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     listHouseholds(getDatabase()).then(setHouseholds);
@@ -74,6 +79,10 @@ export function PaywallScreen({ onBack, highlightKey }: PaywallScreenProps) {
 
   const isPro = plan.id === PRO_PLAN.id;
   const isTrialing = isPro && subscription?.status === 'trial';
+  // US-069: a real (paid) purchase, active or cancelled-but-still-paid-for — not a trial, and not
+  // the transient moment before any row exists.
+  const isManagedSubscription =
+    isPro && (subscription?.status === 'active' || subscription?.status === 'cancelled');
   const currencyCode = households[0]?.currencyCode ?? DEFAULT_CURRENCY_CODE;
   const discountPercent = annualDiscountPercent();
 
@@ -91,6 +100,32 @@ export function PaywallScreen({ onBack, highlightKey }: PaywallScreenProps) {
       );
     } finally {
       setPurchasing(false);
+    }
+  }
+
+  async function handleRestore() {
+    setRestoring(true);
+    setRestoreMessage(null);
+    try {
+      const result = await restorePurchases(getDatabase());
+      setRestoreMessage(
+        result.restored ? t('paywallScreen.restoreFoundMessage') : t('paywallScreen.restoreNoneMessage'),
+      );
+      if (result.restored) {
+        await refresh();
+      }
+    } finally {
+      setRestoring(false);
+    }
+  }
+
+  async function handleCancel() {
+    setCancelling(true);
+    try {
+      await cancelSubscription(getDatabase());
+      await refresh();
+    } finally {
+      setCancelling(false);
     }
   }
 
@@ -180,7 +215,56 @@ export function PaywallScreen({ onBack, highlightKey }: PaywallScreenProps) {
             </Txt>
           </>
         ) : null}
+        {/* US-069's 3rd criterion — a new device starts on the free plan with no way to know
+            whether it already owns Pro; always offered, not just once a purchase is missing. */}
+        <Button
+          label={t('paywallScreen.restoreButton')}
+          variant="secondary"
+          onPress={handleRestore}
+          disabled={restoring}
+        />
+        {restoreMessage ? (
+          <Txt size="xs" color={theme.colors.textSecondary}>
+            {restoreMessage}
+          </Txt>
+        ) : null}
       </Card>
+
+      {isManagedSubscription ? (
+        <Card elevated style={{ gap: theme.spacing.sm }}>
+          <Txt weight="semibold" size="md">
+            {t('paywallScreen.manageTitle')}
+          </Txt>
+          <Txt size="sm">
+            {subscription?.productId === 'annual'
+              ? t('paywallScreen.annualProductLabel')
+              : t('paywallScreen.monthlyProductLabel')}
+          </Txt>
+          {subscription?.status === 'cancelled' && subscription.renewsAt ? (
+            <AlertBanner
+              tone="info"
+              icon="alert-circle"
+              message={t('paywallScreen.cancelledUntilLabel', {
+                date: subscription.renewsAt.slice(0, 10),
+              })}
+            />
+          ) : (
+            <>
+              {subscription?.renewsAt ? (
+                <Txt size="sm" color={theme.colors.textSecondary}>
+                  {t('paywallScreen.renewsOnLabel', { date: subscription.renewsAt.slice(0, 10) })}
+                </Txt>
+              ) : null}
+              <Button
+                label={t('paywallScreen.cancelButton')}
+                variant="secondary"
+                onPress={handleCancel}
+                disabled={cancelling}
+              />
+            </>
+          )}
+        </Card>
+      ) : null}
 
       {!isPro ? (
         <Card elevated style={{ gap: theme.spacing.sm }}>

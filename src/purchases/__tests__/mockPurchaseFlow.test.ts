@@ -3,6 +3,7 @@ import { getSubscription, upsertSubscription } from '../../db/repositories';
 import {
   PurchaseCancelledError,
   PurchaseNetworkError,
+  cancelSubscription,
   purchasePro,
   restorePurchases,
 } from '../mockPurchaseFlow';
@@ -118,5 +119,49 @@ describe('restorePurchases (US-066a)', () => {
     const result = await restorePurchases(db);
 
     expect(result.restored).toBe(false);
+  });
+});
+
+describe('cancelSubscription (US-069)', () => {
+  it('turns off auto-renew but keeps the same renewal date', async () => {
+    const { db } = createFakeDatabase();
+    const purchased = await purchasePro(db, 'monthly');
+
+    const cancelled = await cancelSubscription(db);
+
+    expect(cancelled?.status).toBe('cancelled');
+    expect(cancelled?.renewsAt).toBe(purchased.renewsAt);
+    expect(cancelled?.productId).toBe('monthly');
+  });
+
+  it('persists the cancellation', async () => {
+    const { db } = createFakeDatabase();
+    await purchasePro(db, 'annual');
+
+    await cancelSubscription(db);
+
+    expect((await getSubscription(db))?.status).toBe('cancelled');
+  });
+
+  it('is a no-op when there is nothing active to cancel', async () => {
+    const { db } = createFakeDatabase();
+
+    const result = await cancelSubscription(db);
+
+    expect(result).toBeNull();
+    expect(await getSubscription(db)).toBeNull();
+  });
+
+  it('does not touch a trial (only a real purchase can be cancelled)', async () => {
+    const { db } = createFakeDatabase();
+    await upsertSubscription(db, {
+      planId: 'pro',
+      status: 'trial',
+      trialEndsAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+    });
+
+    const result = await cancelSubscription(db);
+
+    expect(result?.status).toBe('trial');
   });
 });

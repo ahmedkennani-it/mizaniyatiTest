@@ -3,6 +3,7 @@ export type { PurchaseProduct, PurchaseProductId } from './products';
 export {
   PurchaseCancelledError,
   PurchaseNetworkError,
+  cancelSubscription,
   purchasePro,
   restorePurchases,
 } from './mockPurchaseFlow';
