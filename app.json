@@ -10,9 +10,10 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSFaceIDUsageDescription": "$(PRODUCT_NAME) utilise Face ID pour verrouiller l'accès à vos données financières.",
-      "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) utilise le microphone pour la saisie vocale de vos dépenses.",
-      "NSSpeechRecognitionUsageDescription": "$(PRODUCT_NAME) transcrit votre dictée pour remplir la saisie de dépense. Aucun enregistrement n'est conservé."
-      }
+        "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) utilise le microphone pour la saisie vocale de vos dépenses.",
+        "NSSpeechRecognitionUsageDescription": "$(PRODUCT_NAME) transcrit votre dictée pour remplir la saisie de dépense. Aucun enregistrement n'est conservé."
+      },
+      "bundleIdentifier": "com.mizaniyati.app"
     },
     "android": {
       "package": "com.mizaniyati.app",
@@ -22,7 +23,10 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -46,7 +50,7 @@
         "projectId": "440376c5-68dc-455c-b955-fbdcb4a58b8c"
       }
     },
-    "owner": "anissrelicum",
+    "owner": "kennaniahmed",
     "runtimeVersion": {
       "policy": "appVersion"
     },
