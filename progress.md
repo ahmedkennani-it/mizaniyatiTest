@@ -2130,6 +2130,38 @@ entièrement couverte.
 
 **Phase 16 (Monétisation freemium) close : 6/6 tâches `done: true`.**
 
+### Itération 65 — Tâche 17.1 (Garantie « aucune connexion bancaire ») ✅ — phase 17 amorcée
+
+- **Bonne surprise à l'exploration : les 3 critères fonctionnels étaient déjà vrais**, construits
+  incidemment par des tâches antérieures, mais **aucun test dédié ne les figeait** pour cette US
+  précise — le PRD exige « tests unitaires couvrant les critères », pas juste qu'ils soient vrais
+  par accident.
+  - 2e critère (rappel à chaque étape clé) : `welcome.noBankBadge` (4.1), `privacy.commitmentBankTitle/Body`
+    (4.4), `home.disclaimer` (Dashboard), `paywallScreen.noBankBadge` (16.1) — les 4 écrans nommés
+    par le critère ont déjà, **chacun**, un test de rendu qui les épingle (`WelcomeScreen.test.tsx`,
+    `PrivacyScreen.test.tsx`, `HomeScreen.rtl.test.tsx`/`HomeSeniorMode.test.tsx`,
+    `PaywallScreen.test.tsx`). Rien à ajouter ici.
+  - 1er critère (aucun champ ne demande RIB/carte/identifiants bancaires) : `grep` exhaustif sur
+    `src/i18n/locales` et `src/screens` → seulement 2 occurrences, toutes deux des **négations**
+    (« Aucune carte bancaire requise… », « … ne demande jamais de RIB, de carte ni d'identifiants
+    bancaires »), aucun champ `TextField` ne réclame quoi que ce soit de tel.
+- **Nouveau, ce qui manquait vraiment** : rien ne empêchait une régression future sur ces 3
+  critères. Nouveau `src/security/__tests__/noBankIntegration.test.ts`, deux gardes :
+  - **Dépendance interdite** : `package.json` (`dependencies`/`devDependencies`) scanné contre une
+    liste de SDK d'agrégation bancaire connus (Plaid, Tink, Salt Edge, Budget Insight/Powens,
+    Bridge API, TrueLayer, Yapily, Linxo, Nordigen/GoCardless, Finicity…). C'est la traduction
+    mécanique du 3e critère (« une future intégration tierce ne peut pas contredire cette promesse
+    sans opt-in explicite et documenté ») : ajouter une telle dépendance ferait échouer ce test
+    immédiatement, forçant une modification **délibérée** de la liste plutôt qu'un `npm install`
+    silencieux. Complète (sans le dupliquer) le garde réseau de `offlineStorage.test.ts` (1.7/US-070)
+    déjà en place — celui-là interdit l'appel réseau lui-même (`fetch`/`XHR`/`WebSocket`…), celui-ci
+    interdit la dépendance qui le porterait.
+  - **Liste noire de formulations « demande »** (pas une interdiction de mot nu — « carte bancaire »
+    apparaît légitimement dans `trialCommitmentNote`) : motifs comme « Entrez votre RIB/IBAN »,
+    « Numéro de carte bancaire », « Code CVV », vérifiés sur les **3 catalogues** (valeurs
+    aplaties récursivement, pas seulement les clés de premier niveau).
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **2081/2081, 167 suites** ✅.
+
 ## Notes / blocages connus (hors périmètre Phase 1)
 
 - L'arbre de travail contient des changements accumulés multi-phases non
