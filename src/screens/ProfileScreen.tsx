@@ -18,6 +18,7 @@ import {
   Button,
   Card,
   Chip,
+  Icon,
   ListRow,
   Pill,
   ScreenHeader,
@@ -220,6 +221,11 @@ export function ProfileScreen() {
           icon="moon-star"
           accent="gold"
           title={t('ramadanScreen.openLink')}
+          trailing={
+            !entitlements.can('ramadan') ? (
+              <Icon name="lock" size={16} color={theme.colors.textSecondary} accessibilityLabel={t('a11y.proLocked')} />
+            ) : undefined
+          }
           onPress={() => setView('ramadan')}
           chevron
         />
@@ -321,6 +327,11 @@ export function ProfileScreen() {
           icon="hand-heart"
           accent="gold"
           title={t('zakatScreen.openLink')}
+          trailing={
+            !entitlements.can('zakat') ? (
+              <Icon name="lock" size={16} color={theme.colors.textSecondary} accessibilityLabel={t('a11y.proLocked')} />
+            ) : undefined
+          }
           onPress={() => setView('zakat')}
           chevron
         />
@@ -328,6 +339,11 @@ export function ProfileScreen() {
           icon="handshake"
           accent="coral"
           title={t('debtsScreen.openLink')}
+          trailing={
+            !entitlements.can('debts') ? (
+              <Icon name="lock" size={16} color={theme.colors.textSecondary} accessibilityLabel={t('a11y.proLocked')} />
+            ) : undefined
+          }
           onPress={() => setView('debts')}
           chevron
         />

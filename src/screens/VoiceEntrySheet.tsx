@@ -29,6 +29,7 @@ import {
 } from '../voice';
 import type { SilenceWatcher } from '../voice';
 import type { AddExpenseFormPrefill } from './AddExpenseForm';
+import { PaywallScreen } from './PaywallScreen';
 
 export interface VoiceEntrySheetProps {
   onClose: () => void;
@@ -221,18 +222,11 @@ export function VoiceEntrySheet({
     await onSavedFromReview(created);
   }
 
+  // US-068's 2nd criterion: tapping a locked feature opens the paywall with it highlighted, rather
+  // than the generic inline upsell this used to show — voice capture has no data of its own to
+  // preserve read-only access to (unlike Tontine/Debts/Zakat/Ramadan), so there is no other branch.
   if (!canUseVoice) {
-    return (
-      <AppScreen scroll contentStyle={{ gap: theme.spacing.md }}>
-        <ScreenHeader title={t('voiceCapture.title')} onBack={onClose} />
-        <Card elevated style={{ gap: theme.spacing.xs }}>
-          <Txt size="sm">{t('voiceCapture.upsellMessage')}</Txt>
-          <Txt size="sm" weight="bold" color={theme.colors.primary}>
-            {t('voiceCapture.upsellCta')}
-          </Txt>
-        </Card>
-      </AppScreen>
-    );
+    return <PaywallScreen onBack={onClose} highlightKey="voice" />;
   }
 
   const languageRow = (

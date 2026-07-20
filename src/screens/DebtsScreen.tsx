@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { DebtDetail } from './DebtDetail';
 import { DebtForm } from './DebtForm';
+import { PaywallScreen } from './PaywallScreen';
 import {
   AppScreen,
   Avatar,
@@ -43,7 +44,7 @@ export function DebtsScreen({ onBack }: DebtsScreenProps) {
   const { language } = useLanguage();
   const entitlements = useEntitlements();
 
-  const [view, setView] = useState<'list' | 'form' | 'detail'>('list');
+  const [view, setView] = useState<'list' | 'form' | 'detail' | 'paywall'>('list');
   const [debts, setDebts] = useState<Debt[]>([]);
   const [repayments, setRepayments] = useState<DebtRepayment[]>([]);
   const [households, setHouseholds] = useState<Household[]>([]);
@@ -60,21 +61,24 @@ export function DebtsScreen({ onBack }: DebtsScreenProps) {
     refresh();
   }, [refresh]);
 
-  if (!entitlements.can('debts')) {
-    return (
-      <AppScreen scroll contentStyle={{ gap: theme.spacing.md }}>
-        <ScreenHeader title={t('debtsScreen.title')} onBack={onBack} />
-        <Card elevated style={{ gap: theme.spacing.xs }}>
-          <Txt size="sm">{t('debtsScreen.upsellMessage')}</Txt>
-          <Txt size="sm" weight="bold" color={theme.colors.primary}>
-            {t('debtsScreen.upsellCta')}
-          </Txt>
-        </Card>
-      </AppScreen>
-    );
+  const locked = !entitlements.can('debts');
+
+  // US-068: nothing to preserve → the whole screen is the locked feature, straight to the paywall.
+  // Once at least one debt exists it stays fully visible after a downgrade (below); only *adding a
+  // new* debt is gated, via `openAddDebt` further down.
+  if (locked && debts.length === 0) {
+    return <PaywallScreen onBack={onBack} highlightKey="debts" />;
+  }
+
+  if (view === 'paywall') {
+    return <PaywallScreen onBack={() => setView('list')} highlightKey="debts" />;
   }
 
   const currencyCode = households[0]?.currencyCode ?? DEFAULT_CURRENCY_CODE;
+
+  function openAddDebt() {
+    setView(locked ? 'paywall' : 'form');
+  }
 
   if (view === 'form') {
     return (
@@ -193,7 +197,7 @@ export function DebtsScreen({ onBack }: DebtsScreenProps) {
           <Txt size="sm" color={theme.colors.textSecondary} style={{ textAlign: 'center' }}>
             {t('debtsScreen.emptyState')}
           </Txt>
-          <Button label={t('debtsScreen.addButton')} onPress={() => setView('form')} />
+          <Button label={t('debtsScreen.addButton')} onPress={openAddDebt} />
         </Card>
       ) : (
         <>
@@ -201,7 +205,7 @@ export function DebtsScreen({ onBack }: DebtsScreenProps) {
             <SectionHeader
               title={t('debtsScreen.owedToHouseholdTitle')}
               actionLabel={t('debtsScreen.addButton')}
-              onActionPress={() => setView('form')}
+              onActionPress={openAddDebt}
             />
             {owedToHousehold.length === 0 ? null : owedToHousehold.map(debtRow)}
           </View>

@@ -112,9 +112,9 @@ describe('App', () => {
 
     await fireEvent.press(screen.getByText('Tontine'));
     expect(screen.getAllByText('Tontine').length).toBeGreaterThan(0);
-    // App.tsx defaults to FREE_PLAN, which doesn't include the tontine feature (US-024) —
-    // the tab shows the Pro upsell rather than the group dashboard.
-    expect(await screen.findByText('La tontine fait partie du forfait Pro.')).toBeTruthy();
+    // App.tsx defaults to FREE_PLAN, which doesn't include the tontine feature (US-024) — with no
+    // group yet, the tab opens straight into the paywall (US-068) rather than the group dashboard.
+    expect(await screen.findByText('Gratuit vs Pro')).toBeTruthy();
   });
 
   it('hosts the theme demo on the Profil tab and toggles dark mode + senior mode', async () => {

@@ -11,6 +11,9 @@ export interface VoicePromoCardProps {
   subtitle: string;
   /** Small badge (e.g. "NOUVEAU" / "جديد"). */
   badge?: string;
+  /** Free plan (US-068) — badges the mic tile with a lock; tapping still opens the paywall. */
+  locked?: boolean;
+  lockedAccessibilityLabel?: string;
   onPress?: () => void;
   /** Closes the banner for good. Without it there is no way to answer "no thanks" (US-014). */
   onDismiss?: () => void;
@@ -25,6 +28,8 @@ export function VoicePromoCard({
   title,
   subtitle,
   badge,
+  locked,
+  lockedAccessibilityLabel,
   onPress,
   onDismiss,
   dismissLabel,
@@ -59,6 +64,23 @@ export function VoicePromoCard({
           }}
         >
           <Icon name="mic" size={24} color={theme.onAccent.ink} />
+          {locked ? (
+            <View
+              style={{
+                position: 'absolute',
+                bottom: -3,
+                end: -3,
+                width: 18,
+                height: 18,
+                borderRadius: theme.radius.full,
+                backgroundColor: theme.accents.gold.solid,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Icon name="lock" size={10} color={theme.onAccent.ink} accessibilityLabel={lockedAccessibilityLabel} />
+            </View>
+          ) : null}
         </View>
         <View style={{ flex: 1, gap: 3 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>

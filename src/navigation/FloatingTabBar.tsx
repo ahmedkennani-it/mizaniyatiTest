@@ -8,8 +8,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../components/Icon';
 import type { IconName } from '../components/Icon';
 import { Txt } from '../components/Txt';
+import { useEntitlements } from '../entitlements';
 import { useExpenseEntry } from '../screens/ExpenseEntryProvider';
 import { useTheme } from '../theme';
+
+/** Tab routes gated behind a Pro entitlement — the tab badges a lock rather than disappearing
+ * (US-068's "visible mais verrouillée"); tapping still opens the tab, whose own screen redirects to
+ * the paywall (or shows preserved data read-only, per the same US). */
+const TAB_ENTITLEMENT_KEYS: Partial<Record<string, 'tontine'>> = {
+  tontine: 'tontine',
+};
 
 const TAB_ICONS: Record<string, IconName> = {
   home: 'house',
@@ -30,6 +38,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const { openEntry } = useExpenseEntry();
+  const entitlements = useEntitlements();
   const rtl = I18nManager.isRTL;
 
   const items = state.routes.map((route, index) => {
@@ -66,11 +75,23 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
           paddingVertical: 6,
         }}
       >
-        <Icon
-          name={TAB_ICONS[route.name] ?? 'house'}
-          size={21}
-          color={focused ? theme.colors.primary : theme.colors.textSecondary}
-        />
+        <View style={{ position: 'relative' }}>
+          <Icon
+            name={TAB_ICONS[route.name] ?? 'house'}
+            size={21}
+            color={focused ? theme.colors.primary : theme.colors.textSecondary}
+          />
+          {TAB_ENTITLEMENT_KEYS[route.name] && !entitlements.can(TAB_ENTITLEMENT_KEYS[route.name]!) ? (
+            <View style={{ position: 'absolute', top: -4, end: -6 }}>
+              <Icon
+                name="lock"
+                size={11}
+                color={theme.colors.textSecondary}
+                accessibilityLabel={t('a11y.proLocked')}
+              />
+            </View>
+          ) : null}
+        </View>
         <Txt
           size="xs"
           weight={focused ? 'semibold' : 'regular'}

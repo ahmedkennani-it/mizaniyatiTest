@@ -27,6 +27,7 @@ import { DEFAULT_CURRENCY_CODE, formatMoney, parseAmountInput } from '../money';
 import { resolveCategoryDisplayName } from '../categories';
 import { activateRamadanTheme, computeSeasonalThemeStatus } from '../seasonalThemes';
 import { ramadanSurface, useTheme } from '../theme';
+import { PaywallScreen } from './PaywallScreen';
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -70,22 +71,17 @@ export function RamadanScreen({ onBack, onNavigateToZakat }: RamadanScreenProps)
   // Warm seasonal surface for the whole screen (design's Ramadan theme).
   const warmBg = theme.colorScheme === 'dark' ? undefined : ramadanSurface.background;
 
-  if (!entitlements.can('ramadan')) {
-    return (
-      <AppScreen scroll background={warmBg} contentStyle={{ gap: theme.spacing.md }}>
-        <ScreenHeader title={t('ramadanScreen.title')} onBack={onBack} />
-        <Card elevated style={{ gap: theme.spacing.xs }}>
-          <Txt size="sm">{t('ramadanScreen.upsellMessage')}</Txt>
-          <Txt size="sm" weight="bold" color={theme.colors.primary}>
-            {t('ramadanScreen.upsellCta')}
-          </Txt>
-        </Card>
-      </AppScreen>
-    );
-  }
-
   const activeTheme =
     themes.find((candidate) => candidate.type === 'ramadan' && candidate.active) ?? null;
+
+  // US-068: no active season to preserve read access to → the whole screen is the locked feature,
+  // straight to the paywall. An already-active season (started while Pro) stays fully visible and
+  // usable after a downgrade — the only action past this point is *activating a new* season, and
+  // that setup form only renders in the `!activeTheme` branch below, itself unreachable once a
+  // season is active, so no separate mutation guard is needed here.
+  if (!entitlements.can('ramadan') && !activeTheme) {
+    return <PaywallScreen onBack={onBack} highlightKey="ramadan" />;
+  }
 
   async function handleActivate() {
     const envelopeMinor = parseAmountInput(envelopeInput, DEFAULT_CURRENCY_CODE);

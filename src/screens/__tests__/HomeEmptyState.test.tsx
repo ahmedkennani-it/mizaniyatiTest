@@ -34,6 +34,8 @@ import { monthKeyOf } from '../../i18n/dateFormat';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { fr } from '../../i18n/locales/fr';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
+import { SubscriptionProvider } from '../../subscriptions';
+// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { ThemeProvider } from '../../theme';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { ExpenseEntryProvider } from '../ExpenseEntryProvider';
@@ -71,9 +73,11 @@ async function renderHome(plan?: Plan) {
       <LanguageProvider>
         <ThemeProvider initialColorScheme="light">
           <EntitlementsProvider plan={plan}>
-            <ExpenseEntryProvider>
-              <HomeScreen />
-            </ExpenseEntryProvider>
+            <SubscriptionProvider>
+              <ExpenseEntryProvider>
+                <HomeScreen />
+              </ExpenseEntryProvider>
+            </SubscriptionProvider>
           </EntitlementsProvider>
         </ThemeProvider>
       </LanguageProvider>
@@ -130,13 +134,14 @@ describe('dashboard empty state (US-015)', () => {
     });
 
     /** Voice entry is Pro-gated (US-020a) — a free household sees the upsell, not a live mic. */
-    it('shows the Pro upsell from the voice action on the free plan', async () => {
+    it('opens the paywall with the voice row highlighted from the voice action on the free plan', async () => {
       await seed();
       await renderHome();
 
       await fireEvent.press(await screen.findByText(fr.home.emptyStateVoice));
 
-      expect(await screen.findByText(fr.voiceCapture.upsellMessage)).toBeTruthy();
+      expect(await screen.findByText(fr.paywallScreen.title)).toBeTruthy();
+      expect(screen.getByTestId('paywall-row-voice').props.style).toMatchObject({ borderWidth: 2 });
     });
 
     it('opens the voice-capture sheet from the voice action on the Pro plan', async () => {

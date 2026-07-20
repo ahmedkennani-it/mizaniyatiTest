@@ -46,6 +46,7 @@ export const fr = {
     nextMonth: 'Mois suivant',
     overBudget: 'Plafond dépassé',
     unreadNotifications: 'Notifications non lues',
+    proLocked: 'Fonction Pro verrouillée',
   },
   placeholder: {
     comingSoon: 'Bientôt disponible',

@@ -22,6 +22,8 @@ import { LanguageProvider } from '../../i18n';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { activateRamadanTheme, ramadanRangeNear } from '../../seasonalThemes';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
+import { SubscriptionProvider } from '../../subscriptions';
+// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { ThemeProvider } from '../../theme';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { ExpenseEntryProvider } from '../ExpenseEntryProvider';
@@ -45,9 +47,11 @@ async function renderHome(plan?: Plan) {
       <LanguageProvider>
         <ThemeProvider initialColorScheme="light">
           <EntitlementsProvider plan={plan}>
-            <ExpenseEntryProvider>
-              <HomeScreen />
-            </ExpenseEntryProvider>
+            <SubscriptionProvider>
+              <ExpenseEntryProvider>
+                <HomeScreen />
+              </ExpenseEntryProvider>
+            </SubscriptionProvider>
           </EntitlementsProvider>
         </ThemeProvider>
       </LanguageProvider>
@@ -101,6 +105,8 @@ describe('HomeScreen — Ramadan dashboard identity (US-041)', () => {
     expect(screen.queryByText('Dernières opérations')).toBeNull();
   });
 
+  /** `RAMADAN_PLAN` entitles ramadan but not zakat — the shortcut still opens Zakat, which (US-068)
+   *  redirects a locked, assessment-less household straight to the paywall. */
   it('opens Zakat from the dashboard\'s rate-labeled shortcut', async () => {
     await createHousehold(mockFakeDb, { name: 'Famille Benali', currencyCode: 'MAD' });
     const now = new Date();
@@ -116,7 +122,7 @@ describe('HomeScreen — Ramadan dashboard identity (US-041)', () => {
 
     await fireEvent.press(await screen.findByText('Calculer ma Zakat (taux 2,5 %)'));
 
-    expect(await screen.findByText('Zakat')).toBeTruthy();
+    expect(await screen.findByText('Gratuit vs Pro')).toBeTruthy();
   });
 
   it('offers to revert to the standard theme once Ramadan has ended', async () => {

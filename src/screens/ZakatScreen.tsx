@@ -41,6 +41,7 @@ import { useLanguage } from '../i18n';
 import { DEFAULT_CURRENCY_CODE, formatMoney, parseNonNegativeAmountInput } from '../money';
 import { useTheme } from '../theme';
 import { computeNisabMinor, computeZakatAssessment } from '../zakat';
+import { PaywallScreen } from './PaywallScreen';
 
 export interface ZakatScreenProps {
   onBack: () => void;
@@ -52,6 +53,7 @@ export function ZakatScreen({ onBack }: ZakatScreenProps) {
   const { language } = useLanguage();
   const entitlements = useEntitlements();
 
+  const [showPaywall, setShowPaywall] = useState(false);
   const [config, setConfig] = useState<ZakatConfig | null>(null);
   const [assessments, setAssessments] = useState<ZakatAssessment[]>([]);
   const [households, setHouseholds] = useState<Household[]>([]);
@@ -91,18 +93,18 @@ export function ZakatScreen({ onBack }: ZakatScreenProps) {
     refresh();
   }, [refresh]);
 
-  if (!entitlements.can('zakat')) {
-    return (
-      <AppScreen scroll contentStyle={{ gap: theme.spacing.md }}>
-        <ScreenHeader title={t('zakatScreen.title')} onBack={onBack} />
-        <Card elevated style={{ gap: theme.spacing.xs }}>
-          <Txt size="sm">{t('zakatScreen.upsellMessage')}</Txt>
-          <Txt size="sm" weight="bold" color={theme.colors.primary}>
-            {t('zakatScreen.upsellCta')}
-          </Txt>
-        </Card>
-      </AppScreen>
-    );
+  const locked = !entitlements.can('zakat');
+
+  // US-068: no past assessment to preserve read access to → the whole screen is the locked
+  // feature, straight to the paywall. Once at least one exists it (and the calculator that
+  // produced it) stays fully visible after a downgrade; only *saving a new* assessment is gated,
+  // via `handleSaveAssessment` below.
+  if (locked && assessments.length === 0) {
+    return <PaywallScreen onBack={onBack} highlightKey="zakat" />;
+  }
+
+  if (showPaywall) {
+    return <PaywallScreen onBack={() => setShowPaywall(false)} highlightKey="zakat" />;
   }
 
   if (!config) {
@@ -328,7 +330,10 @@ export function ZakatScreen({ onBack }: ZakatScreenProps) {
           value={dueDateInput}
           onChangeText={setDueDateInput}
         />
-        <Button label={t('zakatScreen.saveButton')} onPress={handleSaveAssessment} />
+        <Button
+          label={t('zakatScreen.saveButton')}
+          onPress={() => (locked ? setShowPaywall(true) : handleSaveAssessment())}
+        />
       </Card>
 
       <View style={{ gap: theme.spacing.sm }}>

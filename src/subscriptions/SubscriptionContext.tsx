@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { AppState } from 'react-native';
 
 import { getDatabase } from '../db/client';
 import { getSubscription, upsertSubscription } from '../db/repositories';
@@ -38,6 +39,18 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     refresh();
+  }, [refresh]);
+
+  // US-068's 3rd criterion: a trial/subscription that lapsed while the app sat backgrounded must
+  // drop its locks "at the latest on resume" — a plain mount-time read (above) only re-resolves on
+  // a full relaunch, so a household that never force-quits would keep Pro access past expiry.
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        refresh();
+      }
+    });
+    return () => subscription.remove();
   }, [refresh]);
 
   const startTrial = useCallback(async () => {

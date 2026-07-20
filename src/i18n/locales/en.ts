@@ -44,6 +44,7 @@ export const en: TranslationSchema = {
     nextMonth: 'Next month',
     overBudget: 'Over budget',
     unreadNotifications: 'Unread notifications',
+    proLocked: 'Pro feature locked',
   },
   placeholder: {
     comingSoon: 'Coming soon',

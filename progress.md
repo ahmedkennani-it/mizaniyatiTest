@@ -2028,6 +2028,73 @@ entièrement couverte.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **2059/2059, 166 suites** ✅.
 - ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé).
 
+### Itération 63 — Tâche 16.5 (Verrouillage des fonctions Pro / gating) ✅
+
+- **Écart trouvé sur les 5 fonctions Pro (voix, tontine, dettes, zakat, Ramadan)** : aucune ne
+  respectait les 2 premiers critères. Chaque écran remplaçait **tout son contenu** par une carte
+  d'upsell générique dès `!entitlements.can(clé)` — même quand des données avaient déjà été
+  fetchées (`refresh()` tournait quand même), donc **aucune entrée n'était visible avec un
+  cadenas** (juste une carte plate au clic) et **rien n'ouvrait jamais le vrai `PaywallScreen`**
+  (`highlightKey` existait déjà côté `PaywallScreen` mais n'était appelé nulle part).
+- **Règle retenue pour concilier les critères 2 et 4** (« tape une fonction verrouillée → paywall »
+  vs « abonnement expiré → données lisibles ») : *une fonction sans aucune donnée existante est
+  strictement verrouillée → paywall immédiat ; une fonction avec des données déjà créées pendant
+  Pro reste pleinement visible, seule la création d'une **nouvelle** entité redirige vers le
+  paywall.* Gérer/faire évoluer une entité déjà existante (encaisser un remboursement, cocher un
+  paiement de tontine, marquer une Zakat payée, désactiver une saison) reste possible — bloquer
+  cela aurait pénalisé un usage réel déjà engagé sans rapport avec « créer du contenu Pro », et
+  rien dans le critère ne l'exige à la lettre.
+- **Effet de bord agréable** : pour Tontine et Ramadan, cette règle ne demandait **aucune garde
+  supplémentaire** — la « création d'une nouvelle entité » est déjà structurellement isolée dans
+  une branche (`!group` / `!activeTheme`) inatteignable dès qu'une entité existe. Il a suffi de
+  réordonner le calcul (`group`/`activeTheme` avant la porte d'entitlement) et de remplacer la
+  carte d'upsell par `<PaywallScreen highlightKey=... />` quand la donnée est absente. Debts et
+  Zakat, eux, avaient leur bouton de création **dans la même vue** que la liste en lecture seule —
+  un garde explicite (`openAddDebt`, `setShowPaywall`) a donc été nécessaire sur ce seul point
+  d'entrée.
+- **Voix n'a pas de branche lecture seule** : contrairement aux 4 autres, elle ne produit aucune
+  donnée persistée qui lui soit propre (les transactions créées ne sont jamais gate-ées) — le
+  panneau ouvre directement `<PaywallScreen highlightKey="voice" />` dès `!can('voice')`, sans
+  condition.
+- **Cadenas visible aux points d'entrée (1er critère)** : ajouté sans nouveau composant générique,
+  en réutilisant les emplacements déjà prévus par le design system —
+  - `ProfileScreen` : `Icon name="lock"` dans le slot `trailing` déjà supporté par `ListRow`
+    (Zakat, Ramadan, Dettes).
+  - `FloatingTabBar` : petit badge cadenas en surimpression sur l'icône Tontine
+    (`position: 'absolute'`, `end: -6` — propriété logique, se retourne seule en RTL).
+  - `VoicePromoCard` (accueil) : nouvelle prop `locked?` qui badge la pastille micro d'un petit
+    rond doré + cadenas, sans toucher au badge `NOUVEAU` existant (sémantique différente, gardée
+    séparée) ; le bouton micro de l'état vide échange simplement son icône `mic` → `lock`.
+  - Toutes ces icônes portent un `accessibilityLabel` (`a11y.proLocked`, nouvelle clé i18n ×3) —
+    l'icône `Icon` ne s'expose aux lecteurs d'écran que si elle en a un (règle posée en 2.5), donc
+    un cadenas muet aurait été invisible en lecture vocale.
+- **3e critère (« les verrous disparaissent au plus tard à la reprise de l'app »)** : trouvé un
+  vrai trou pendant l'exploration — `SubscriptionContext` ne relisait la souscription qu'au montage
+  et après un achat/essai, jamais au retour au premier plan. Un essai qui expire pendant que l'app
+  reste ouverte en arrière-plan restait Pro indéfiniment tant que l'app n'était pas relancée.
+  Ajouté un `AppState.addEventListener('change', ...)` qui rappelle `refresh()` sur `'active'`.
+  Testé en isolant un vrai piège de test : `AppState.addEventListener` est un mock partagé entre
+  tous les tests du fichier (jamais reset), donc `.find()` sur ses appels récupérait le listener
+  d'un test **précédent** au lieu de celui du rendu courant — `.filter(...).at(-1)` corrige.
+  Timers fictifs (`jest.useFakeTimers`) écartés au profit d'un vrai petit délai (40 ms) : le
+  `waitFor`/`findBy*` de RNTL sonde sur de vrais timers, que les fake timers gèlent.
+- **4e critère (données lisibles après expiration), testé par mutation réelle** : chaque écran a un
+  test qui seed une entité **avant** le rendu, rend en plan Gratuit, et vérifie qu'elle est visible
+  **et** que créer une nouvelle entité redirige vers le paywall (`TontineScreen`, `DebtsScreen`,
+  `ZakatScreen`, `RamadanScreen`).
+- 🐛 **Regressions découvertes en cascade** : `VoiceEntrySheet`, `TontineScreen`, `DebtsScreen`,
+  `ZakatScreen`, `RamadanScreen` embarquent maintenant `PaywallScreen`, qui lit `useSubscription()`
+  — 7 fichiers de test (`VoiceEntrySheet`, `TontineScreen`, `DebtsScreen`, `ZakatScreen`,
+  `RamadanScreen`, `HomeRamadan`, `HomeVoicePromo`, `HomeEmptyState`) rendaient ces écrans **sans**
+  `SubscriptionProvider` dans leur wrapper — jamais nécessaire avant que `PaywallScreen` n'y
+  apparaisse. Ajouté partout, plus la mise à jour des anciennes assertions qui cherchaient encore
+  le texte de l'upsell générique disparu (`voiceCapture.upsellMessage`, etc.) au profit du nouveau
+  comportement (`paywallScreen.title` + ligne mise en évidence).
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **2066/2066, 166 suites** ✅.
+- ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé) — le nouveau
+  badge cadenas utilise exclusivement des propriétés logiques (`end`, jamais `right`), cohérent
+  avec la garde `noHardcodedColors`/RTL déjà en place ailleurs.
+
 ## Notes / blocages connus (hors périmètre Phase 1)
 
 - L'arbre de travail contient des changements accumulés multi-phases non

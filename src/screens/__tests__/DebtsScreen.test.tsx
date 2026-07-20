@@ -18,6 +18,8 @@ import type { Plan } from '../../entitlements';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { LanguageProvider } from '../../i18n';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
+import { SubscriptionProvider } from '../../subscriptions';
+// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { ThemeProvider } from '../../theme';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { DebtsScreen } from '../DebtsScreen';
@@ -34,7 +36,9 @@ function renderScreen(plan?: Plan, onBack: () => void = jest.fn()) {
     <LanguageProvider>
       <ThemeProvider initialColorScheme="light">
         <EntitlementsProvider plan={plan}>
-          <DebtsScreen onBack={onBack} />
+          <SubscriptionProvider>
+            <DebtsScreen onBack={onBack} />
+          </SubscriptionProvider>
         </EntitlementsProvider>
       </ThemeProvider>
     </LanguageProvider>,
@@ -48,10 +52,36 @@ describe('DebtsScreen (US-048)', () => {
     mockFakeDb = createFakeDatabase().db;
   });
 
-  it('shows the Pro upsell when the plan does not include debts', async () => {
+  /** US-068: no debt yet on the free plan → straight to the paywall, debts row highlighted. */
+  it('opens the paywall with the debts row highlighted when the plan does not include debts', async () => {
     renderScreen();
 
-    expect(await screen.findByText('Le suivi des dettes fait partie du forfait Pro.')).toBeTruthy();
+    expect(await screen.findByText('Gratuit vs Pro')).toBeTruthy();
+    expect(screen.getByTestId('paywall-row-tontine').props.style).toMatchObject({ borderWidth: 2 });
+  });
+
+  /** US-068's 4th criterion: a debt recorded while Pro stays fully readable after a downgrade, but
+   *  adding a *new* one is gated. */
+  it('keeps an existing debt visible and gates adding a new one after the plan drops debts', async () => {
+    await createHousehold(mockFakeDb, { name: 'Famille Test', currencyCode: 'MAD' });
+    await createDebt(mockFakeDb, {
+      label: 'Prêt',
+      counterparty: 'Karim',
+      direction: 'owed_to_household',
+      amountMinor: 50000,
+      currencyCode: 'MAD',
+      date: CURRENT_MONTH + '-01',
+      dueDate: null,
+    });
+
+    renderScreen();
+
+    expect(await screen.findByText('Karim')).toBeTruthy();
+    expect(screen.queryByText('Gratuit vs Pro')).toBeNull();
+
+    await fireEvent.press(screen.getByText('Ajouter'));
+
+    expect(await screen.findByText('Gratuit vs Pro')).toBeTruthy();
   });
 
   it('shows the cultural-framing subtitle', async () => {

@@ -123,6 +123,25 @@ describe('ProfileScreen — accès aux Dettes & prêts (US-048)', () => {
   });
 });
 
+describe('ProfileScreen — verrouillage des fonctions Pro (US-068)', () => {
+  beforeEach(() => {
+    mockFakeDb = createFakeDatabase().db;
+  });
+
+  it('badges the Zakat, Ramadan, and Debts entries with a lock on the free plan', async () => {
+    renderScreen();
+
+    expect((await screen.findAllByLabelText('Fonction Pro verrouillée')).length).toBe(3);
+  });
+
+  it('shows no lock badge once subscribed', async () => {
+    await renderScreenAsPro();
+
+    await screen.findByText('Zakat');
+    expect(screen.queryByLabelText('Fonction Pro verrouillée')).toBeNull();
+  });
+});
+
 describe('ProfileScreen — aperçu Famille (US-053)', () => {
   beforeEach(() => {
     mockFakeDb = createFakeDatabase().db;

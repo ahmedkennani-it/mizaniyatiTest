@@ -18,6 +18,8 @@ import type { Plan } from '../../entitlements';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { LanguageProvider } from '../../i18n';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
+import { SubscriptionProvider } from '../../subscriptions';
+// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { ThemeProvider } from '../../theme';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { nextMonthKey, previousMonthKey } from '../../calendar';
@@ -42,7 +44,9 @@ function renderScreen(plan?: Plan) {
     <LanguageProvider>
       <ThemeProvider initialColorScheme="light">
         <EntitlementsProvider plan={plan}>
-          <TontineScreen />
+          <SubscriptionProvider>
+            <TontineScreen />
+          </SubscriptionProvider>
         </EntitlementsProvider>
       </ThemeProvider>
     </LanguageProvider>,
@@ -54,11 +58,30 @@ describe('TontineScreen (US-024)', () => {
     mockFakeDb = createFakeDatabase().db;
   });
 
-  it('shows the Pro upsell when the plan does not include tontine', async () => {
+  /** US-068: no group yet on the free plan → straight to the paywall, tontine row highlighted. */
+  it('opens the paywall with the tontine row highlighted when the plan does not include tontine', async () => {
     await renderScreen();
 
-    expect(await screen.findByText('La tontine fait partie du forfait Pro.')).toBeTruthy();
+    expect(await screen.findByText('Gratuit vs Pro')).toBeTruthy();
+    expect(screen.getByTestId('paywall-row-tontine').props.style).toMatchObject({ borderWidth: 2 });
     expect(screen.queryByText('Créer une tontine')).toBeNull();
+  });
+
+  /** US-068's 4th criterion: a group created while Pro stays fully readable after a downgrade. */
+  it('keeps an existing group visible and readable after the plan drops tontine', async () => {
+    await createTontineGroupWithMembers(mockFakeDb, {
+      name: 'Tontine famille',
+      contributionPerRoundMinor: 100000,
+      currencyCode: 'MAD',
+      startMonth: new Date().toISOString().slice(0, 7),
+      memberNames: ['Youssef', 'Salma'],
+      selfIndex: 0,
+    });
+
+    await renderScreen();
+
+    expect(await screen.findByText('Tontine famille')).toBeTruthy();
+    expect(screen.queryByText('Gratuit vs Pro')).toBeNull();
   });
 
   it('shows the disclaimer and creation CTA when entitled with no group yet', async () => {

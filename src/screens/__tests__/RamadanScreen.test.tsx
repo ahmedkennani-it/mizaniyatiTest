@@ -18,6 +18,8 @@ import type { Plan } from '../../entitlements';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { LanguageProvider } from '../../i18n';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
+import { SubscriptionProvider } from '../../subscriptions';
+// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { ThemeProvider } from '../../theme';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { activateRamadanTheme } from '../../seasonalThemes';
@@ -40,7 +42,9 @@ function renderScreen(
     <LanguageProvider>
       <ThemeProvider initialColorScheme="light">
         <EntitlementsProvider plan={plan}>
-          <RamadanScreen onBack={onBack} onNavigateToZakat={onNavigateToZakat} />
+          <SubscriptionProvider>
+            <RamadanScreen onBack={onBack} onNavigateToZakat={onNavigateToZakat} />
+          </SubscriptionProvider>
         </EntitlementsProvider>
       </ThemeProvider>
     </LanguageProvider>,
@@ -52,10 +56,29 @@ describe('RamadanScreen (US-026)', () => {
     mockFakeDb = createFakeDatabase().db;
   });
 
-  it('shows the Pro upsell when the plan does not include ramadan', async () => {
+  /** US-068: no active season on the free plan → straight to the paywall, ramadan row highlighted. */
+  it('opens the paywall with the ramadan row highlighted when the plan does not include ramadan', async () => {
     await renderScreen();
 
-    expect(await screen.findByText('Le mode Ramadan fait partie du forfait Pro.')).toBeTruthy();
+    expect(await screen.findByText('Gratuit vs Pro')).toBeTruthy();
+    expect(screen.getByTestId('paywall-row-zakat').props.style).toMatchObject({ borderWidth: 2 });
+  });
+
+  /** US-068's 4th criterion: a season activated while Pro stays fully visible and usable after a
+   *  downgrade — there is no "activate a new season" affordance while one is already active. */
+  it('keeps an active season visible after the plan drops ramadan', async () => {
+    await activateRamadanTheme(mockFakeDb, {
+      startDate: '2020-01-01',
+      endDate: '2099-01-30',
+      envelopeMinor: 750000,
+      currencyCode: 'MAD',
+      language: 'fr',
+    });
+
+    await renderScreen();
+
+    expect(await screen.findByText('Budget Ramadan — restant')).toBeTruthy();
+    expect(screen.queryByText('Gratuit vs Pro')).toBeNull();
   });
 
   it('shows the setup form when entitled with no active theme', async () => {

@@ -14,6 +14,7 @@ import {
   createCategory,
   createHousehold,
   createMember,
+  createZakatAssessment,
   listTransactions,
   listZakatAssessments,
 } from '../../db/repositories';
@@ -23,6 +24,8 @@ import { EntitlementsProvider } from '../../entitlements';
 import type { Plan } from '../../entitlements';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { LanguageProvider } from '../../i18n';
+// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
+import { SubscriptionProvider } from '../../subscriptions';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { ThemeProvider } from '../../theme';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
@@ -40,7 +43,9 @@ function renderScreen(onBack: () => void = jest.fn(), plan?: Plan) {
     <LanguageProvider>
       <ThemeProvider initialColorScheme="light">
         <EntitlementsProvider plan={plan}>
-          <ZakatScreen onBack={onBack} />
+          <SubscriptionProvider>
+            <ZakatScreen onBack={onBack} />
+          </SubscriptionProvider>
         </EntitlementsProvider>
       </ThemeProvider>
     </LanguageProvider>,
@@ -52,12 +57,37 @@ describe('ZakatScreen (US-025)', () => {
     mockFakeDb = createFakeDatabase().db;
   });
 
-  it('shows the Pro upsell when the plan does not include zakat', async () => {
+  /** US-068: no assessment yet on the free plan → straight to the paywall, zakat row highlighted. */
+  it('opens the paywall with the zakat row highlighted when the plan does not include zakat', async () => {
     await renderScreen(jest.fn());
 
-    expect(
-      await screen.findByText('Le calcul de la Zakat fait partie du forfait Pro.'),
-    ).toBeTruthy();
+    expect(await screen.findByText('Gratuit vs Pro')).toBeTruthy();
+    expect(screen.getByTestId('paywall-row-zakat').props.style).toMatchObject({ borderWidth: 2 });
+  });
+
+  /** US-068's 4th criterion: an assessment saved while Pro stays fully readable after a downgrade,
+   *  but saving a *new* one is gated. */
+  it('keeps an existing assessment visible and gates saving a new one after the plan drops zakat', async () => {
+    await createHousehold(mockFakeDb, { name: 'Famille Test', currencyCode: 'MAD' });
+    await createZakatAssessment(mockFakeDb, {
+      cashMinor: 1000000,
+      goldSilverMinor: 0,
+      investmentsMinor: 0,
+      debtsMinor: 0,
+      baseMinor: 1000000,
+      dueMinor: 25000,
+      aboveNisab: true,
+      dueDate: null,
+    });
+
+    await renderScreen(jest.fn());
+
+    expect(await screen.findByText('Historique')).toBeTruthy();
+    expect(screen.queryByText('Gratuit vs Pro')).toBeNull();
+
+    await fireEvent.press(await screen.findByText('Enregistrer & planifier le don'));
+
+    expect(await screen.findByText('Gratuit vs Pro')).toBeTruthy();
   });
 
   it('shows the disclaimer and defaults to the gold nisab basis', async () => {

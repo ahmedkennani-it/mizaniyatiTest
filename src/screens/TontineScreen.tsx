@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { PaywallScreen } from './PaywallScreen';
 import { TontineGroupForm } from './TontineGroupForm';
 import {
   AppScreen,
@@ -56,18 +57,17 @@ export function TontineScreen() {
     refresh();
   }, [refresh]);
 
-  if (!entitlements.can('tontine')) {
-    return (
-      <AppScreen scroll bottomInset={110} contentStyle={{ gap: theme.spacing.md }}>
-        <ScreenHeader title={t('tontineScreen.title')} />
-        <Card elevated style={{ gap: theme.spacing.xs }}>
-          <Txt size="sm">{t('tontineScreen.upsellMessage')}</Txt>
-          <Txt size="sm" weight="bold" color={theme.colors.primary}>
-            {t('tontineScreen.upsellCta')}
-          </Txt>
-        </Card>
-      </AppScreen>
-    );
+  const group = groups[0] ?? null;
+
+  // US-068: no existing tontine to preserve read access to → the whole tab is the "locked
+  // feature", tapped straight into the paywall. Once a group exists it stays fully visible even
+  // after a downgrade (below) — only *creating a second, brand-new* group is out of reach, and that
+  // action lives solely in the `!group` empty state further down, itself unreachable once a group
+  // exists, so no separate mutation guard is needed here.
+  if (!entitlements.can('tontine') && !group) {
+    // No screen to return to from a tab root — the back arrow is inert here, same as every other
+    // tab's `ScreenHeader` (none of them take an `onBack` either).
+    return <PaywallScreen onBack={() => {}} highlightKey="tontine" />;
   }
 
   if (view === 'form') {
@@ -82,7 +82,6 @@ export function TontineScreen() {
     );
   }
 
-  const group = groups[0] ?? null;
   const groupMembers = group ? members.filter((member) => member.groupId === group.id) : [];
   const groupRounds = group ? rounds.filter((round) => round.groupId === group.id) : [];
   const groupPayments = group

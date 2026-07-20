@@ -1,6 +1,6 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
-import { Pressable, Text } from 'react-native';
+import { AppState, Pressable, Text } from 'react-native';
 
 import { createFakeDatabase } from '../../db/testUtils/createFakeDatabase';
 
@@ -87,6 +87,40 @@ describe('SubscriptionProvider / useSubscription', () => {
     expect(await screen.findByText(`plan:${FREE_PLAN.id}`)).toBeTruthy();
     // The trial was already used even though it's now expired — no second trial is offered.
     expect(screen.getByText('trialAlreadyUsed:true')).toBeTruthy();
+  });
+
+  /** US-068's 3rd criterion: a trial that lapses while the app sits backgrounded (no interaction
+   *  to trigger a re-render on its own) still drops Pro access "at the latest on resume". Uses a
+   *  short *real* delay rather than fake timers — `waitFor`/`findBy*` poll on real timers, which
+   *  fake timers would freeze. */
+  it('re-resolves the plan when the app returns to the foreground', async () => {
+    await upsertSubscription(mockFakeDb, {
+      planId: 'pro',
+      status: 'trial',
+      trialEndsAt: new Date(Date.now() + 40).toISOString(),
+    });
+
+    await renderProbe();
+    expect(await screen.findByText(`plan:${PRO_PLAN.id}`)).toBeTruthy();
+
+    // Real time passes the trial's end with nothing to trigger a React re-render on its own — the
+    // component would keep reading the stale `plan` from its last render forever without a nudge.
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 80));
+    });
+    expect(screen.getByText(`plan:${PRO_PLAN.id}`)).toBeTruthy();
+
+    // The mock accumulates calls across every test in this file (each mounts its own provider) —
+    // the *last* 'change' registration is this test's own probe.
+    const addEventListener = AppState.addEventListener as jest.Mock;
+    const onChange = addEventListener.mock.calls
+      .filter(([event]) => event === 'change')
+      .at(-1)?.[1] as (state: string) => void;
+    act(() => {
+      onChange('active');
+    });
+
+    expect(await screen.findByText(`plan:${FREE_PLAN.id}`)).toBeTruthy();
   });
 
   it('throws when useSubscription is called outside a SubscriptionProvider', async () => {

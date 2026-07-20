@@ -44,6 +44,7 @@ export const ar: TranslationSchema = {
     nextMonth: 'الشهر التالي',
     overBudget: 'تجاوز الحد',
     unreadNotifications: 'إشعارات غير مقروءة',
+    proLocked: 'ميزة برو مقفلة',
   },
   placeholder: {
     comingSoon: 'قريباً',

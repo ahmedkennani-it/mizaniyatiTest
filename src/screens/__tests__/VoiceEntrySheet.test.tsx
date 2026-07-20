@@ -58,6 +58,8 @@ import { ar } from '../../i18n/locales/ar';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { fr } from '../../i18n/locales/fr';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
+import { SubscriptionProvider } from '../../subscriptions';
+// eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { ThemeProvider } from '../../theme';
 // eslint-disable-next-line import/first -- must come after jest.mock('../../db/client', ...) above
 import { createSilenceWatcher, speechRecognitionClient } from '../../voice';
@@ -118,12 +120,14 @@ function renderSheet(
     <LanguageProvider>
       <ThemeProvider initialColorScheme="light">
         <EntitlementsProvider plan={options.plan}>
-          <VoiceEntrySheet
-            onClose={onClose}
-            onFallbackToKeyboard={onFallbackToKeyboard}
-            onCaptured={onCaptured}
-            onSavedFromReview={onSavedFromReview}
-          />
+          <SubscriptionProvider>
+            <VoiceEntrySheet
+              onClose={onClose}
+              onFallbackToKeyboard={onFallbackToKeyboard}
+              onCaptured={onCaptured}
+              onSavedFromReview={onSavedFromReview}
+            />
+          </SubscriptionProvider>
         </EntitlementsProvider>
       </ThemeProvider>
     </LanguageProvider>,
@@ -146,12 +150,14 @@ describe('VoiceEntrySheet (US-020a)', () => {
     mockSpeechClient.requestPermissionsAsync.mockResolvedValue(DENIED);
   });
 
-  it('shows the Pro upsell instead of ever touching the microphone on the free plan', async () => {
+  /** US-068: a locked feature opens the paywall with itself highlighted, never the microphone. */
+  it('opens the paywall with the voice row highlighted instead of ever touching the microphone on the free plan', async () => {
     await seedSettings(true);
 
     renderSheet();
 
-    expect(await screen.findByText(fr.voiceCapture.upsellMessage)).toBeTruthy();
+    expect(await screen.findByText(fr.paywallScreen.title)).toBeTruthy();
+    expect(screen.getByTestId('paywall-row-voice').props.style).toMatchObject({ borderWidth: 2 });
     expect(mockSpeechClient.getPermissionsAsync).not.toHaveBeenCalled();
   });
 

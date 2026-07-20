@@ -469,6 +469,8 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
               title={t('home.voiceTitle')}
               subtitle={t('home.voiceSubtitle')}
               badge={t('home.voiceBadge')}
+              locked={!entitlements.can('voice')}
+              lockedAccessibilityLabel={t('a11y.proLocked')}
               onPress={openVoiceEntry}
               onDismiss={async () => {
                 await dismissVoicePromo(getDatabase());
@@ -581,7 +583,7 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
             <Button label={t('home.emptyStateExpense')} icon="plus" onPress={() => openEntry()} />
             <Button
               label={t('home.emptyStateVoice')}
-              icon="mic"
+              icon={entitlements.can('voice') ? 'mic' : 'lock'}
               variant="secondary"
               onPress={openVoiceEntry}
             />
