@@ -43,6 +43,13 @@ import { useTheme } from '../theme';
 /** How many avatars stack before folding the rest into a "+N" tail (US-053). */
 const STACKED_AVATAR_LIMIT = 3;
 
+/** Whole days left until `trialEndsAt` (US-067) — never negative, a trial that just lapsed reads
+ * as 0 rather than a confusing negative count for the brief window before it resolves to Free. */
+function daysRemaining(trialEndsAt: string, now: Date = new Date()): number {
+  const diffMs = new Date(trialEndsAt).getTime() - now.getTime();
+  return Math.max(0, Math.ceil(diffMs / (24 * 60 * 60 * 1000)));
+}
+
 /** Wraps `PlaceholderScreen` with a back link — for entry points to specs not built yet. */
 function ProfilePlaceholder({
   title,
@@ -80,8 +87,11 @@ export function ProfileScreen() {
   } = useTheme();
   const { language, setLanguage } = useLanguage();
   const entitlements = useEntitlements();
-  const { plan } = useSubscription();
+  const { plan, subscription } = useSubscription();
   const isPro = plan.id === PRO_PLAN.id;
+  const isTrialing = isPro && subscription?.status === 'trial';
+  const trialDaysRemaining =
+    isTrialing && subscription?.trialEndsAt ? daysRemaining(subscription.trialEndsAt) : null;
 
   const [budgetAlertsEnabled, setBudgetAlertsEnabledState] = useState(false);
   const [members, setMembers] = useState<Member[]>([]);
@@ -166,7 +176,11 @@ export function ProfileScreen() {
             </Txt>
             {isPro ? (
               <Pill
-                label={t('profileScreen.proBadge')}
+                label={
+                  trialDaysRemaining !== null
+                    ? t('profileScreen.trialBadge', { count: trialDaysRemaining })
+                    : t('profileScreen.proBadge')
+                }
                 background={theme.accents.gold.wash}
                 color={theme.accents.gold.ink}
               />

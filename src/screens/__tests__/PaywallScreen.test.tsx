@@ -58,6 +58,31 @@ describe('PaywallScreen (US-029)', () => {
     expect(screen.getByText("Commencer l'essai gratuit de 14 jours")).toBeTruthy();
   });
 
+  /** US-067's 1st criterion: the trial CTA carries the no-commitment mention. */
+  it('shows the no-commitment mention alongside the trial CTA', async () => {
+    await renderScreen();
+
+    expect(await screen.findByText("Commencer l'essai gratuit de 14 jours")).toBeTruthy();
+    expect(
+      screen.getByText('Aucune carte bancaire requise. Sans engagement, annulable à tout moment.'),
+    ).toBeTruthy();
+  });
+
+  it('hides the no-commitment mention once the trial has already been used', async () => {
+    await upsertSubscription(mockFakeDb, {
+      planId: 'pro',
+      status: 'trial',
+      trialEndsAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+    });
+
+    await renderScreen();
+
+    await screen.findByText('Votre essai gratuit est terminé. Vous êtes revenu au forfait Gratuit.');
+    expect(
+      screen.queryByText('Aucune carte bancaire requise. Sans engagement, annulable à tout moment.'),
+    ).toBeNull();
+  });
+
   it('shows the Gratuit vs Pro comparison table', async () => {
     await renderScreen();
 

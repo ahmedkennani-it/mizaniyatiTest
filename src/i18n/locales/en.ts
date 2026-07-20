@@ -697,6 +697,7 @@ export const en: TranslationSchema = {
   },
   profileScreen: {
     proBadge: 'Pro',
+    trialBadge: 'Trial — {{count}} day(s) left',
   },
   paywallScreen: {
     back: 'Back',
@@ -708,8 +709,8 @@ export const en: TranslationSchema = {
     statusTrialEndedLabel: 'Your free trial has ended. You are back on the Free plan.',
     statusActiveLabel: 'You are on the Pro plan.',
     startTrialButton: 'Start the 14-day free trial',
-    noCardRequiredNote:
-      'No bank card required for the trial. No paid subscription is available for now.',
+    trialCommitmentNote:
+      'No bank card required. No commitment — cancel anytime.',
     pricingTitle: 'Choose your plan',
     monthlyProductLabel: 'Monthly',
     annualProductLabel: 'Annual',

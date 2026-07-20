@@ -2002,6 +2002,32 @@ entièrement couverte.
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **2056/2056, 166 suites** ✅.
 - ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé).
 
+### Itération 62 — Tâche 16.4 (Essai gratuit de 14 jours) ✅
+
+- La logique de fond existait déjà et était déjà testée avant cette itération :
+  `resolveActivePlan` (Pro pendant l'essai, repli Gratuit sans perte de données à l'expiration) et
+  `trialAlreadyUsed` (`subscriptions` a une ligne dès le premier essai → bouton masqué) — seule la
+  **surface UI** manquait pour clore les 5 critères fonctionnels.
+- **Repris un travail commencé hors boucle et laissé non committé** : `ProfileScreen.tsx` et les 3
+  catalogues portaient déjà `daysRemaining()` + `profileScreen.trialBadge` (jours restants affichés
+  à la place du badge « Pro » nu pendant un essai actif) — code correct, juste sans commit ni test.
+  Ajouté le test manquant (`ProfileScreen.test.tsx`, essai à 3 jours de la fin → badge « Essai — 3
+  jour(s) restant(s) », pas de simple « Pro »).
+- 🐛 **Mention « sans engagement, annulable à tout moment » absente du CTA** (1er critère de
+  US-067) : `noCardRequiredNote` disait encore « Aucun abonnement payant n'est disponible pour le
+  moment » — **faux** depuis 16.2/16.3, qui ont ajouté un vrai flux d'achat mocké. Renommé
+  `trialCommitmentNote` avec le texte exigé par le critère (`fr`/`en`/`ar`), et **recadré son
+  affichage** sur la seule condition du bouton d'essai (`!isPro && !trialAlreadyUsed`) plutôt que
+  sur `!isPro` seul — la mention « sans engagement » n'a de sens qu'à côté du CTA qu'elle qualifie,
+  pas après un essai déjà consommé où l'écran affiche désormais un vrai bouton d'achat.
+- Tests : `PaywallScreen.test.tsx` (+2 : mention visible à côté du CTA, absente une fois l'essai
+  consommé) ; `ProfileScreen.test.tsx` (+1, ci-dessus).
+- Les changements non liés (app.json/eas.json/package.json — profil de build `development` +
+  `expo-dev-client`) trouvés dans l'arbre de travail au début de cette itération sont **laissés
+  tels quels, non committés** : aucun rapport avec US-067, à traiter dans leur propre tâche.
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **2059/2059, 166 suites** ✅.
+- ⚠️ Vérification navigateur LTR/RTL non effectuée (blocage `dev-browser` inchangé).
+
 ## Notes / blocages connus (hors périmètre Phase 1)
 
 - L'arbre de travail contient des changements accumulés multi-phases non

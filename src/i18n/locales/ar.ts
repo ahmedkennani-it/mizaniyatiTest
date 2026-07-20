@@ -688,6 +688,7 @@ export const ar: TranslationSchema = {
   },
   profileScreen: {
     proBadge: 'Pro',
+    trialBadge: 'تجربة — {{count}} يوم متبقٍ',
   },
   paywallScreen: {
     back: 'رجوع',
@@ -699,7 +700,7 @@ export const ar: TranslationSchema = {
     statusTrialEndedLabel: 'انتهت فترتك التجريبية المجانية. لقد عدت إلى الخطة المجانية.',
     statusActiveLabel: 'أنت على خطة برو.',
     startTrialButton: 'ابدأ التجربة المجانية لمدة 14 يومًا',
-    noCardRequiredNote: 'لا حاجة لبطاقة بنكية للتجربة. لا يتوفر اشتراك مدفوع حاليًا.',
+    trialCommitmentNote: 'لا حاجة لبطاقة بنكية. بدون التزام، يمكن الإلغاء في أي وقت.',
     pricingTitle: 'اختر باقتك',
     monthlyProductLabel: 'شهري',
     annualProductLabel: 'سنوي',

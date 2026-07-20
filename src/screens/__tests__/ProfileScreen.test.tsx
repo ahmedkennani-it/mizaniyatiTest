@@ -210,6 +210,29 @@ describe('ProfileScreen — carte de profil (US-055)', () => {
     expect(screen.getByText('Abonnement')).toBeTruthy();
     expect(screen.queryByText('Passer à Pro')).toBeNull();
   });
+
+  it('shows the days remaining (not the plain Pro badge) during an active trial (US-067)', async () => {
+    await upsertSubscription(mockFakeDb, {
+      planId: 'pro',
+      status: 'trial',
+      trialEndsAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    });
+
+    render(
+      <LanguageProvider>
+        <ThemeProvider initialColorScheme="light">
+          <EntitlementsProvider plan={PRO_PLAN}>
+            <SubscriptionProvider>
+              <ProfileScreen />
+            </SubscriptionProvider>
+          </EntitlementsProvider>
+        </ThemeProvider>
+      </LanguageProvider>,
+    );
+
+    expect(await screen.findByText('Essai — 3 jour(s) restant(s)')).toBeTruthy();
+    expect(screen.queryByText('Pro')).toBeNull();
+  });
 });
 
 describe('ProfileScreen — thème (US-059)', () => {

@@ -708,6 +708,7 @@ export const fr = {
   },
   profileScreen: {
     proBadge: 'Pro',
+    trialBadge: 'Essai — {{count}} jour(s) restant(s)',
   },
   paywallScreen: {
     back: 'Retour',
@@ -719,8 +720,8 @@ export const fr = {
     statusTrialEndedLabel: 'Votre essai gratuit est terminé. Vous êtes revenu au forfait Gratuit.',
     statusActiveLabel: 'Vous êtes sur le forfait Pro.',
     startTrialButton: "Commencer l'essai gratuit de 14 jours",
-    noCardRequiredNote:
-      "Aucune carte bancaire requise pour l'essai. Aucun abonnement payant n'est disponible pour le moment.",
+    trialCommitmentNote:
+      "Aucune carte bancaire requise. Sans engagement, annulable à tout moment.",
     pricingTitle: 'Choisissez votre formule',
     monthlyProductLabel: 'Mensuel',
     annualProductLabel: 'Annuel',

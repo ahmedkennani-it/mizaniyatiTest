@@ -173,12 +173,12 @@ export function PaywallScreen({ onBack, highlightKey }: PaywallScreenProps) {
           style={{ alignSelf: 'flex-start' }}
         />
         {!isPro && !trialAlreadyUsed ? (
-          <Button label={t('paywallScreen.startTrialButton')} onPress={startTrial} />
-        ) : null}
-        {!isPro ? (
-          <Txt size="xs" color={theme.colors.textSecondary}>
-            {t('paywallScreen.noCardRequiredNote')}
-          </Txt>
+          <>
+            <Button label={t('paywallScreen.startTrialButton')} onPress={startTrial} />
+            <Txt size="xs" color={theme.colors.textSecondary}>
+              {t('paywallScreen.trialCommitmentNote')}
+            </Txt>
+          </>
         ) : null}
       </Card>
 
