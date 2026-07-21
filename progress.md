@@ -2291,6 +2291,35 @@ entièrement couverte.
   couverture RTL repose donc sur les tests de rendu sous les deux directions
   (`components.rtl.test.tsx`, `RootNavigator.rtl.test.tsx`, `shellStrings`,
   `HomeScreen.rtl`). À refaire manuellement via `npm run web`.
+  - ⚠️ **Tentative faite le 2026-07-21, `npm run web` ne rend rien dans ce sandbox — diagnostic
+    complet, cause identifiée, pas un simple « outil manquant » cette fois.** Playwright (via
+    npx) + un reverse-proxy maison (pour les en-têtes COOP/COEP) ont permis de contourner deux
+    obstacles d'environnement (Watchman refuse le crawl avec `EPERM`, `SharedArrayBuffer`
+    indisponible sans isolation cross-origin réelle) — mais la page reste blanche : `getDatabase()`
+    (`src/db/client.ts`) appelle `SQLite.openDatabaseSync(...)`, qui sur web tourne dans un worker
+    séparé (wa-sqlite/WASM) et communique en synchrone via `Atomics.wait` avec un budget fixe
+    d'environ 1 000 000 cycles CPU (`node_modules/expo-sqlite/web/WorkerChannel.ts:96-138`). Dans ce
+    sandbox, l'initialisation du worker (compilation WASM + `AccessHandlePoolVFS.isReady()` qui crée
+    plusieurs handles OPFS, `node_modules/expo-sqlite/web/wa-sqlite/AccessHandlePoolVFS.js:218-231`)
+    dépasse systématiquement ce budget → `Error: Sync operation timeout`, avant même le premier
+    rendu. Vérifié que ce n'est **pas** un souci d'isolation (`crossOriginIsolated: true` confirmé)
+    ni d'OPFS lui-même (un test isolé `createSyncAccessHandle` dans un worker nu réussit
+    instantanément) ni un flake à froid (échoue identiquement après deux rechargements complets,
+    le cache de compilation WASM aurait dû aider sinon). C'est une fragilité réelle de
+    l'implémentation web d'`expo-sqlite` sur ce CPU virtualisé/sandboxé précis — indépendante de
+    tout code de cette session, et qui n'affecte que la cible web (jamais exercée par un vrai
+    utilisateur mobile, où `openDatabaseSync` est du SQLite natif instantané, pas un worker WASM).
+    Aucun changement de code laissé en place (le contournement Watchman/COOP-COEP était dans
+    `metro.config.js`, entièrement annulé après coup — `git status` propre).
+  - Deux erreurs mineures notées au passage, non creusées (masquées par le blocage ci-dessus avant
+    même d'avoir un effet visible) : `ExpoSecureStore.default.getValueWithKeyAsync is not a
+    function` (le shim web d'`expo-secure-store` n'implémente pas cette méthode) et
+    `[expo-notifications] Listening to push token changes is not yet fully supported on web`
+    (avertissement documenté par le paquet lui-même).
+  - Pour retenter : soit accepter le risque et relancer plusieurs fois (le budget de cycles CPU
+    n'est pas garanti, un CPU hôte plus rapide pourrait passer), soit — si la vérification web
+    devient un besoin récurrent — envisager un changement de code assumé (`openDatabaseAsync` sur
+    web spécifiquement dans `src/db/client.ts`, une vraie décision produit, pas tentée ici).
 
 ## État final de la boucle — 81/87 tâches `done: true`
 
