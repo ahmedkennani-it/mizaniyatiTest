@@ -1696,7 +1696,7 @@
         "npm run typecheck passe sans erreur",
         "npm test passe (tests unitaires couvrant les criteres ci-dessus)"
       ],
-      "done": false
+      "done": true
     },
     {
       "id": "17.3",

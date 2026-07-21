@@ -671,8 +671,31 @@ export const en: TranslationSchema = {
     localOnlyNote:
       'This lock protects access to the app on this device; it does not encrypt the local database.',
     forgotPinNote:
-      'Forgotten PIN: no recovery is possible for now. Uninstalling the app will erase your local data (no cloud backup exists yet).',
+      'Forgotten PIN: no recovery is possible for now. Uninstalling the app will erase your local data, unless you exported an encrypted backup beforehand.',
     cancel: 'Cancel',
+  },
+  backupScreen: {
+    title: 'Encrypted backup',
+    description:
+      "Export an encrypted file of your data (household, transactions, categories, goals) to keep wherever you like — a USB drive, your own cloud storage, etc. Nothing is sent automatically.",
+    enableButton: 'Enable backup',
+    recoveryKeyLabel: 'Recovery key',
+    recoveryKeyConfirmLabel: 'Confirm the recovery key',
+    recoveryKeyPlaceholder: 'At least 8 characters',
+    recoveryKeyWarning:
+      'Write this key down and keep it somewhere safe: it cannot be recovered. Without it, an exported backup is unreadable forever.',
+    confirmEnableButton: 'Enable',
+    errorRecoveryKeyTooShort: 'The recovery key must be at least 8 characters.',
+    errorRecoveryKeyMismatch: 'The two keys do not match.',
+    lastBackupLabel: 'Last successful backup: {{date}}',
+    neverBackedUpLabel: 'No backup exported yet.',
+    exportButton: 'Export now',
+    confirmExportButton: 'Encrypt and export',
+    exportSuccessMessage: 'Backup exported and encrypted successfully.',
+    errorWrongRecoveryKey: 'Incorrect recovery key.',
+    errorNotEnabled: 'Backup is not enabled.',
+    errorExportFailed: 'Export failed, please try again.',
+    disableButton: 'Disable backup',
   },
   storage: {
     title: 'Your data stays on this device',
@@ -680,7 +703,7 @@ export const en: TranslationSchema = {
       'Everything is stored locally: no data is sent to a server, and everything stays available offline.',
     uninstallWarningTitle: 'Uninstalling erases everything, permanently',
     uninstallWarning:
-      'There is no cloud backup. If you uninstall the app, switch devices or clear its data, your transactions, categories and goals will be lost with no way to recover them.',
+      'Without an encrypted backup exported beforehand (see above), your transactions, categories and goals will be lost with no way to recover them if you uninstall the app, switch devices, or clear its data.',
   },
   lockScreen: {
     title: 'App locked',

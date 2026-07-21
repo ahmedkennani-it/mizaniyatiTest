@@ -23,6 +23,8 @@ import { en } from '../../i18n/locales/en';
 // eslint-disable-next-line import/first -- must come after the jest.mock(...) calls above
 import { fr } from '../../i18n/locales/fr';
 // eslint-disable-next-line import/first -- must come after the jest.mock(...) calls above
+import { LanguageProvider } from '../../i18n';
+// eslint-disable-next-line import/first -- must come after the jest.mock(...) calls above
 import { AppLockProvider } from '../../security';
 // eslint-disable-next-line import/first -- must come after the jest.mock(...) calls above
 import { getAppLockSettings } from '../../security/appLockSettings';
@@ -36,11 +38,13 @@ import { SecurityScreen } from '../SecurityScreen';
 async function renderScreenIn(language: 'fr' | 'ar' | 'en') {
   await i18n.changeLanguage(language);
   await render(
-    <ThemeProvider initialColorScheme="light">
-      <AppLockProvider>
-        <SecurityScreen onBack={jest.fn()} />
-      </AppLockProvider>
-    </ThemeProvider>,
+    <LanguageProvider>
+      <ThemeProvider initialColorScheme="light">
+        <AppLockProvider>
+          <SecurityScreen onBack={jest.fn()} />
+        </AppLockProvider>
+      </ThemeProvider>
+    </LanguageProvider>,
   );
 }
 

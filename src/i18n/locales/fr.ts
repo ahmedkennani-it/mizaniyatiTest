@@ -680,18 +680,43 @@ export const fr = {
     localOnlyNote:
       "Ce verrou protège l'accès à l'app sur cet appareil ; il ne chiffre pas la base de données locale.",
     forgotPinNote:
-      "Code PIN oublié : aucune récupération n'est possible pour le moment. Désinstaller l'app effacera vos données locales (aucune sauvegarde cloud n'existe encore).",
+      "Code PIN oublié : aucune récupération n'est possible pour le moment. Désinstaller l'app effacera vos données locales, sauf si vous avez exporté une sauvegarde chiffrée au préalable.",
     cancel: 'Annuler',
   },
+  // US-071a/US-071b : sauvegarde chiffrée exportée manuellement (aucun envoi vers un service
+  // distant) — désactivée par défaut, clé de récupération dérivée côté client, jamais stockée.
+  backupScreen: {
+    title: 'Sauvegarde chiffrée',
+    description:
+      "Exportez un fichier chiffré de vos données (foyer, opérations, catégories, objectifs) à conserver où vous voulez — clé USB, stockage cloud personnel, etc. Rien n'est envoyé automatiquement.",
+    enableButton: 'Activer la sauvegarde',
+    recoveryKeyLabel: 'Clé de récupération',
+    recoveryKeyConfirmLabel: 'Confirmez la clé de récupération',
+    recoveryKeyPlaceholder: '8 caractères minimum',
+    recoveryKeyWarning:
+      "Notez cette clé et conservez-la en lieu sûr : elle ne peut pas être récupérée. Sans elle, une sauvegarde exportée est illisible pour toujours.",
+    confirmEnableButton: 'Activer',
+    errorRecoveryKeyTooShort: 'La clé de récupération doit contenir au moins 8 caractères.',
+    errorRecoveryKeyMismatch: 'Les deux clés ne correspondent pas.',
+    lastBackupLabel: 'Dernière sauvegarde réussie : {{date}}',
+    neverBackedUpLabel: 'Aucune sauvegarde exportée pour le moment.',
+    exportButton: 'Exporter maintenant',
+    confirmExportButton: 'Chiffrer et exporter',
+    exportSuccessMessage: 'Sauvegarde exportée et chiffrée avec succès.',
+    errorWrongRecoveryKey: 'Clé de récupération incorrecte.',
+    errorNotEnabled: "La sauvegarde n'est pas activée.",
+    errorExportFailed: "Échec de l'export, réessayez.",
+    disableButton: 'Désactiver la sauvegarde',
+  },
   // US-070 : l'utilisateur doit savoir que ses données ne vivent que sur cet appareil, avant de
-  // désinstaller — il n'existe aucune sauvegarde cloud d'où les restaurer.
+  // désinstaller — sans export manuel chiffré (US-071a), il n'existe aucun moyen de les récupérer.
   storage: {
     title: 'Vos données restent sur cet appareil',
     description:
       'Tout est enregistré localement : aucune donnée ne part vers un serveur, et tout reste consultable hors ligne.',
     uninstallWarningTitle: 'Désinstaller effacera tout, définitivement',
     uninstallWarning:
-      "Aucune sauvegarde cloud n'existe. Si vous désinstallez l'app, changez d'appareil ou effacez ses données, vos opérations, catégories et objectifs seront perdus sans aucun moyen de les récupérer.",
+      "Sans sauvegarde chiffrée exportée au préalable (voir ci-dessus), vos opérations, catégories et objectifs seront perdus sans aucun moyen de les récupérer si vous désinstallez l'app, changez d'appareil ou effacez ses données.",
   },
   lockScreen: {
     title: 'Application verrouillée',

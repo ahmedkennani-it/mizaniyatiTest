@@ -2162,6 +2162,63 @@ entièrement couverte.
     aplaties récursivement, pas seulement les clés de premier niveau).
 - `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **2081/2081, 167 suites** ✅.
 
+### Itération 66 — Tâche 17.2 (Chiffrement et export de la sauvegarde) ✅
+
+- 🚨 **Conflit d'architecture trouvé avant d'écrire du code** : les critères de US-071a parlent
+  d'« envoi » et de « sauvegardes distantes » à supprimer — or `offlineStorage.test.ts` (1.7/US-070)
+  interdit déjà tout `fetch`/`XHR`/`WebSocket` dans **tout** `src/`, et `CLAUDE.md` décrit la stack
+  comme « aucune donnée n'est envoyée à un serveur ». Un vrai service cloud contredirait les deux.
+  Présenté le choix à l'utilisateur (mock local façon achat in-app / laisser `done:false` / autre) →
+  **décision : export/import manuel de fichier chiffré, sans notion de « distant »** — l'utilisateur
+  choisit où garder le fichier (clé USB, son propre cloud…), l'app n'envoie jamais rien elle-même.
+- **Nouveau module `src/backup/`**, chaque brique testée isolément :
+  - `backupCrypto.ts` — AES-256-CBC (`crypto-js`, nouvelle dépendance) avec IV aléatoire à chaque
+    appel, clé dérivée par **PBKDF2-SHA256** (`deriveBackupKey`) à partir d'une phrase de
+    récupération + sel. 10 000 itérations (pas 100k/OWASP) : compromis délibéré pour rester
+    utilisable sur un export ponctuel sans ralentir la suite de tests à l'excès — documenté dans
+    le code.
+  - `backupSettings.ts` — même schéma que `appLockSettings.ts` (secteur déjà éprouvé) : sel + hash
+    de vérification stockés via `secureStoreClient`, **jamais la phrase elle-même**. Volontairement
+    **aucune récupération possible** si la phrase est perdue — contrairement au PIN (un simple
+    verrou d'accès), c'est un vrai chiffrement ; un accès de secours en annulerait l'intérêt (le
+    commentaire de `pinHash.ts`, déjà présent avant cette tâche, l'annonçait explicitement).
+  - `backupPayload.ts` — `buildBackupPayload` : foyer, transactions, catégories, objectifs (US-071b
+    le nomme), **plus `members`** — non cité par le critère mais structurellement nécessaire
+    (`Transaction.memberId` y fait référence). Tontine/dettes/zakat/réglages/abonnement **hors
+    périmètre**, assumé et documenté — une extension naturelle, pas tentée ici.
+  - `backupFileClient.ts` — fine enveloppe sur `expo-file-system`/`expo-sharing` (2 nouvelles
+    dépendances SDK 54, plus `expo-document-picker` pour la tâche 17.3 à venir), même convention de
+    testabilité que `secureStoreClient`/`biometricClient` : jamais appelée en clair dans un test,
+    toujours mockée en bloc.
+  - `exportBackup.ts` — orchestration : vérifie la clé, construit le payload, chiffre, écrit
+    localement (sandbox de l'app — pas un vrai « distant », juste une copie de travail), ouvre la
+    feuille de partage OS, horodate le succès.
+- **`SecurityScreen`** gagne une carte « Sauvegarde chiffrée » : activation avec confirmation de la
+  phrase + avertissement « non récupérable », export (re-saisie de la phrase, ne jamais la garder
+  en mémoire au-delà de l'appel), date de dernière sauvegarde, désactivation.
+- 🐛 **Trouvé et corrigé avant tout commit — vrai oubli, pas un test qui ment** : le bouton
+  « Désactiver » n'appelait que `disableBackup()` (efface la clé), jamais
+  `backupFileClient.deleteLocalBackup()` — le 3e critère (« la désactivation supprime les
+  sauvegardes ») restait donc à moitié fait. Corrigé, testé.
+- **Textes devenus faux, corrigés en cascade** : `securityScreen.forgotPinNote` et
+  `storage.uninstallWarning` affirmaient tous deux « aucune sauvegarde n'existe » — plus vrai. Les
+  deux mentionnent maintenant l'export chiffré comme échappatoire, dans les 3 langues.
+- 🐛 **Deux pièges de mock Jest, tous deux dans les tests, pas dans le code produit** :
+  - Assigner une fonction mockée **directement** comme valeur dans une factory `jest.mock()`
+    (`writeLocalBackup: mockWriteLocalBackup`) échoue avec « is not a function » — il faut
+    l'indirection `(x) => mockWriteLocalBackup(x)` pour ne lire la variable qu'à l'appel, pas à la
+    définition de la factory (même motif que `mockPurchasePro` dans `PaywallScreen.test.tsx`).
+  - `getDatabase()` n'était pas mocké dans `SecurityScreen.test.tsx` : il tentait d'ouvrir une
+    vraie base SQLite (indisponible sous Jest), l'erreur résultante masquait complètement le test
+    du bon chemin d'erreur (`WrongRecoveryKeyError` vs `BackupNotEnabledError`) — le export mocké
+    n'était jamais atteint. Un simple `getDatabase: () => ({})` a suffi, puisque `exportBackup`
+    lui-même est mocké et ne touche jamais à cet objet.
+- Tests : `backupCrypto.test.ts` (7), `backupSettings.test.ts` (7), `backupPayload.test.ts` (2),
+  `exportBackup.test.ts` (3), `SecurityScreen.test.tsx` (+10).
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **2116/2116, 171 suites** ✅.
+- ⚠️ Vérification navigateur non effectuée (blocage `dev-browser` inchangé) ; de toute façon,
+  `expo-file-system`/`expo-sharing` (partage OS) ne peuvent pas être exercés dans un navigateur.
+
 ## Notes / blocages connus (hors périmètre Phase 1)
 
 - L'arbre de travail contient des changements accumulés multi-phases non
