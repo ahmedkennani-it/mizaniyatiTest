@@ -2291,3 +2291,28 @@ entièrement couverte.
   couverture RTL repose donc sur les tests de rendu sous les deux directions
   (`components.rtl.test.tsx`, `RootNavigator.rtl.test.tsx`, `shellStrings`,
   `HomeScreen.rtl`). À refaire manuellement via `npm run web`.
+
+## État final de la boucle — 81/87 tâches `done: true`
+
+Après clôture des phases 16 et 17 (itérations 59-67), les 6 tâches restantes ont
+été réexaminées une à une. Aucune n'est un oubli : chacune retombe sur l'un des
+deux mêmes obstacles, déjà présentés à l'utilisateur, qui a tranché explicitement
+le 2026-07-21 de les laisser ouvertes plutôt que de les forcer :
+
+| Tâche | Blocage racine | Décision |
+| --- | --- | --- |
+| 1.7 | `expo-sqlite` n'expose aucune clé de chiffrement (pas de SQLCipher natif) | **Laissé `done: false`** — l'utilisateur a explicitement refusé le repli « chiffrement OS » (qui aurait clos la tâche sans changement de code) et refusé la migration op-sqlite+SQLCipher (gros chantier, touche toute la couche `src/db`). |
+| 3.1 | `CLAUDE.md`/le PRD nomment expo-router ; l'app utilise React Navigation (fonctionnellement équivalent, déjà livré partout) | **Laissé `done: false`** — l'utilisateur a explicitement refusé de corriger le critère pour refléter la stack réelle (aucun risque, aurait clos la tâche) et refusé la migration vers expo-router (gros chantier, aucun bénéfice utilisateur visible). |
+| 4.6 | Exige des « identifiants » et « un compte » — une vraie authentification multi-appareils | **Infaisable dans ce projet** : construire un backend contredirait le garde-fou central « aucune donnée n'est envoyée à un serveur ». La sauvegarde manuelle chiffrée (17.2/17.3) couvre le changement d'appareil *volontaire* avec un fichier, mais pas la reconnexion par identifiants qu'exige littéralement le critère. |
+| 6.9 | 3/4 critères livrés et testés (modifier, confirmation + Annuler 5 s, recalcul du solde) ; le 4e exige un statut « Lecture seule » **appliqué à la personne qui tient le téléphone en ce moment** — et rien dans l'app n'identifie qui c'est, sur un MVP mono-appareil sans session | **Infaisable sans le même backend que 4.6/13.2/13.3** — déjà documenté à l'itération 38, revu et reconfirmé à l'itération de la tâche 13.4 (US-052) qui a heurté exactement le même mur. Inventer un sélecteur « agir en tant que » local donnerait une fausse impression de contrôle d'accès sans rien protéger réellement (personne d'autre ne peut physiquement toucher l'app sans le téléphone) — délibérément écarté aux deux itérations précédentes, pas reconsidéré ici. |
+| 13.2 | Lien d'invitation utilisable une seule fois, avec expiration, **par un autre appareil** | **Infaisable dans ce projet** — nécessite un serveur pour qu'un deuxième appareil apprenne qu'un lien a été utilisé. Même contradiction qu'en 4.6 avec le garde-fou « zéro serveur ». |
+| 13.3 | Écran d'invitation dont l'envoi/l'acceptation dépend de 13.2 | **Infaisable dans ce projet**, pour la même raison que 13.2. `memberInvite.cloudRequiredMessage`/`enableCloudButton` existent déjà dans les 3 catalogues i18n comme message d'attente honnête plutôt que comme un flux qui ne mènerait nulle part. |
+
+**Conclusion** : avec ces 6 tâches tranchées comme `done: false` en connaissance de
+cause, la boucle Ralph a atteint son plafond dans les contraintes du projet — le
+critère de fin de `CLAUDE.md` (« Quand toutes les tâches ... sont done: true »)
+n'est pas rempli, et la phrase `<promise>SAHTI_FRONTEND_COMPLETE</promise>` ne
+doit donc **pas** être écrite. Toute nouvelle tâche exécutable sans backend ni
+changement de stack déjà refusé a été traitée ; ce qui reste exige soit un vrai
+serveur (hors du périmètre « frontend, 100% local » du projet), soit de revenir
+sur une décision déjà prise explicitement par l'utilisateur.
