@@ -55,7 +55,7 @@ import type {
   VaultContribution,
 } from '../db/repositories';
 import { useEntitlements } from '../entitlements';
-import { useLanguage } from '../i18n';
+import { nextLanguage, useLanguage } from '../i18n';
 import { formatMonthLabel, monthKeyOf, monthKeyToDate } from '../i18n/dateFormat';
 import { forceLTR, toLocalizedDigits } from '../i18n/numberFormat';
 import { marketHasModule, originMarket } from '../market';
@@ -87,7 +87,7 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
     'dashboard',
   );
   const { theme, seniorMode } = useTheme();
-  const { language } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const entitlements = useEntitlements();
   const { openEntry, openVoiceEntry, dataVersion } = useExpenseEntry();
 
@@ -284,8 +284,14 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
         icon: 'globe' as const,
         text: language.toUpperCase(),
         accessibilityLabel: t('home.a11yLanguage'),
+        onPress: () => setLanguage(nextLanguage(language)),
       },
-      { icon: 'bell' as const, badge: true, accessibilityLabel: t('home.a11yNotifications') },
+      {
+        icon: 'bell' as const,
+        badge: true,
+        accessibilityLabel: t('home.a11yNotifications'),
+        onPress: () => navigation?.navigate('profile'),
+      },
     ];
 
     if (ramadanStatus.isEnded) {
@@ -393,8 +399,14 @@ export function HomeScreen({ navigation }: HomeScreenProps = {}) {
             icon: 'globe',
             text: language.toUpperCase(),
             accessibilityLabel: t('home.a11yLanguage'),
+            onPress: () => setLanguage(nextLanguage(language)),
           },
-          { icon: 'bell', badge: true, accessibilityLabel: t('home.a11yNotifications') },
+          {
+            icon: 'bell',
+            badge: true,
+            accessibilityLabel: t('home.a11yNotifications'),
+            onPress: () => navigation?.navigate('profile'),
+          },
         ]}
       />
 

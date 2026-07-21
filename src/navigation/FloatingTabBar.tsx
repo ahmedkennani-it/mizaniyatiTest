@@ -1,7 +1,7 @@
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { I18nManager, Pressable, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -9,6 +9,7 @@ import { Icon } from '../components/Icon';
 import type { IconName } from '../components/Icon';
 import { Txt } from '../components/Txt';
 import { useEntitlements } from '../entitlements';
+import { useLanguage } from '../i18n';
 import { useExpenseEntry } from '../screens/ExpenseEntryProvider';
 import { useTheme } from '../theme';
 
@@ -30,8 +31,15 @@ const TAB_ICONS: Record<string, IconName> = {
 /**
  * Custom floating tab bar matching the mockup: a raised surface bar with the four tab items and a
  * central gradient FAB (the "+") that opens the global expense-entry sheet (`useExpenseEntry`) from
- * any tab. The FAB is inserted in the visual middle of the row. React Navigation already reorders
- * the tabs for RTL from `I18nManager.isRTL`; the FAB stays centered either way.
+ * any tab. The FAB is inserted in the visual middle of the row.
+ *
+ * Order is driven by the language context's `isRTL`, not the native `I18nManager.isRTL` — the latter
+ * only takes effect after an app restart (see `LanguageContext`), so relying on it here (or on
+ * `flexDirection: 'row'`'s automatic RTL mirroring) left the bar's visual order out of sync with the
+ * live language for the rest of the session: tabs stayed in their old position while everything else
+ * (translated labels, `focused` state) moved on, so a tap on what looked like "Accueil" could land on
+ * whatever tab actually occupied that stale slot. `direction: 'ltr'` on the row below opts the
+ * container out of native mirroring so this manual reorder is the only thing moving the tabs.
  */
 export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const { t } = useTranslation();
@@ -39,9 +47,12 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
   const insets = useSafeAreaInsets();
   const { openEntry } = useExpenseEntry();
   const entitlements = useEntitlements();
-  const rtl = I18nManager.isRTL;
+  const { isRTL: rtl } = useLanguage();
 
-  const items = state.routes.map((route, index) => {
+  const orderedRoutes = rtl ? [...state.routes].reverse() : state.routes;
+
+  const items = orderedRoutes.map((route) => {
+    const index = state.routes.indexOf(route);
     const focused = state.index === index;
     const { options } = descriptors[route.key];
     const label =
@@ -151,6 +162,9 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
         paddingTop: 8,
         paddingHorizontal: theme.spacing.md,
         flexDirection: 'row',
+        // Order already reflects `rtl` above — opt this row out of native RTL auto-mirroring so it
+        // isn't flipped a second time by a stale `I18nManager.isRTL`.
+        direction: 'ltr',
         alignItems: 'flex-start',
         justifyContent: 'space-around',
         backgroundColor: theme.colors.surface,
