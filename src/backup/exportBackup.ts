@@ -1,25 +1,12 @@
 import type { SqlDatabase } from '../db/types';
+import { BackupNotEnabledError, WrongRecoveryKeyError } from './backupErrors';
 import { backupFileClient } from './backupFileClient';
 import { buildBackupPayload } from './backupPayload';
 import { deriveBackupKey, encryptWithKey } from './backupCrypto';
 import { getBackupSettings, recordBackupSuccess, verifyRecoveryKey } from './backupSettings';
 import type { BackupSettings } from './backupSettings';
 
-/** Backups were never turned on (US-071a's 1st criterion — nothing exports until they are). */
-export class BackupNotEnabledError extends Error {
-  constructor() {
-    super('backup_not_enabled');
-    this.name = 'BackupNotEnabledError';
-  }
-}
-
-/** The re-typed recovery passphrase doesn't match the one set at activation. */
-export class WrongRecoveryKeyError extends Error {
-  constructor() {
-    super('wrong_recovery_key');
-    this.name = 'WrongRecoveryKeyError';
-  }
-}
+export { BackupNotEnabledError, WrongRecoveryKeyError } from './backupErrors';
 
 export interface ExportResult {
   uri: string;

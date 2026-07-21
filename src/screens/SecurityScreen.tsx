@@ -13,12 +13,15 @@ import {
 } from '../components';
 import {
   BackupNotEnabledError,
+  InvalidBackupFileError,
   WrongRecoveryKeyError,
+  appReloadClient,
   backupFileClient,
   disableBackup,
   enableBackup,
   exportBackup,
   getBackupSettings,
+  restoreBackup,
 } from '../backup';
 import type { BackupSettings } from '../backup';
 import { getDatabase } from '../db/client';
@@ -31,6 +34,7 @@ import {
   enableBiometric,
   setPinLock,
   useAppLock,
+  verifyPin,
 } from '../security';
 import { useTheme } from '../theme';
 
@@ -62,6 +66,13 @@ export function SecurityScreen({ onBack }: SecurityScreenProps) {
   const [exportError, setExportError] = useState<string | undefined>(undefined);
   const [exportMessage, setExportMessage] = useState<string | undefined>(undefined);
   const [exporting, setExporting] = useState(false);
+
+  const [showRestorePrompt, setShowRestorePrompt] = useState(false);
+  const [restorePinInput, setRestorePinInput] = useState('');
+  const [restoreKeyInput, setRestoreKeyInput] = useState('');
+  const [restoreError, setRestoreError] = useState<string | undefined>(undefined);
+  const [restoreMessage, setRestoreMessage] = useState<string | undefined>(undefined);
+  const [restoring, setRestoring] = useState(false);
 
   const refreshBackupSettings = useCallback(() => {
     getBackupSettings().then(setBackupSettings);
@@ -169,6 +180,54 @@ export function SecurityScreen({ onBack }: SecurityScreenProps) {
       );
     } finally {
       setExporting(false);
+    }
+  }
+
+  function openRestorePrompt() {
+    setRestorePinInput('');
+    setRestoreKeyInput('');
+    setRestoreError(undefined);
+    setRestoreMessage(undefined);
+    setShowRestorePrompt(true);
+  }
+
+  async function handleRestore() {
+    setRestoreError(undefined);
+    // US-071b's 1st criterion — there's no account/login in this app, so the closest available
+    // authentication is the device's own app-lock, when one is configured; the recovery key
+    // re-typed just below (required either way to decrypt) is what stands in for it on a device
+    // that never had a PIN set — the scenario the criterion's own "appareil vierge" describes.
+    if (settings.mode !== 'none') {
+      const pinOk = await verifyPin(restorePinInput, settings);
+      if (!pinOk) {
+        setRestoreError(t('backupScreen.errorWrongPin'));
+        return;
+      }
+    }
+
+    setRestoring(true);
+    try {
+      const content = await backupFileClient.pickBackupFile();
+      if (content === null) {
+        return;
+      }
+      await restoreBackup(getDatabase(), content, restoreKeyInput);
+      setShowRestorePrompt(false);
+      try {
+        await appReloadClient.reload();
+      } catch {
+        setRestoreMessage(t('backupScreen.restoreSuccessRestartNote'));
+      }
+    } catch (restoreErr) {
+      setRestoreError(
+        restoreErr instanceof WrongRecoveryKeyError
+          ? t('backupScreen.errorWrongRecoveryKey')
+          : restoreErr instanceof InvalidBackupFileError
+            ? t('backupScreen.errorInvalidFile')
+            : t('backupScreen.errorRestoreFailed'),
+      );
+    } finally {
+      setRestoring(false);
     }
   }
 
@@ -377,6 +436,68 @@ export function SecurityScreen({ onBack }: SecurityScreenProps) {
               />
             </>
           )}
+
+          {/* US-071b: available regardless of whether *this* device has backup enabled — a
+              freshly onboarded device starts disabled by default (US-071a's 1st criterion) and is
+              exactly the "appareil vierge" this restores onto. */}
+          <Txt weight="semibold" size="sm">
+            {t('backupScreen.restoreTitle')}
+          </Txt>
+          {!showRestorePrompt ? (
+            <Button
+              label={t('backupScreen.restoreButton')}
+              variant="secondary"
+              onPress={openRestorePrompt}
+            />
+          ) : (
+            <>
+              {settings.mode !== 'none' ? (
+                <TextField
+                  label={t('securityScreen.pinLabel')}
+                  placeholder={t('securityScreen.pinPlaceholder')}
+                  value={restorePinInput}
+                  onChangeText={(value) => {
+                    setRestorePinInput(value);
+                    setRestoreError(undefined);
+                  }}
+                  keyboardType="number-pad"
+                  secureTextEntry
+                />
+              ) : null}
+              <TextField
+                label={t('backupScreen.recoveryKeyLabel')}
+                placeholder={t('backupScreen.recoveryKeyPlaceholder')}
+                value={restoreKeyInput}
+                onChangeText={(value) => {
+                  setRestoreKeyInput(value);
+                  setRestoreError(undefined);
+                }}
+                secureTextEntry
+                errorMessage={restoreError}
+              />
+              <AlertBanner
+                tone="warning"
+                icon="alert-triangle"
+                message={t('backupScreen.restoreWarning')}
+              />
+              <Button
+                label={t('backupScreen.confirmRestoreButton')}
+                onPress={handleRestore}
+                disabled={restoring}
+              />
+              <Button
+                label={t('securityScreen.cancel')}
+                variant="secondary"
+                onPress={() => setShowRestorePrompt(false)}
+              />
+            </>
+          )}
+
+          {restoreMessage ? (
+            <Txt size="xs" color={theme.colors.textSecondary}>
+              {restoreMessage}
+            </Txt>
+          ) : null}
         </Card>
       ) : null}
 

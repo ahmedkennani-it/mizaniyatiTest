@@ -1,3 +1,4 @@
+import * as DocumentPicker from 'expo-document-picker';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
@@ -15,6 +16,8 @@ export interface BackupFileClient {
   writeLocalBackup(content: string): Promise<string>;
   share(uri: string): Promise<void>;
   deleteLocalBackup(): Promise<void>;
+  /** US-071b: opens the OS document picker; `null` if the household cancels. */
+  pickBackupFile(): Promise<string | null>;
 }
 
 export const backupFileClient: BackupFileClient = {
@@ -33,5 +36,16 @@ export const backupFileClient: BackupFileClient = {
     if (file.exists) {
       file.delete();
     }
+  },
+  async pickBackupFile() {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ['application/json', 'application/octet-stream', '*/*'],
+      copyToCacheDirectory: true,
+    });
+    if (result.canceled || result.assets.length === 0) {
+      return null;
+    }
+    const file = new File(result.assets[0].uri);
+    return file.text();
   },
 };

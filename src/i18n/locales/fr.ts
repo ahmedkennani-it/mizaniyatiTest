@@ -707,6 +707,16 @@ export const fr = {
     errorNotEnabled: "La sauvegarde n'est pas activée.",
     errorExportFailed: "Échec de l'export, réessayez.",
     disableButton: 'Désactiver la sauvegarde',
+    restoreTitle: 'Restaurer une sauvegarde',
+    restoreButton: 'Restaurer depuis un fichier',
+    restoreWarning:
+      'Cela remplace toutes les données actuelles de cet appareil (opérations, catégories, membres, objectifs) par le contenu du fichier choisi. Cette action est irréversible.',
+    confirmRestoreButton: 'Choisir un fichier et restaurer',
+    errorWrongPin: 'Code PIN incorrect.',
+    errorInvalidFile: "Ce fichier n'est pas une sauvegarde Mizaniyati valide.",
+    errorRestoreFailed: 'Échec de la restauration, réessayez.',
+    restoreSuccessRestartNote:
+      'Sauvegarde restaurée avec succès. Redémarrez Mizaniyati pour voir vos données.',
   },
   // US-070 : l'utilisateur doit savoir que ses données ne vivent que sur cet appareil, avant de
   // désinstaller — sans export manuel chiffré (US-071a), il n'existe aucun moyen de les récupérer.

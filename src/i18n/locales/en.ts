@@ -696,6 +696,15 @@ export const en: TranslationSchema = {
     errorNotEnabled: 'Backup is not enabled.',
     errorExportFailed: 'Export failed, please try again.',
     disableButton: 'Disable backup',
+    restoreTitle: 'Restore a backup',
+    restoreButton: 'Restore from a file',
+    restoreWarning:
+      'This replaces all current data on this device (transactions, categories, members, goals) with the content of the chosen file. This action cannot be undone.',
+    confirmRestoreButton: 'Choose a file and restore',
+    errorWrongPin: 'Incorrect PIN.',
+    errorInvalidFile: 'This file is not a valid Mizaniyati backup.',
+    errorRestoreFailed: 'Restore failed, please try again.',
+    restoreSuccessRestartNote: 'Backup restored successfully. Restart Mizaniyati to see your data.',
   },
   storage: {
     title: 'Your data stays on this device',

@@ -2219,6 +2219,63 @@ entièrement couverte.
 - ⚠️ Vérification navigateur non effectuée (blocage `dev-browser` inchangé) ; de toute façon,
   `expo-file-system`/`expo-sharing` (partage OS) ne peuvent pas être exercés dans un navigateur.
 
+### Itération 67 — Tâche 17.3 (Restauration d'une sauvegarde) ✅ — phase 17 close (3/3)
+
+- 🚨 **Conflit d'architecture trouvé avant d'écrire du code, distinct de celui de 17.2** : le
+  critère « restauration sur un appareil vierge » suppose une base de données vide — mais
+  `App.tsx` redirige vers l'onboarding dès qu'aucun foyer n'existe, et l'onboarding **crée
+  toujours un foyer de démarrage** avant qu'aucun écran (donc aucun bouton « Restaurer ») ne soit
+  atteignable. Un appareil littéralement vierge n'a **jamais** de base vide au moment où la
+  restauration devient possible — **décision : la restauration remplace les données existantes**
+  (foyer, membres, catégories, transactions, objectifs — exactement ce que ce module gère, rien
+  d'autre) plutôt que d'exiger une base vide. Testé dans les deux sens : sur une base réellement
+  vide (le scénario nommé par le critère) et sur une base contenant déjà le foyer de démarrage
+  d'un onboarding frais (le scénario réel).
+  - Garde-fou : la purge (`wipeManagedData`) n'a lieu **qu'après** un déchiffrement réussi — une
+    mauvaise clé de récupération ne doit jamais effacer ce qui existait déjà sur l'appareil.
+- **`restoreBackup.ts`** : déchiffre, purge, puis réinsère foyer → membres → catégories →
+  transactions → objectifs → versements, dans cet ordre de dépendance, avec une table de
+  correspondance ancien-id → nouvel-id à chaque étape (aucun `create*` du dépôt n'accepte d'id
+  explicite, et ça n'était pas nécessaire : rien en dehors du fichier de sauvegarde ne référence
+  les anciens ids). Un membre « retiré » (`removedAt` non nul) est recréé actif puis retiré avec
+  **la même date d'origine**, pour ne pas réécrire l'historique.
+- **« Authentification » (1er critère) sans notion de compte** : cette app n'a ni compte ni
+  connexion. Solution retenue : si un verrou d'app (PIN/biométrie) est déjà configuré sur
+  l'appareil, il est exigé avant la restauration ; sur un appareil vraiment vierge (aucun verrou
+  configuré), la clé de récupération elle-même — de toute façon nécessaire pour déchiffrer — tient
+  lieu d'authentification. Documenté explicitement dans le code, pas juste supposé.
+- **Après une restauration réussie, l'app se recharge entièrement** (`appReloadClient`, nouvelle
+  fine enveloppe sur `expo-updates`, déjà une dépendance) plutôt que de rafraîchir chaque contexte
+  à la main — `App.tsx` relit foyer/réglages au démarrage, donc un rechargement complet est le
+  chemin le plus sûr pour que tout l'app reflète les données restaurées. Repli : si `reloadAsync`
+  n'est pas supporté (ex. Expo Go), un message invite à redémarrer l'app manuellement plutôt que de
+  planter.
+- **Erreurs typées partagées entre export et import** : `WrongRecoveryKeyError`/
+  `BackupNotEnabledError` déplacées dans `backupErrors.ts` (nouveau) pour être réutilisées sans
+  import croisé entre `exportBackup.ts` et `restoreBackup.ts` ; `InvalidBackupFileError` ajoutée
+  pour un fichier qui n'est simplement pas une sauvegarde Mizaniyati (JSON invalide ou mauvaise
+  forme) — distinct d'une mauvaise clé, qui produit un déchiffrement qui échoue plutôt qu'un JSON
+  mal formé dès le départ.
+- **2e critère (date de dernière sauvegarde affichée) : déjà livré en 17.2** — rien à ajouter ici.
+- **`backupFileClient.pickBackupFile`** (nouveau, `expo-document-picker`) : ouvre le sélecteur de
+  fichiers OS, lit le contenu texte du fichier choisi ; `null` si annulé, propagé proprement
+  jusqu'à l'UI (aucune action, pas d'erreur affichée pour une simple annulation).
+- ⚠️ **Note pour l'avenir, non traitée ici** : la tâche 4.6 (« Connexion à un compte existant »)
+  avait été laissée `done: false` à l'itération 20, explicitement bloquée par « des dépendances de
+  phase 17 ». Cette phase est maintenant close — 4.6 pourrait être reconsidérée dans une itération
+  future en s'appuyant sur ce module de restauration, mais ce n'est pas la tâche courante et rien
+  n'a été changé sur 4.6 ici.
+- Tests : `restoreBackup.test.ts` (6, dont le test d'intégration nommé par le critère : appareil
+  réellement vierge → foyer/membres/catégories/transactions/objectifs reconstitués avec les bons
+  ids remappés) ; `SecurityScreen.test.tsx` (+8 : bouton toujours offert même sauvegarde jamais
+  activée sur cet appareil, pas de PIN demandé si aucun verrou, restauration + rechargement,
+  annulation du sélecteur, mauvaise clé, fichier invalide, PIN requis et vérifié).
+- `npm run typecheck` ✅, `npm run lint` ✅, `npx jest` : **2133/2133, 172 suites** ✅.
+- ⚠️ Vérification navigateur non effectuée (blocage `dev-browser` inchangé ; de toute façon,
+  `expo-document-picker`/`expo-updates` ne peuvent pas être exercés dans un navigateur).
+
+**Phase 17 (Confidentialité & sauvegarde) close : 3/3 tâches `done: true`.**
+
 ## Notes / blocages connus (hors périmètre Phase 1)
 
 - L'arbre de travail contient des changements accumulés multi-phases non

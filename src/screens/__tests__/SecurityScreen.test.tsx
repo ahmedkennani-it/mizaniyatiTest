@@ -19,9 +19,15 @@ jest.mock('../../backup', () => ({
   enableBackup: jest.fn(),
   disableBackup: jest.fn(),
   exportBackup: jest.fn(),
-  backupFileClient: { deleteLocalBackup: jest.fn().mockResolvedValue(undefined) },
+  restoreBackup: jest.fn(),
+  backupFileClient: {
+    deleteLocalBackup: jest.fn().mockResolvedValue(undefined),
+    pickBackupFile: jest.fn(),
+  },
+  appReloadClient: { reload: jest.fn() },
   BackupNotEnabledError: class BackupNotEnabledError extends Error {},
   WrongRecoveryKeyError: class WrongRecoveryKeyError extends Error {},
+  InvalidBackupFileError: class InvalidBackupFileError extends Error {},
 }));
 
 // `exportBackup` itself is mocked above and never touches its `db` argument — this only exists so
@@ -37,6 +43,7 @@ import {
   enableBiometric,
   getAppLockSettings,
   setPinLock,
+  verifyPin,
 } from '../../security/appLockSettings';
 // eslint-disable-next-line import/first -- must come after the jest.mock(...) calls above
 import { biometricClient } from '../../security/biometricClient';
@@ -45,12 +52,15 @@ import { AppLockProvider } from '../../security';
 // eslint-disable-next-line import/first -- must come after the jest.mock(...) calls above
 import {
   BackupNotEnabledError,
+  InvalidBackupFileError,
   WrongRecoveryKeyError,
+  appReloadClient,
   backupFileClient,
   disableBackup,
   enableBackup,
   exportBackup,
   getBackupSettings,
+  restoreBackup,
 } from '../../backup';
 // eslint-disable-next-line import/first -- must come after the jest.mock(...) calls above
 import { LanguageProvider } from '../../i18n';
@@ -70,6 +80,10 @@ const mockGetBackupSettings = getBackupSettings as jest.Mock;
 const mockEnableBackup = enableBackup as jest.Mock;
 const mockDisableBackup = disableBackup as jest.Mock;
 const mockExportBackup = exportBackup as jest.Mock;
+const mockRestoreBackup = restoreBackup as jest.Mock;
+const mockPickBackupFile = backupFileClient.pickBackupFile as jest.Mock;
+const mockReload = appReloadClient.reload as jest.Mock;
+const mockVerifyPin = verifyPin as jest.Mock;
 
 const DEFAULT_BACKUP_SETTINGS = {
   enabled: false,
@@ -334,5 +348,127 @@ describe('SecurityScreen — sauvegarde chiffrée (US-071a)', () => {
 
     expect(mockDisableBackup).toHaveBeenCalledTimes(1);
     expect(backupFileClient.deleteLocalBackup).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('SecurityScreen — restauration d’une sauvegarde (US-071b)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetAppLockSettings.mockResolvedValue({ mode: 'none', pinHash: null, pinSalt: null });
+    mockHasHardware.mockResolvedValue(true);
+    mockIsEnrolled.mockResolvedValue(true);
+    // A device that has never enabled backup itself is exactly the "appareil vierge" scenario —
+    // the restore action must still be offered.
+    mockGetBackupSettings.mockResolvedValue(DEFAULT_BACKUP_SETTINGS);
+  });
+
+  it('offers restore even when this device has never enabled backup', async () => {
+    await renderScreen();
+
+    expect(await screen.findByText('Restaurer depuis un fichier')).toBeTruthy();
+  });
+
+  it('does not prompt for a PIN when no app lock is configured', async () => {
+    await renderScreen();
+    await fireEvent.press(await screen.findByText('Restaurer depuis un fichier'));
+
+    expect(screen.queryByLabelText('Code PIN (4 chiffres ou plus)')).toBeNull();
+    expect(await screen.findByText('Clé de récupération')).toBeTruthy();
+  });
+
+  it('restores from a picked file with the recovery key and reloads the app', async () => {
+    mockPickBackupFile.mockResolvedValue('{"version":1,"salt":"x","ciphertext":"y"}');
+    mockRestoreBackup.mockResolvedValue({
+      households: 1,
+      members: 1,
+      categories: 1,
+      transactions: 1,
+      vaults: 1,
+      vaultContributions: 1,
+    });
+    mockReload.mockResolvedValue(undefined);
+
+    await renderScreen();
+    await fireEvent.press(await screen.findByText('Restaurer depuis un fichier'));
+    await fireEvent.changeText(screen.getByLabelText('Clé de récupération'), 'correct horse battery');
+    await fireEvent.press(screen.getByText('Choisir un fichier et restaurer'));
+
+    // The prompt closes (back to the plain "Restaurer" button) once the restore succeeds.
+    expect(await screen.findByText('Restaurer depuis un fichier')).toBeTruthy();
+    expect(mockPickBackupFile).toHaveBeenCalledTimes(1);
+    expect(mockRestoreBackup).toHaveBeenCalledWith(
+      expect.anything(),
+      '{"version":1,"salt":"x","ciphertext":"y"}',
+      'correct horse battery',
+    );
+    expect(mockReload).toHaveBeenCalledTimes(1);
+  });
+
+  it('does nothing when the file picker is cancelled', async () => {
+    mockPickBackupFile.mockResolvedValue(null);
+
+    await renderScreen();
+    await fireEvent.press(await screen.findByText('Restaurer depuis un fichier'));
+    await fireEvent.changeText(screen.getByLabelText('Clé de récupération'), 'correct horse battery');
+    await fireEvent.press(screen.getByText('Choisir un fichier et restaurer'));
+
+    expect(await screen.findByText('Choisir un fichier et restaurer')).toBeTruthy();
+    expect(mockRestoreBackup).not.toHaveBeenCalled();
+  });
+
+  it('shows a friendly error on the wrong recovery key, without crashing', async () => {
+    mockPickBackupFile.mockResolvedValue('{"version":1,"salt":"x","ciphertext":"y"}');
+    mockRestoreBackup.mockRejectedValue(new WrongRecoveryKeyError());
+
+    await renderScreen();
+    await fireEvent.press(await screen.findByText('Restaurer depuis un fichier'));
+    await fireEvent.changeText(screen.getByLabelText('Clé de récupération'), 'wrong key');
+    await fireEvent.press(screen.getByText('Choisir un fichier et restaurer'));
+
+    expect(await screen.findByText('Clé de récupération incorrecte.')).toBeTruthy();
+  });
+
+  it('shows a friendly error on an invalid backup file, without crashing', async () => {
+    mockPickBackupFile.mockResolvedValue('not a backup');
+    mockRestoreBackup.mockRejectedValue(new InvalidBackupFileError());
+
+    await renderScreen();
+    await fireEvent.press(await screen.findByText('Restaurer depuis un fichier'));
+    await fireEvent.changeText(screen.getByLabelText('Clé de récupération'), 'anything');
+    await fireEvent.press(screen.getByText('Choisir un fichier et restaurer'));
+
+    expect(
+      await screen.findByText("Ce fichier n'est pas une sauvegarde Mizaniyati valide."),
+    ).toBeTruthy();
+  });
+
+  /** US-071b's 1st criterion: when a PIN is set, restoring requires it. */
+  it('requires the correct PIN before restoring when an app lock is configured', async () => {
+    mockGetAppLockSettings.mockResolvedValue({ mode: 'pin', pinHash: 'h', pinSalt: 's' });
+    mockVerifyPin.mockResolvedValue(false);
+
+    await renderScreen();
+    await fireEvent.press(await screen.findByText('Restaurer depuis un fichier'));
+    await fireEvent.changeText(screen.getByLabelText('Code PIN (4 chiffres ou plus)'), '0000');
+    await fireEvent.changeText(screen.getByLabelText('Clé de récupération'), 'correct horse battery');
+    await fireEvent.press(screen.getByText('Choisir un fichier et restaurer'));
+
+    expect(await screen.findByText('Code PIN incorrect.')).toBeTruthy();
+    expect(mockPickBackupFile).not.toHaveBeenCalled();
+  });
+
+  it('proceeds once the correct PIN is entered', async () => {
+    mockGetAppLockSettings.mockResolvedValue({ mode: 'pin', pinHash: 'h', pinSalt: 's' });
+    mockVerifyPin.mockResolvedValue(true);
+    mockPickBackupFile.mockResolvedValue(null);
+
+    await renderScreen();
+    await fireEvent.press(await screen.findByText('Restaurer depuis un fichier'));
+    await fireEvent.changeText(screen.getByLabelText('Code PIN (4 chiffres ou plus)'), '1234');
+    await fireEvent.changeText(screen.getByLabelText('Clé de récupération'), 'correct horse battery');
+    await fireEvent.press(screen.getByText('Choisir un fichier et restaurer'));
+
+    expect(await screen.findByText('Choisir un fichier et restaurer')).toBeTruthy();
+    expect(mockPickBackupFile).toHaveBeenCalledTimes(1);
   });
 });

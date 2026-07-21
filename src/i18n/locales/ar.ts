@@ -688,6 +688,15 @@ export const ar: TranslationSchema = {
     errorNotEnabled: 'النسخ الاحتياطي غير مفعّل.',
     errorExportFailed: 'فشل التصدير، أعد المحاولة.',
     disableButton: 'تعطيل النسخ الاحتياطي',
+    restoreTitle: 'استعادة نسخة احتياطية',
+    restoreButton: 'استعادة من ملف',
+    restoreWarning:
+      'سيؤدي هذا إلى استبدال جميع بيانات هذا الجهاز الحالية (العمليات، الفئات، الأعضاء، الأهداف) بمحتوى الملف المختار. لا يمكن التراجع عن هذا الإجراء.',
+    confirmRestoreButton: 'اختيار ملف والاستعادة',
+    errorWrongPin: 'رمز PIN غير صحيح.',
+    errorInvalidFile: 'هذا الملف ليس نسخة احتياطية صالحة لتطبيق Mizaniyati.',
+    errorRestoreFailed: 'فشلت الاستعادة، أعد المحاولة.',
+    restoreSuccessRestartNote: 'تمت استعادة النسخة الاحتياطية بنجاح. أعد تشغيل Mizaniyati لرؤية بياناتك.',
   },
   storage: {
     title: 'بياناتك تبقى على هذا الجهاز',
